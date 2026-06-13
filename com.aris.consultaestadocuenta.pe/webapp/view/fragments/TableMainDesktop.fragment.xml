@@ -1,0 +1,66 @@
+<core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core" xmlns:l="sap.ui.layout" xmlns:f="sap.ui.layout.form">
+    <ScrollContainer
+        width="100%"
+        height="100%"
+        horizontal="{= ${device>/system/phone} }"
+        vertical="true"
+        focusable="true">
+    <Table items="{oModelProyect>/oReporte}"
+        id="tblMain"
+        growing="true"
+        growingThreshold="20"
+        growingScrollToLoad="false">
+        <headerToolbar>
+            <Toolbar>
+                <ToolbarSpacer/>
+                <Button text="{i18n>textbtnPrueba}" press="_onPressPrueba" type="Critical" icon="sap-icon://pdf-attachment" tooltip="{i18n>textbtnDelivery}"
+                visible="false"/>
+            </Toolbar>
+        </headerToolbar>
+        <columns>
+            <Column width="8rem" hAlign="Center" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false">
+                <header>
+                    <Text text="{i18n>titleTbColCodeClientMain}" width="auto" />
+                </header>
+            </Column>
+            <Column width="16rem" hAlign="Left" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false">
+                <header>
+                    <Text text="{i18n>titleTbNameMain}" width="auto" />
+                </header>
+            </Column>
+            <Column width="9rem" hAlign="Center" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false">
+                <header>
+                    <Text text="{i18n>titleTbColDocMain}" width="auto" />
+                </header>
+            </Column>
+            <Column width="8rem" hAlign="Left" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false">
+                <header>
+                    <Text text="{i18n>titleTbColGroupMain}" width="auto" />
+                </header>
+            </Column>
+            <Column width="10rem" hAlign="Left" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false">
+                <header>
+                    <Text text="{i18n>titleTbColCredAsigMain}" width="auto" />
+                </header>
+            </Column>
+            <Column width="10rem" hAlign="Left" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false">
+                <header>
+                    <Text text="{i18n>titleTbColSellerMain}" width="auto" />
+                </header>
+            </Column>
+        </columns>
+        <items>
+            <ColumnListItem type="Inactive">
+                <cells>
+                    <Link text="{oModelProyect>Customer}" press="_onPressNavigateDetail"/>
+                    <Text text="{path: 'oModelProyect>CustomerFullName', formatter: '.formatter.cleanCustomerFullName'}" textAlign="Begin"/>
+                    <Text text="{path: 'oModelProyect>', formatter: '.formatter.getDocumento'}"/>
+                    <Text text="{oModelProyect>DescriptionCustomerGroup}"/>
+                    <Text text="{oModelProyect>DescriptionConditionPayment}"/>
+                    <Text text="{oModelProyect>Seller}"/>
+                </cells>
+            </ColumnListItem>
+        </items>
+    </Table>
+    </ScrollContainer>
+</core:FragmentDefinition>

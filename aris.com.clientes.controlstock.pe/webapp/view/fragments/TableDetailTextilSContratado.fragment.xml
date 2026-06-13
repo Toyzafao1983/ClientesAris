@@ -1,0 +1,62 @@
+<core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core" xmlns:l="sap.ui.layout" xmlns:f="sap.ui.layout.form">
+    <Table  items="{oModelProyect>/oStockTextilStockCont}"  mode="None" growingThreshold="20" width="auto">
+        <columns>
+            <Column width="8%" hAlign="Center" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false">
+                <header>
+                    <Text text="{i18n>titleDetTexPiePart}" width="auto" />
+                </header>
+            </Column>
+            <Column width="8%" hAlign="End" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false">
+                <header>
+                    <HBox justifyContent="Center" width="100%">
+                        <Text text="{i18n>titleDetTexPieLength}" width="auto" />
+                    </HBox>
+                </header>
+            </Column>
+            <Column width="10%" hAlign="Center" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false" visible="{= !${oModelUser>/rCliente}||${oModelUser>/rMetTextil}}">
+                <header>
+                    <Text text="{i18n>titleDetTexPieOrigin}" width="auto" />
+                </header>
+            </Column>
+            <Column width="10%" hAlign="Center" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false" visible="{= !${oModelUser>/rCliente}}">
+                <header>
+                    <Text text="{i18n>titleDetTexPieType}" width="auto" />
+                </header>
+            </Column>
+            <Column width="10%" hAlign="Center" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false" visible="{= !${oModelUser>/rCliente}}">
+                <header>
+                    <Text text="{i18n>titleDetTexPieReceiptDate}" width="auto" />
+                </header>
+            </Column>
+            <Column width="10%" hAlign="End" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false" visible="{= !${oModelUser>/rCliente}}">
+                <header>
+                    <HBox justifyContent="Center" width="100%">
+                        <Text text="{i18n>titleDetTexPieManufacturingOrder}" width="auto" />
+                    </HBox>
+                </header>
+            </Column>
+            <Column width="30%" hAlign="Begin" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false" visible="{= !${oModelUser>/rCliente}}">
+                <header>
+                    <HBox justifyContent="Center" width="100%">
+                        <Text text="{i18n>titleDetTexPieCustomer}" width="auto" />
+                    </HBox>
+                </header>
+            </Column>
+            
+        </columns>
+       <items>
+            <ColumnListItem type="Inactive"  >
+                <cells>
+                    <Text text="{path:'oModelProyect>Charg'}"/>
+                    <Text text="{path:'oModelProyect>Longitud'}"/>
+                    <Text text="{path:'oModelProyect>Procedencia'}"/>
+                    <Text text="{path:'oModelProyect>Tipo'}"/>
+                    <Text text="{path:'oModelProyect>FechaIngreso'}"/>
+                    <Text text="{path:'oModelProyect>OrdenFabric'}"/>
+                    <Text text="{path:'oModelProyect>Cliente'}"/>
+                </cells>
+            </ColumnListItem>
+        </items>
+     
+    </Table>
+</core:FragmentDefinition>

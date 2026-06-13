@@ -1,0 +1,23 @@
+<core:FragmentDefinition 
+    xmlns:core="sap.ui.core" 
+    xmlns="sap.m">
+
+    <SelectDialog
+        id="FilterCodClientDialog"
+        title="Seleccionar Cliente"
+        multiSelect="true"
+        noDataText="Sin resultados"
+        liveChange=".onClienteLiveChange" 
+        search=".onClienteSearch"           
+        confirm=".onDialogClienteConfirm"
+        cancel=".onDialogClienteCancel"
+        items="{ path: 'oModelProyect>/oCliente' }">
+
+        <StandardListItem
+            icon="sap-icon://customer"
+            title="{oModelProyect>Customer}"
+            description="{oModelProyect>CustomerFullName}"
+            type="Active"/>
+    </SelectDialog>
+
+</core:FragmentDefinition>

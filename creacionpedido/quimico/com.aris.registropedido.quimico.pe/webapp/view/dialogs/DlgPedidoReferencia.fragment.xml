@@ -1,0 +1,32 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core">
+    <Dialog
+        id="dlgPedidoReferencia"
+        title="Pedido con referencia"
+        contentWidth="25rem"
+        stretchOnPhone="true">
+        <VBox alignItems="Center" class="sapUiMediumMargin">
+            <HBox alignItems="Center">
+                <core:Icon
+                    src="sap-icon://create-form"
+                    size="2rem"
+                    color="#0ad11eff"
+                    tooltip="Crear pedido con referencia"
+                    class="sapUiTinyMarginEnd" />
+                <Text text="¿Desea crear un pedido con referencia?" />
+            </HBox>
+        </VBox>
+        <beginButton>
+            <Button
+                text="Sí"
+                type="Emphasized"
+                press=".onPedidoReferenciaYes" />
+        </beginButton>
+        <endButton>
+            <Button
+                text="No"
+                press=".onPedidoReferenciaNo" />
+        </endButton>
+    </Dialog>
+</core:FragmentDefinition>

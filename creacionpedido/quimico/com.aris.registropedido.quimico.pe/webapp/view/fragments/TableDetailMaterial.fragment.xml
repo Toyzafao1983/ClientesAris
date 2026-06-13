@@ -1,0 +1,361 @@
+<core:FragmentDefinition xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    xmlns:l="sap.ui.layout"
+    xmlns:custom="http://schemas.sap.com/sapui5/extension/sap.ui.core.CustomData/1"
+    xmlns:f="sap.ui.layout.form">
+        <ScrollContainer
+        width="100%"
+        height="100%"
+        horizontal="true"
+        vertical="true">
+
+    <Table id="tbProductos1"
+        width="90rem"
+        items="{oModelProyect>/oMaterialUI}"
+        growingThreshold="20"
+        mode="SingleSelectMaster"
+        selectionChange="onSelectProducto">
+
+        <headerToolbar>
+            <Toolbar>
+                <Label text="{i18n>txtDiscountPermitted}:"
+                    visible="{= !${oModelUser>/bIsCliente}}"/>
+                <Text text="{oModelProyect>/oSelecTableDetalle/DescuentoPermitido}"
+                    width="auto"
+                    class="sapUiMediumMarginEnd"
+                    visible="{= !${oModelUser>/bIsCliente}}"/>
+                <Label id="SearchMaterial"
+                    text="{i18n>txtDiscountManual}:(%)"
+                    visible="{= !${oModelUser>/bIsCliente}}"/>
+                <Input id="inpDescuentoManual"
+                    value="{oModelProyect>/oSelecTableDetalle/DescuentoManual}"
+                    placeholder="Ingrese Descuento"
+                    width="auto"
+                    class="sapUiMediumMarginEnd"
+                    enabled="{= ${oModelProyect>/inputForm/esConReferencia} ? false : !${oModelProyect>/oSelecTableDetalle/usarPrecioManual} }"
+                    visible="{= !${oModelUser>/bIsCliente}}"
+                    liveChange=".onLiveChangeDescuentoManual"
+                    change=".onChangeDescuentoManual"/>
+                <Button id="btnRecalateProduct"
+                    text="{i18n>txtRecalculateProduct}"
+                    type="Attention"
+                    icon="sap-icon://refresh"
+                    press="onRecalculatePrices"/>
+                <ToolbarSpacer/>
+            </Toolbar>
+        </headerToolbar>
+
+        <columns>
+            <!-- Posición -->
+            <Column width="4rem" hAlign="End" vAlign="Middle"
+                minScreenWidth="Tablet" demandPopin="true"
+                popinDisplay="Inline" mergeDuplicates="false">
+                <header>
+                    <Text text="{i18n>txtTabledPosition}"
+                        width="auto" maxLines="2" wrapping="false"
+                        textAlign="Begin" textDirection="Inherit" visible="true"/>
+                </header>
+            </Column>
+
+            <!-- Material -->
+            <Column width="4rem" hAlign="End" vAlign="Middle"
+                minScreenWidth="Tablet" demandPopin="true"
+                popinDisplay="Inline" mergeDuplicates="false">
+                <header>
+                    <Text text="{i18n>txtTabledMaterial}"
+                        maxLines="2" wrapping="false"
+                        textAlign="Begin" textDirection="Inherit" visible="true"/>
+                </header>
+                <footer>
+                    <VBox height="100%">
+                        <HBox>
+                        <Label text="{i18n>txtFootertableAdvance}" />
+                        </HBox>
+                        <HBox>
+                        <Label text="{i18n>txtFootertableNC}" />
+                       
+                        </HBox>
+                    </VBox>
+                </footer>
+            </Column>
+
+            <!-- Descripción -->
+            <Column width="10rem" hAlign="Left" vAlign="Middle"
+                minScreenWidth="Tablet" demandPopin="true"
+                popinDisplay="Inline" mergeDuplicates="false">
+                <header>
+                    <Text text="{i18n>txtTableDescriptions}"
+                        width="auto" maxLines="1" wrapping="false"
+                        textAlign="Begin" textDirection="Inherit" visible="true"/>
+                </header>
+                <footer>
+                    <VBox height="100%">
+                        <Input id="InputFooterTableAnticipo"
+                            value="{
+                            path: 'oModelData>/Anticipo/OutstandingAmount',
+                            formatter: '.formatter.formatMonto2Dec'
+                            }"
+                            width="95px"
+                            enabled="false"/>
+                        <Input id="InputFooterTableNC"
+                            value="{
+                                path: 'oModelData>/NotaCredito/NotaCredito',
+                                formatter: '.formatter.formatMonto2Dec'
+                            }"
+                            width="95px"
+                            enabled="false"/>
+                    </VBox>
+                </footer>
+            </Column>
+
+            <!-- Cantidad -->
+            <Column width="5rem" hAlign="End" vAlign="Middle"
+                minScreenWidth="Tablet" demandPopin="true"
+                popinDisplay="Inline" mergeDuplicates="false">
+                <header>
+                    <Text text="{i18n>txtTabledAmount}"
+                        width="7rem" maxLines="2" wrapping="false"
+                        textAlign="Begin" textDirection="Inherit" visible="true"/>
+                </header>
+            </Column>
+
+            <!-- UMV -->
+            <Column width="8rem" hAlign="Center" vAlign="Middle"
+                minScreenWidth="Tablet" demandPopin="true"
+                popinDisplay="Inline" mergeDuplicates="false">
+                <header>
+                    <Text text="{i18n>txtTabledUMV}"
+                        width="8rem" maxLines="2" wrapping="true"
+                        textAlign="Begin" textDirection="Inherit" visible="true"/>
+                </header>
+            </Column>
+
+            <!-- Precio Lista -->
+            <Column width="4rem"  hAlign="End" vAlign="Middle"
+                minScreenWidth="Tablet" demandPopin="true"
+                popinDisplay="Inline" mergeDuplicates="false">
+                <header>
+                    <Text text="Pr.Lista"
+                        width="6rem" maxLines="2" wrapping="true"
+                        textAlign="Begin" textDirection="Inherit" visible="true"/>
+                </header>
+            </Column>
+
+            <!-- Descuento -->
+            <Column width="5rem"
+                visible="{=${oModelcom.aris.registropedido.quimico.pe>/DataGeneral/sStatus}==='C'?true:false}"
+                hAlign="End" vAlign="Middle" minScreenWidth="Tablet"
+                demandPopin="true" popinDisplay="Inline" mergeDuplicates="false">
+                <header>
+                    <Text text="{i18n>txtTabledDiscount}"
+                        width="5rem" maxLines="2" wrapping="true"
+                        textAlign="Begin" textDirection="Inherit" visible="true"/>
+                </header>
+            </Column>
+
+            <!-- Pv Neto -->
+            <Column width="5rem"
+                visible="{=${oModelcom.aris.registropedido.quimico.pe>/DataGeneral/sStatus}==='C'?true:false}"
+                hAlign="End" vAlign="Middle" minScreenWidth="Tablet"
+                demandPopin="true" popinDisplay="Inline" mergeDuplicates="false">
+                <header>
+                    <Text text="Pv. Neto"
+                        width="5rem" maxLines="2" wrapping="true"
+                        textAlign="Begin" textDirection="Inherit" visible="true"/>
+                </header>
+                <footer>
+                    <VBox height="100%">
+                        <Label id="textFooterColTotalMaterial"
+                            text="{i18n>txtTabledSubTotal}"
+                            visible="{=${device>/system/phone}?false:true}"/>
+                        <Label id="textFooterColTotalMaterial1"
+                            text="Flete"
+                            visible="{=${device>/system/phone}?false:true}"
+                            class="sapUiTinyMarginTop"/>
+                        <Label id="textFooterColTotalMaterial2"
+                            text="{i18n>txtTableIGV}"
+                            visible="{=${device>/system/phone}?false:true}"
+                            class="sapUiTinyMarginTop"/>
+                        <Label id="textFooterColTotalMaterial3"
+                            text="{i18n>titleFooterColProducto}"
+                            visible="{=${device>/system/phone}?false:true}"
+                            class="sapUiTinyMarginTop"/>
+                    </VBox>
+                </footer>
+            </Column>
+
+            <!-- Total línea -->
+            <Column width="5rem" hAlign="End" vAlign="Middle"
+                minScreenWidth="Tablet" demandPopin="true"
+                popinDisplay="Inline" mergeDuplicates="false">
+                <header>
+                    <Text text="{i18n>txtTabledTotal}"
+                        width="auto" maxLines="2" wrapping="false"
+                        textAlign="Begin" textDirection="Inherit" visible="true"/>
+                </header>
+                <footer>
+                    <VBox height="100%">
+                        <Input id="SubTotalMat"
+                            value="{
+                                path: 'oModelProyect>/oDatCalculo/subtotalGeneral',
+                                formatter: '.formatter.formatMonto2Dec'
+                            }"
+                            visible="{=${device>/system/phone}?false:true}"
+                            textAlign="End"
+                            editable="false"/>
+                        <Input id="TotalEmba"
+                            value="{
+                                path: 'oModelProyect>/oDatCalculo/embalaje',
+                                formatter: '.formatter.formatMonto2Dec'
+                            }"
+                            visible="{=${device>/system/phone}?false:true}"
+                            textAlign="End"
+                            editable="false"/>
+                        <Input id="TotalIgvMat"
+                            value="{
+                                path: 'oModelProyect>/oDatCalculo/totalImpuesto',
+                                formatter: '.formatter.formatMonto2Dec'
+                            }"
+                            visible="{=${device>/system/phone}?false:true}"
+                            textAlign="End"
+                            editable="false"/>
+                        <Input id="TotalMat"
+                            value="{
+                                path: 'oModelProyect>/oDatCalculo/totalGeneral',
+                                formatter: '.formatter.formatMonto2Dec'
+                            }"
+                            visible="{=${device>/system/phone}?false:true}"
+                            textAlign="End"
+                            editable="false"/>
+                    </VBox>
+                </footer>
+            </Column>
+             <!-- UMV Peso -->
+             <Column id="clDetailTablePeso" width="4rem"
+                hAlign="End" vAlign="Middle" minScreenWidth="Tablet"
+                demandPopin="true" popinDisplay="Inline" mergeDuplicates="false">
+                <header>
+                    <Text text="{i18n>txtWeight}"
+                        width="2rem" maxLines="2" wrapping="true"
+                        textAlign="Begin" textDirection="Inherit" visible="true"/>
+                </header>
+                <footer>
+                    <VBox height="100%">
+                        <Label
+                        id="textFooterColTotalPeso"
+                        text="{i18n>txtTabledTotalPeso}"
+                        wrapping="true"
+                        width="auto"
+                        visible="{=${device>/system/phone}?false:true}"/>
+                    </VBox>
+                </footer>
+            </Column>
+            
+            <!-- Peso -->
+            <Column id="clDetailTableUMVWeigth" width="5rem"
+                hAlign="Center" vAlign="Middle" minScreenWidth="Tablet"
+                demandPopin="true" popinDisplay="Inline" mergeDuplicates="false">
+                <header>
+                    <Text text="{i18n>txtTableUMVWeight}"
+                        width="auto" maxLines="2" wrapping="false"
+                        textAlign="Begin" textDirection="Inherit" visible="true"/>
+                </header>
+                <footer>
+                    <VBox height="100%">
+                        <Input id="TotalPeso"
+                            value="{
+                                path: 'oModelProyect>/oDatCalculo/totalPeso',
+                                formatter: '.formatter.formatMonto2Dec'
+                            }"
+                            visible="{=${device>/system/phone}?false:true}"
+                            textAlign="End"
+                            editable="false"/>
+                    </VBox>
+                </footer>
+            </Column>
+
+            <!-- Bonus -->
+            <Column id="clPedBonus" width="4rem"
+                hAlign="Center" vAlign="Middle" minScreenWidth="Tablet"
+                demandPopin="true" popinDisplay="Inline" mergeDuplicates="false">
+                <header>
+                    <Text text="{i18n>txtTableBonus}"
+                        width="auto" maxLines="2" wrapping="false"
+                        textAlign="Begin" textDirection="Inherit" visible="true"/>
+                </header>
+            </Column>
+            <Column id="clEditMaterial" width="3rem"
+                hAlign="Left" vAlign="Middle" minScreenWidth="Tablet"
+                demandPopin="true" popinDisplay="Inline" mergeDuplicates="false">
+                <header>
+                    <Text text="{i18n>txtTabledEdit}"
+                        width="auto" maxLines="2" wrapping="false"
+                        textAlign="Begin" textDirection="Inherit" visible="true"/>
+                </header>
+            </Column>
+
+            <!-- Eliminar -->
+            <Column id="clEliminateMaterial" width="5rem"
+                hAlign="Left" vAlign="Middle" minScreenWidth="Tablet"
+                demandPopin="true" popinDisplay="Inline" mergeDuplicates="false">
+                <header>
+                    <Text text="{i18n>txtTabledEliminate}"
+                        width="auto" maxLines="2" wrapping="false"
+                        textAlign="Begin" textDirection="Inherit" visible="true"/>
+                </header>
+            </Column>
+        </columns>
+
+        <items>
+            <ColumnListItem type="Inactive">
+                <cells>
+                    <Text text="{oModelProyect>ItmNumber}"/>
+                    <Text text="{oModelProyect>Material}"/>
+                    <Text text="{oModelProyect>Descriptions}"/>
+                    <Input value="{
+                                path:'oModelProyect>cantidad',
+                                formatter: '.formatter.formatMonto2Dec'
+                            }"
+                        enabled="false"
+                        textAlign="End"/>
+                    <Text text="{oModelProyect>TargetQu}"/>
+                    <Text text="{
+                                path:'oModelProyect>prlist',
+                                formatter: '.formatter.formatMonto2Dec'
+                            }"/>
+                    <Text text="{
+                                path: 'oModelProyect>descuentoManualPctDisplay',
+                                formatter: '.formatter.formatPct'
+                            }"/>
+
+                    <Text text="{
+                                path:'oModelProyect>pvNeto',
+                                formatter: '.formatter.formatMonto2Dec'
+                            }"/>
+                    <Text text="{ 
+                                path:'oModelProyect>totalpos',
+                                formatter: '.formatter.formatMonto2Dec'
+                            }"/>
+
+                    <Text text="{ 
+                                path:'oModelProyect>Peso',
+                                formatter: '.formatter.formatPesoKg'
+                            }"/>
+                    <Text text="{oModelProyect>UMVWeight}"/>
+                    <Text text="{oModelProyect>Bonus}"/>
+
+                    <Button icon="sap-icon://edit"
+                        type="Emphasized"
+                        press="_onPressEditDetail"
+                        visible="{= !${oModelProyect>isExtraFromSAP} }"/>
+                    <Button icon="sap-icon://delete"
+                        type="Attention"
+                        press="_onDeleteProduct"
+                        visible="{= !${oModelProyect>isExtraFromSAP} }"/>
+                </cells>
+            </ColumnListItem>
+        </items>
+
+    </Table>
+    </ScrollContainer>
+</core:FragmentDefinition>

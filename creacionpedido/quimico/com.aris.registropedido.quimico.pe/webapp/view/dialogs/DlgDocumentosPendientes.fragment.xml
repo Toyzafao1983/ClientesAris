@@ -1,0 +1,53 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core">
+    <Dialog
+        id="dlgDocumentosPendientes"
+        title="Documentos Pendientes"
+        contentWidth="40rem"
+        stretchOnPhone="true">
+        <VBox class="sapUiMediumMargin">
+            <Table
+                id="tblDocPendientes"
+                mode="SingleSelectLeft"
+                width="100%"
+                items="{
+                    path: 'oModelProyect>/aDocsPendientesRef'
+                }">
+                <columns>
+                    <Column hAlign="End"><Text text="Doc. Comercial"/></Column>
+                    <Column hAlign="End"><Text text="CL. Docum."/></Column>
+                    <Column hAlign="End"><Text text="Inicio"/></Column>
+                    <Column hAlign="End"><Text text="Fin"/></Column>
+                </columns>
+                <items>
+                    <ColumnListItem>
+                        <cells>
+                            <Text text="{oModelProyect>DocComercial}"/>
+                            <Text text="{oModelProyect>ClDocum}"/>
+                            <Text text="{oModelProyect>FechaInicio}"/>
+                            <Text text="{oModelProyect>FechaFin}"/>
+                        </cells>
+                    </ColumnListItem>
+                </items>
+            </Table>
+
+           <HBox justifyContent="Center" class="sapUiMediumMarginTop">
+                <Button
+                    text="Atrás"
+                    type="Transparent"
+                    class="sapUiTinyMarginEnd"
+                    press=".onDocPendientesBack"/>
+
+                <Button
+                    text="Continuar"
+                    type="Emphasized"
+                    class="sapUiTinyMarginEnd"
+                    press=".onDocPendientesContinuar"/>
+                <Button
+                    text="Cancelar"
+                    press=".onDocPendientesCancelar"/>
+            </HBox>
+        </VBox>
+    </Dialog>
+</core:FragmentDefinition>

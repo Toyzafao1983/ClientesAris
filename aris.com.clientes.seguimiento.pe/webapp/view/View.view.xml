@@ -1,0 +1,177 @@
+<mvc:View controllerName="aris.com.clientes.seguimiento.pe.controller.View"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns:core="sap.ui.core"
+    xmlns="sap.m"
+    xmlns:f="sap.f"
+    xmlns:fb="sap.ui.comp.filterbar"
+    xmlns:svm="sap.ui.comp.smartvariants"
+    xmlns:custom="http://schemas.sap.com/sapui5/extension/sap.ui.core.CustomData/1">
+
+        <f:DynamicPage headerExpanded="true">
+                <f:title>
+                    <f:DynamicPageTitle>
+                     <f:heading>
+                            <Title text="Bienvenido(a): {oModelUser>/welcomeText}" level="H4" />
+                        </f:heading>
+                        <f:actions>
+                            <Button text="{i18n>textHome}" press="_onbtnHome" type="Back" icon="sap-icon://home" tooltip="{i18n>tooltipbtnHome}" visible="true"/>
+                            <MenuButton text="{i18n>titleButtonLanguaje}">
+                                    <menu>
+                                        <Menu itemSelected="onMenuAction">
+                                            <MenuItem text="{i18n>titleButtonLanguajeEN}" press="onLanguageEng"/>
+                                            <MenuItem text="{i18n>titleButtonLanguajeES}" press="onLanguageEsp"/>
+                                        </Menu>
+                                    </menu>
+                                </MenuButton>
+
+                        </f:actions>
+                    </f:DynamicPageTitle>
+                </f:title>
+                <f:header>
+                    <f:DynamicPageHeader>
+                        <f:content>
+                        <VBox visible="{= !${ui>/filtersReady} }" class="sapUiSmallMargin">
+                            <BusyIndicator size="2rem"/>
+                        </VBox>
+                        <VBox visible="{ui>/filtersReady}" width="100%">
+                        <VBox>
+                            <fb:FilterBar id="idFilterBar" filterContainerWidth="10rem" reset="onReset" search="_onSearchFB" showFilterConfiguration="false"
+                                showRestoreButton="false" showClearOnFB="false" showGoOnFB="false" clear="_onClearComponent" useToolbar="false" >
+                                <fb:filterItems>
+                                
+                                    <fb:FilterItem name="A" label="{i18n>txtStartDate}">
+                                        <fb:control >
+                                            <DatePicker
+                                                id="dStartDate"
+                                                dateValue="{oModelProyect>/Main/filter/dStartDate}"
+                                                valueFormat="dd/MM/yyyy"
+                                                displayFormat="dd/MM/yyyy"
+                                                enabled="{oModelProyect>/Main/ui/bEnableClientFilters}"
+                                            />
+                                        </fb:control>
+                                    </fb:FilterItem>
+                                    
+                                    <fb:FilterItem name="B" label="{i18n>txtEndDate}" >
+                                        <fb:control>
+                                           <DatePicker
+                                                id="dEndDate"
+                                                dateValue="{oModelProyect>/Main/filter/dEndDate}"
+                                                valueFormat="dd/MM/yyyy"
+                                                displayFormat="dd/MM/yyyy"
+                                                enabled="{oModelProyect>/Main/ui/bEnableClientFilters}"
+                                            />
+                                        </fb:control>
+                                    </fb:FilterItem>
+
+                                    <fb:FilterItem name="C" label="{i18n>txtOrder}">
+                                        <fb:control>
+                                             <MultiInput
+                                                id="miDocumento"
+                                                enabled="{oModelProyect>/Main/ui/bEnableClientFilters}"
+                                                width="300px"
+                                                showClearIcon="true"
+                                                showSuggestion="true"
+                                                showValueHelp="true"
+                                                valueHelpRequest=".onOpenDocumentoDialog"
+                                                liveChange="onChangeDocumento"
+                                                tokenUpdate="ChangeMultiImput"
+                                                suggestionItems="{
+                                                    path: 'oModelData>/oFiltroDocumento'
+                                                }">
+
+                                                <suggestionItems>
+                                                    <core:Item key="{oModelData>SalesDocument}" text="{oModelData>Display}" />
+                                                </suggestionItems>
+                                            </MultiInput>
+                                        </fb:control>
+                                    </fb:FilterItem>
+
+                                    
+                                    <fb:FilterItem
+                                            name="D"
+                                            label="{i18n>txtCustomer}"
+                                            visible="{= ${oModelUser>/bRol}==='SUPERVISOR' ? true : ${oModelUser>/bRol}==='VENDEDOR' ? true : ((${oModelUser>/bRol}==='CLIENTES' || ${oModelUser>/bRol}==='CLIENTE') &amp;&amp; ${oModelUser>/bUniNeg}==='QUIMICOS') ? true : false }"
+                                        >
+                                        <fb:control>
+                                             <MultiInput
+                                                id="miCliente"
+                                                enabled="{oModelProyect>/Main/ui/bEnableClientFilters}"
+                                                width="400px"
+                                                showClearIcon="true"
+                                                showSuggestion="true"
+                                                showValueHelp="true"
+                                                suggest="onSuggestClient"
+                                                valueHelpRequest=".onOpenClienteDialog"
+                                                suggestionItems="{ path: 'oModelProyect>/oClienteFilter' }"
+                                                tokenUpdate="ChangeMultiImput">
+
+                                                <suggestionItems>
+                                                    <core:Item
+                                                        key="{oModelProyect>Customer}"
+                                                        text="{= ${oModelProyect>Customer} + ' - ' + ${oModelProyect>CustomerFullName} }" />
+                                                </suggestionItems>
+                                            </MultiInput>
+                                        </fb:control>
+                                    </fb:FilterItem>
+
+                                    <fb:FilterItem 
+                                        name="E" 
+                                        label="{i18n>txtSeller}" 
+                                        visible="{= ${oModelUser>/bRol}==='SUPERVISOR' || ${oModelUser>/bRol}==='VENDEDOR'}">
+                                        <fb:control>
+                                            <MultiComboBox
+                                                id="mcbVendedor"
+                                                enabled="{= ${oModelUser>/bRol}==='SUPERVISOR'
+                                                    ? true
+                                                    : ${oModelUser>/bRol}==='VENDEDOR'
+                                                        ? ${oModelUser>/bUniNeg}!=='QUIMICOS'
+                                                        : false }"
+                                                selectedKeys="{oModelProyect>/Main/filter/cbVendor}"
+                                                items="{ path: 'oModelData>/oVendedores' }"
+                                                selectionChange="onVendorSelectionChange">
+                                                <core:Item key="{oModelData>VendorCode}" text="{oModelData>Display}" />
+                                            </MultiComboBox>
+                                        </fb:control>
+                                    </fb:FilterItem>
+                                    <fb:FilterItem id="mcbEstadosF" name="F" label="{i18n>txtState}" visible="false">
+                                        <fb:control>
+                                              <MultiComboBox
+                                                id="mcbEstados"
+                                                width="300px"
+                                                enabled="{oModelProyect>/Main/ui/bEnableClientFilters}"
+                                                selectionChange="onEstadoSelectionChange">
+                                                <core:Item key="Pend. Aprobación" text="{i18n>estadoPendAprobacion}" />
+                                                <core:Item key="Aprobado" text="{i18n>estadoAprobado}" />
+                                                <core:Item key="En preparación" text="{i18n>estadoEnPreparacion}" />
+                                                <core:Item key="Despacho parcial" text="{i18n>estadoDespachoParcial}" />
+                                                <core:Item key="Facturado" text="{i18n>estadoFacturacion}" />
+                                                <core:Item key="Finalizado" text="{i18n>estadoFinalizado}" />
+                                                 <core:Item key="Rechazado" text="{i18n>estadoRechazado}" />
+                                                <core:Item key="" text="{i18n>estadoVacio}" />
+                                            </MultiComboBox>
+
+                                        </fb:control>
+                                    </fb:FilterItem>
+
+                                </fb:filterItems>
+                            </fb:FilterBar>
+                            </VBox>
+                            </VBox>
+                            <HBox>
+                                <Button text="{i18n>textFind}" press="_onPressExecute" icon="sap-icon://detail-view" tooltip="{i18n>tooltipbtnFind}" enabled="{oModelProyect>/Main/ui/bEnableExecuteSearch}"/>
+                                <Button text="{i18n>textClear}" press="_onClearComponent" icon="sap-icon://clear-filter" tooltip="{i18n>tooltipbtnClear}"/>
+                            </HBox>
+                        </f:content>
+                    </f:DynamicPageHeader>
+                </f:header>
+                <f:content>
+                    <VBox >
+                        <VBox >
+                         <VBox id="vbTableMain">
+                        </VBox>
+                        </VBox>
+                    </VBox>
+                </f:content>
+            </f:DynamicPage>
+   
+</mvc:View>

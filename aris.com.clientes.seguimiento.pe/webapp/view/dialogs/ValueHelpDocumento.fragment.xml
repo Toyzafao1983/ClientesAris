@@ -1,0 +1,27 @@
+<core:FragmentDefinition 
+xmlns:core="sap.ui.core" 
+xmlns="sap.m" 
+xmlns:fb="sap.ui.comp.filterbar" 
+xmlns:l="sap.ui.layout"  
+xmlns:vh="sap.ui.comp.valuehelpdialog"
+xmlns:custom="http://schemas.sap.com/sapui5/extension/sap.ui.core.CustomData/1">
+	
+   <SelectDialog
+        id="FilterDocumentoDialog"
+        title="Seleccionar Documento"
+        multiSelect="true"
+        noDataText="Sin resultados"
+        liveChange=".onDocumentoLiveChange"
+        search=".onDocumentoSearch"
+        confirm=".onDialogDocumentoConfirm"
+        cancel=".onDialogDocumentoCancel"
+        items="{ path: 'oModelData>/oFiltroDocumento' }">
+
+        <StandardListItem
+            icon="sap-icon://document"
+            title="{oModelData>SalesDocument}"
+            description="{oModelData>Display}"
+            type="Active"/>
+    </SelectDialog>
+
+</core:FragmentDefinition>

@@ -1,0 +1,176 @@
+<core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core" xmlns:l="sap.ui.layout"
+    xmlns:custom="http://schemas.sap.com/sapui5/extension/sap.ui.core.CustomData/1" xmlns:f="sap.ui.layout.form"
+    inset="false" sticky="ColumnHeaders" autoPopinMode="true" popinLayout="GridSmall">
+
+    <Table id="tbProductos1" items="{oModelProyect>/oMaterialUI}" growingThreshold="20"
+        mode="SingleSelect" selectionChange="_onPressSelectionChange">
+
+        <headerToolbar>
+            <Toolbar>
+                <ToolbarSpacer/>
+                <Button id="btnAgregarDetail" text="{i18n>textbtnAgregar}" type="Emphasized" icon="sap-icon://add" press="_onPressAddProduct"/>
+                <Button
+                    id="btnCalcBolsas"
+                    text="{i18n>txtCalcBolsas}"
+                    type="Default"
+                    icon="sap-icon://loan"
+                    press=".onCalcularBolsas"
+                    visible="{= !${oModelProyect>/isExternalZPEFDetailLocked} }"
+                    enabled="{
+                        = ${oModelProyect>/inputForm/grupoMaterial} === '01'
+                        || ${oModelProyect>/inputForm/grupoMaterial} === '02'
+                    }"/>
+            </Toolbar>
+        </headerToolbar>
+
+        <columns>
+            <Column width="5rem" hAlign="End">
+                <header><Text text="{i18n>txtTabledPosition}"/></header>
+            </Column>
+            <Column width="10rem" hAlign="End">
+                <header><Text text="{i18n>txtTabledMaterial}"/></header>
+            </Column>
+            <Column width="7rem" hAlign="End">
+                <header><Text text="{i18n>txtTabledAmount}"/></header>
+            </Column>
+            <Column width="5rem" hAlign="Center">
+                <header><Text text="{i18n>txtTabledUMV}"/></header>
+            </Column>
+            <Column width="5rem" visible="{=${oModelcom.aris.registropedido.textiles.pe>/DataGeneral/sStatus}==='C'}">
+                <header><Text text="{i18n>txtTabedPrice}"/></header>
+            </Column>
+            <Column width="6rem" hAlign="Center" visible="{=${oModelcom.aris.registropedido.textiles.pe>/DataGeneral/sStatus}==='C'}">
+                <header><Text text="{i18n>txtTabledSubTotal}"/></header>
+            </Column>
+            <Column width="6rem" hAlign="End" visible="{=${oModelcom.aris.registropedido.textiles.pe>/DataGeneral/sStatus}==='C'}">
+                <header><Text text="{i18n>txtTabledDiscount}"/></header>
+            </Column>
+            <Column width="7rem" hAlign="End">
+                <header><Text text="{i18n>txtTabledTotal}"/></header>
+            </Column>
+            <Column width="5rem" hAlign="Center">
+                <header><Text text="{i18n>txtTabledEdit}"/></header>
+            </Column>
+            <Column width="5rem" hAlign="Center">
+                <header><Text text="{i18n>txtTabledEliminate}"/></header>
+            </Column>
+        </columns>
+
+        <items>
+            <ColumnListItem type="Inactive">
+                <cells>
+                    <Text text="{oModelProyect>ItmNumber}"/>
+                    <Text text="{oModelProyect>Material}"/>
+                    <Input value="{
+                            path: 'oModelProyect>cantidad',
+                            formatter: '.formatter.formatCantidad'
+                        }"
+                        editable="false" textAlign="End"/>
+
+                   <Text text="{
+                        parts: [
+                            { path: 'oModelProyect>UMV' },
+                            { path: 'oModelProyect>/inputForm/grupoMaterial' },
+                            { path: 'oModelProyect>Brand' }
+                        ],
+                        formatter: '.formatter.formatUMVTextil'
+                    }"/>
+                    <Text text="{
+                            path: 'oModelProyect>precioUnit',
+                            formatter: '.formatter.formatMonto2Dec'
+                        }"/>
+                    <Text text="{
+                            path: 'oModelProyect>precioBase',
+                            formatter: '.formatter.formatMonto2Dec'
+                        }"/>
+                    <Text text="{
+                            path: 'oModelProyect>descuentos',
+                            formatter: '.formatter.formatMonto2Dec'
+                        }"/>
+                    <Text text="{
+                            path: 'oModelProyect>importeTabla',
+                            formatter: '.formatter.formatMonto2Dec'
+                        }"/>
+                    <VBox >  
+                    <Button icon="sap-icon://edit" type="Emphasized" press="_onPressEditDetail"  visible="{= !${oModelProyect>esBolsa} }"/>
+                    <Button icon="sap-icon://edit" type="Emphasized" press=".onEditarBolsa"  visible="{= ${oModelProyect>esBolsa} }"/>
+                    </VBox>  
+                    <Button icon="sap-icon://delete" type="Reject" press="_onDeleteProduct"/>
+                </cells>
+            </ColumnListItem>
+        </items>
+    </Table>
+    <VBox class="sapUiSmallMarginTop table-footer">
+        <HBox class="footer-row" alignItems="Start" justifyContent="SpaceBetween" width="100%">
+
+                <VBox width="58%" class="sapUiSmallMarginEnd">
+                    <TextArea
+                        id="taMensajeFleteExteriorZPEF"
+                        value="{oModelProyect>/inputForm/mensajeFleteZPEF}"
+                        visible="{= ${oModelProyect>/inputForm/showMensajeFleteZPEF} === true }"
+                        editable="false"
+                        rows="3"
+                        width="100%"/>
+                </VBox>
+            <HBox class="footer-col footer-col-left" alignItems="Start">
+                <VBox class="labels">
+                    <Label text="N/C" class="footer-label"/>
+                    <Label text="Anticipo" class="footer-label"/>
+                </VBox>
+
+                <VBox class="inputs">
+                    <Input value="{
+                            path: 'oModelData>/NotaCredito/NotaCredito',
+                            formatter: '.formatter.formatMonto2Dec'
+                        }"
+                        editable="false"
+                        class="footer-input"/>
+
+                    <Input value="{
+                            path: 'oModelData>/Anticipo/OutstandingAmount',
+                            formatter: '.formatter.formatMonto2Dec'
+                        }"
+                        editable="false"
+                        class="footer-input"/>
+                </VBox>
+            </HBox>
+            <HBox class="footer-col" alignItems="Start">
+                <VBox class="labels">
+                    <Label text="{i18n>txtTabledSubTotal}" class="footer-label"/>
+                    <Label text="{i18n>txtTableEmba}" class="footer-label"/>
+                    <Label text="{i18n>txtTableIGV}" class="footer-label"/>
+                    <Label text="{i18n>titleFooterColProducto}" class="footer-label"/>
+                </VBox>
+                <VBox class="inputs">
+                    <Input value="{
+                            path: 'oModelProyect>/oDatCalculo/subtotalGeneral',
+                            formatter: '.formatter.formatMonto2Dec'
+                        }"
+                        editable="false"
+                        class="footer-input"/>
+
+                    <Input value="{
+                            path: 'oModelProyect>/oDatCalculo/embalaje',
+                            formatter: '.formatter.formatMonto2Dec'
+                        }"
+                        editable="false"
+                        class="footer-input"/>
+
+                    <Input value="{
+                            path: 'oModelProyect>/oDatCalculo/totalImpuesto',
+                            formatter: '.formatter.formatMonto2Dec'
+                        }"
+                        editable="false"
+                        class="footer-input"/>
+                    <Input value="{
+                            path: 'oModelProyect>/oDatCalculo/totalGeneral',
+                            formatter: '.formatter.formatMonto2Dec'
+                        }"
+                        editable="false"
+                        class="footer-input"/>
+                </VBox>
+            </HBox>
+        </HBox>
+    </VBox>
+
+</core:FragmentDefinition>

@@ -1,0 +1,49 @@
+<core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core">
+    <Dialog
+        id="dlgDetallePiezas"
+        title="Detalle de Piezas"
+        contentWidth="90rem"
+        contentHeight="20rem"
+        resizable="true"
+        draggable="true">
+
+        <content>
+            <Table
+                id="tbDetallePiezas"
+                items="{oModelProyect>/Piezas}">
+                <columns>
+                    <Column hAlign="End"><Text text="Pieza"/></Column>
+                    <Column hAlign="End"><Text text="Longitud"/></Column>
+                    <Column hAlign="End"><Text text="Calidad"/></Column>
+                    <Column hAlign="Left"><Text text="Procedencia"/></Column>
+                    <Column hAlign="End"><Text text="Tipo"/></Column>
+                    <Column hAlign="End"><Text text="Fecha Ingreso"/></Column>
+                    <Column hAlign="End"><Text text="Orden Fabricación"/></Column>
+                    <Column hAlign="End"><Text text="Cliente"/></Column>
+                </columns>
+                <items>
+                    <ColumnListItem>
+                        <cells>
+                            <Text text="{oModelProyect>Charg}" />              
+                            <Text text="{oModelProyect>Longitud}" />            
+                            <Text text="{oModelProyect>Calidad}" />             
+                            <Text text="{oModelProyect>Procedencia}" />         
+                            <Text text="{oModelProyect>Tipo}" />                
+                            <Text text="{oModelProyect>FechaIngreso}" />       
+                            <Text text="{oModelProyect>OrdenFabric}" />         
+                            <Text text="{oModelProyect>Cliente}" />             
+                        </cells>
+                    </ColumnListItem>
+                </items>
+            </Table>
+        </content>
+
+        <buttons>
+            <Button
+                text="Regresar"
+                icon="sap-icon://nav-back"
+                type="Emphasized"
+                press=".onPressBackToMaterials"/>
+        </buttons>
+    </Dialog>
+</core:FragmentDefinition>

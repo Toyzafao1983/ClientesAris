@@ -1,0 +1,146 @@
+<mvc:View controllerName="com.aris.consultaestadocuenta.pe.controller.Main"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:f="sap.f"
+    xmlns:core="sap.ui.core"
+    xmlns:fb="sap.ui.comp.filterbar"
+    xmlns:svm="sap.ui.comp.smartvariants"
+    xmlns:custom="http://schemas.sap.com/sapui5/extension/sap.ui.core.CustomData/1"
+    height="100%">
+    <Shell appWidthLimited="false">
+        <Page id="page" showHeader="false" enableScrolling="true" >
+            <!-- <VBox
+                justifyContent="Center"
+                alignItems="Center"
+                height="100%"
+                visible="{= !${oModelUser>/bShowMain} }">
+                <BusyIndicator size="3rem" />
+                <Text text="Cargando información..." />
+            </VBox>
+            <VBox visible="{oModelUser>/bShowMain}"> -->
+         <ObjectHeader
+                title="{= 'Bienvenido(a): ' + ${oModelUser>/bUserName}}"
+                condensed="true"
+                />
+                    <f:DynamicPage headerExpanded="true">
+                        <f:header>
+                            <f:DynamicPageHeader pinnable="false">
+                                <f:content>
+                                    <fb:FilterBar filterContainerWidth="15rem" reset="onReset" search="_onPressExecute" showFilterConfiguration="true"
+                                        showRestoreButton="false" showClearOnFB="true" clear="onClearFilters" useToolbar="false" visible="{= !${oModelUser>/bIsCliente} }">
+                                        <fb:filterItems>
+                                           <fb:FilterItem name="A" label="{i18n>lblVendedores}" visible="{= !${oModelUser>/bDisableSellerFilter} }" >
+                                            <fb:control> 
+                                                <MultiInput
+                                                    id="multiInputSeller"
+                                                    placeholder="Ingrese código o abra búsqueda"
+                                                    showValueHelp="true"      
+                                                    valueHelpRequest="FilterSelling"
+                                                    suggest="onSuggestSeller"
+                                                    tokenUpdate="onTokenUpdateSeller"
+                                                    showSuggestion="true"
+                                                    suggestionItems="{
+                                                        path: 'oModelProyect>/oSellerUnique'
+                                                    }">
+                                                    <suggestionItems>
+                                                        <core:Item
+                                                        key="{oModelProyect>kunn2}"
+                                                        text="{= ${oModelProyect>kunn2} + ' - ' + ${oModelProyect>Seller} }" />
+                                                    </suggestionItems>
+                                                </MultiInput>
+                                            </fb:control>
+                                        </fb:FilterItem>
+                                            
+                                            <fb:FilterItem name="B" label="{i18n>lblCodCliente}">
+                                            <fb:control>
+                                                <MultiInput
+                                                    id="multiInputCodClient"
+                                                    placeholder="Ingrese código o abra búsqueda"
+                                                    showValueHelp="true"
+                                                    valueHelpRequest="FilterCodClient"
+                                                    showSuggestion="true"
+                                                    suggest="onSuggestClient"
+                                                    tokenUpdate="onTokenUpdateClient"
+                                                    suggestionItems="{
+                                                        path: 'oModelProyect>/oClienteFilter'
+                                                    }">
+                                                    <suggestionItems>
+                                                        <core:Item
+                                                        key="{oModelProyect>Customer}"
+                                                        text="{= ${oModelProyect>Customer} + ' - ' + ${oModelProyect>CustomerFullName} }" />
+                                                    </suggestionItems>
+                                                </MultiInput>
+                                            </fb:control>
+                                        </fb:FilterItem>
+                                            
+                                           <fb:FilterItem name="D" label="{i18n>lblRazonSocial}">
+                                                <fb:control>
+                                                    <MultiInput
+                                                        id="multiInputRazonSocial"
+                                                        placeholder="Seleccionar razón social"
+                                                        showValueHelp="true"
+                                                        valueHelpRequest="FilterRazonSocial"
+                                                        showSuggestion="true"
+                                                        suggest="onSuggestRazonSocial"
+                                                        tokenUpdate="onTokenUpdateRazonSocial"
+                                                        suggestionItems="{
+                                                            path: 'oModelProyect>/oClienteFilter'
+                                                        }">
+                                                        <suggestionItems>
+                                                            <core:Item
+                                                            key="{oModelProyect>Customer}"
+                                                            text="{oModelProyect>CustomerFullName}" />
+                                                        </suggestionItems>
+                                                    </MultiInput>
+                                                </fb:control>
+                                            </fb:FilterItem>
+
+                                            <fb:FilterItem name="E" label="{i18n>lblDocumento}">
+                                                <fb:control>
+                                                    <MultiInput
+                                                        id="multiInputDocument"
+                                                        placeholder="Seleccionar RUC"
+                                                        showValueHelp="true"
+                                                        valueHelpRequest="FilterDocument"
+                                                        showSuggestion="true"
+                                                        suggest="onSuggestDocument"
+                                                        tokenUpdate="onTokenUpdateDocument"
+                                                        suggestionItems="{
+                                                            path: 'oModelProyect>/oClienteFilter'
+                                                        }">
+                                                        <suggestionItems>
+                                                            <core:Item
+                                                            key="{path:'oModelProyect>', formatter: '.formatter.getFirstTaxNumber'}"
+                                                            text="{path:'oModelProyect>', formatter: '.formatter.getFirstTaxNumber'}" />
+                                                        </suggestionItems>
+                                                    </MultiInput>
+                                                </fb:control>
+                                            </fb:FilterItem>
+                                        </fb:filterItems>
+                                    </fb:FilterBar>
+                                </f:content>
+                            </f:DynamicPageHeader>
+                        </f:header>
+                            <f:content>
+
+                                <VBox fitContainer="true">
+                                    <VBox
+                                        justifyContent="Center"
+                                        alignItems="Center"
+                                        height="100%"
+                                        visible="{= !${oModelUser>/bShowMain} }">
+                                        <BusyIndicator size="3rem" />
+                                        <Text text="Cargando información..." />
+                                    </VBox>
+                                    <VBox
+                                        visible="{oModelUser>/bShowMain}">
+                                        <VBox id="vbTableMain"></VBox>
+                                    </VBox>
+
+                                </VBox>
+                            </f:content>
+                    </f:DynamicPage>
+                    <!-- </VBox> -->
+                </Page>
+            </Shell>
+        </mvc:View>

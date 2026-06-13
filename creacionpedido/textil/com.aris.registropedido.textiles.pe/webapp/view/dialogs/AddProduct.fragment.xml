@@ -1,0 +1,23 @@
+<core:FragmentDefinition xmlns:core="sap.ui.core" xmlns="sap.m" xmlns:fb="sap.ui.comp.filterbar" xmlns:l="sap.ui.layout"
+	xmlns:custom="http://schemas.sap.com/sapui5/extension/sap.ui.core.CustomData/1" xmlns:u="sap.ui.unified">
+	<Dialog title="{i18n>titleAddManual}" contentHeight="auto" contentWidth="500px" afterOpen="_afterOpenAddPedido">
+        <content>
+            <HBox width="auto" class="sapUiSmallMargin" wrap="Wrap" justifyContent="SpaceBetween">
+                <Button text="{i18n>textbtnManual}" type="Default" icon="sap-icon://add-document" press="_onPressAddManual" 
+                    />
+                <Button text="{i18n>textbtnEan}" type="Default" icon="sap-icon://add" press="_onPressAddEan" 
+                    />
+                <Button text="{i18n>textbtnIngMasivo}" type="Accept" icon="sap-icon://excel-attachment" press="_onPressLoadMasive" 
+                    visible="{=${oModelcom.aris.registropedido.textiles.pe>/DataGeneral/sStatus}==='M'?false:true}"/>
+            </HBox>
+            <HBox width="auto" class="sapUiSmallMargin" wrap="Wrap" justifyContent="Center">
+                <u:FileUploader id="fuImpRespaldo" name="myFileUpload2" icon="sap-icon://upload" change="_onImportPressRespaldo" uploadUrl="upload/" sameFilenameAllowed="true"
+                    buttonOnly="true" fileType="Xlsx,Xls" buttonText="{i18n>textbtnImpRespaldo}" tooltip="{i18n>toolUpload}" style="Accept">
+                </u:FileUploader>
+            </HBox>
+        </content>
+		<buttons>
+			<Button text="{i18n>returnText}" press="_onPressClose" custom:custom="custom" type="Default"/>
+		</buttons>
+	</Dialog>
+</core:FragmentDefinition>

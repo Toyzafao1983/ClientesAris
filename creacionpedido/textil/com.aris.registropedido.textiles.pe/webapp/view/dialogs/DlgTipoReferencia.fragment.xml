@@ -1,0 +1,46 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core">
+    <Dialog
+        id="dlgTipoReferencia"
+        title="Tipo de documento de referencia"
+        contentWidth="25rem"
+        stretchOnPhone="true">
+        <VBox class="sapUiMediumMargin">
+            <Text text="Seleccione el tipo de documento de referencia" />
+            <RadioButtonGroup id="rbgTipoReferencia" columns="1">
+                <buttons>
+                    <RadioButton text="Cotización">
+                        <customData>
+                            <core:CustomData key="key" value="ZCNA"/>
+                        </customData>
+                    </RadioButton>
+                    <RadioButton text="Contrato">
+                        <customData>
+                            <core:CustomData key="key" value="ZACN"/>
+                        </customData>
+                    </RadioButton>
+                    <RadioButton text="Separación">
+                        <customData>
+                            <core:CustomData key="key" value="ZPSE"/>
+                        </customData>
+                    </RadioButton>
+                </buttons>
+            </RadioButtonGroup>
+        </VBox>
+        <customData>
+            <!-- guardamos keys en los botones -->
+        </customData>
+        <beginButton>
+            <Button
+                text="Continuar"
+                type="Emphasized"
+                press=".onTipoReferenciaContinuar" />
+        </beginButton>
+        <endButton>
+            <Button
+                text="Cancelar"
+                press=".onTipoReferenciaCancelar" />
+        </endButton>
+    </Dialog>
+</core:FragmentDefinition>

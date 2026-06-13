@@ -1,0 +1,131 @@
+    <core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core" xmlns:l="sap.ui.layout" xmlns:f="sap.ui.layout.form">
+        <VBox fitContainer="true" width="100%">
+        <!-- Toolbar global del fragment -->
+        <Toolbar>
+            <ToolbarSpacer/>
+            <Button
+                text="{i18n>ExportExcel}"
+                press="onPressExportarExcel"
+                type="Accept"
+                icon="sap-icon://excel-attachment"
+                tooltip="{i18n>ExportExcel}" />
+        </Toolbar>
+        <IconTabBar
+                        id="idIconTabBarCerCli"
+                        expanded="{device>/isNoPhone}"
+                        class="sapUiResponsiveContentPadding" >
+                            <items >
+                                        <IconTabFilter icon="sap-icon://drop-down-list" 
+                                        key="info" 
+                                        text="{i18n>titleColTabCerCliListView}" 
+                                        design="Horizontal" >
+                                            <Table items="{oModelProyect>/oReporteCeraCli}"  mode="None" growingThreshold="20">
+                                            <columns>
+                                                
+                                                <Column width="auto" hAlign="Center" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false">
+                                                    <header>
+                                                        <Text text="{i18n>titleColTabCerCliCode}" width="auto" />
+                                                    </header>
+                                                </Column>
+                                                <Column width="auto" hAlign="Center" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false">
+                                                    <header>
+                                                        <Text text="{i18n>titleColTabCerClcbDescMaterial}" width="auto" />
+                                                    </header>
+                                                </Column>
+                                                <Column width="auto" hAlign="Center" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false">
+                                                    <header>
+                                                        <Text text="{i18n>titleColTabCerCliUM}" width="auto" />
+                                                    </header>
+                                                </Column>
+                                                <Column width="auto" hAlign="Center" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false">
+                                                    <header>
+                                                        <Text text="{i18n>titleColTabCerCliStockM2}" width="auto" />
+                                                    </header>
+                                                </Column>
+                                                <Column
+                                                    visible="{= ${oModelProyect>/Main/filter/iTipoIndex} !== 1 }"
+                                                    width="auto" hAlign="Center" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline">
+                                                    <header>
+                                                        <Text text="{i18n>titleColTabCerCliPallets}" />
+                                                    </header>
+                                                 </Column>
+                                                <Column
+                                                    visible="{= ${oModelProyect>/Main/filter/iTipoIndex} !== 0 }"
+                                                    width="auto" hAlign="Center" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline">
+                                                    <header>
+                                                        <Text text="{i18n>titleColTabCerCliBoxes}" />
+                                                    </header>
+                                                </Column>
+                                                
+                                            </columns>
+                                        <items>
+                                                <ColumnListItem type="Inactive">
+                                                    <cells>
+                                                        <Text text="{path:'oModelProyect>Matnr'}"/>
+                                                        <Text text="{path:'oModelProyect>Descripcion'}"/>
+                                                        <Text text="{path:'oModelProyect>Um'}"/>
+                                                        <Text text="{path:'oModelProyect>StockFisicoFmt'}"/>
+                                                        <Text text="{oModelProyect>PalletsFmt}" />
+                                                        <Text text="{oModelProyect>SaldosFmt}" />
+
+                                                    </cells>
+                                                </ColumnListItem>
+                                            </items>
+                                        
+                                        </Table>
+                                        </IconTabFilter>
+                                        <IconTabFilter
+                                            icon="sap-icon://image-viewer"
+                                            key="attachments"
+                                            text="{i18n>titleColTabCerCliImageView}" 
+                                            design="Horizontal">
+                                            <l:Grid
+                                                defaultSpan="L4 M6 S12"
+                                                width="100%"
+                                                class="sapUiSmallMarginTop"
+                                                content="{oModelProyect>/oReporteCeraCli}">
+                                                <l:content>
+                                                    <Panel
+                                                        class="sapUiResponsiveMargin"
+                                                        width="auto">
+                                                        <headerToolbar>
+                                                            <Toolbar>
+                                                                <Title text="{path:'oModelProyect>Descripcion'}" wrapping="true" />
+                                                            </Toolbar>
+                                                        </headerToolbar>
+                                                        <f:SimpleForm editable="false" layout="ResponsiveGridLayout">
+                                                            <HBox justifyContent="SpaceBetween">
+                                                            <VBox >
+                                                            <Label text="{i18n>titleColTabCerCliCode}" />
+                                                            <Text text="{oModelProyect>Matnr}" wrapping="false" />
+
+                                                            <Label text="{i18n>titleColTabCerCliStockM2}" />
+                                                            <Text text="{oModelProyect>StockFisicoFmt}" wrapping="false" />
+
+                                                            <Label text="{i18n>titleColTabCerCliPallets}" />
+                                                            <Text text="{oModelProyect>PalletsFmt}" wrapping="false" />
+
+                                                            <Label text="{i18n>titleColTabCerCliBoxes}" />
+                                                            <Text text="{oModelProyect>SaldosFmt}" wrapping="false" />
+                                                            </VBox>
+                                                            <VBox alignContent="End" >
+                                                                
+                                                                <Image src="{path: 'oModelProyect>Matnr', formatter: '.formatter.absImgPath'}"
+                                                                    width="100px"
+                                                                    height="100px"
+                                                                    press="onImagePress" >
+                                                                    <customData>
+                                                                        <core:CustomData key="titulo" value="{oModelProyect>Descripcion}" />
+                                                                    </customData>
+                                                                </Image>
+                                                            </VBox>
+                                                            </HBox>
+                                                        </f:SimpleForm>
+                                                    </Panel>
+                                                </l:content>
+                                            </l:Grid>
+                                        </IconTabFilter>
+                            </items>
+                        </IconTabBar>
+                        </VBox>
+    </core:FragmentDefinition>

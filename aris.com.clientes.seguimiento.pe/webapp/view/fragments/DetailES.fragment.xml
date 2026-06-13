@@ -1,0 +1,128 @@
+<core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core" xmlns:l="sap.ui.layout"  
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns:n="sap.n"
+    xmlns:f="sap.f"
+    xmlns:microchart="sap.suite.ui.microchart"
+    xmlns:si="sap.suite.ui.commons.statusindicator"
+    xmlns:co="sap.suite.ui.commons"
+    xmlns:svm="sap.ui.comp.smartvariants">
+
+     <VBox alignItems="Center">
+                <HBox alignItems="Center" justifyContent="Center" class="sapUiSmallMargin">
+                        <!-- Paso 1 -->
+                        <VBox alignItems="Center">
+                                <core:Icon id="iStateES1" src="sap-icon://accounting-document-verification" size="3rem" color="black"/>
+                                <Label text="Pendiente de Aprobación" design="Bold"/>
+                        </VBox>
+                        <!-- Flecha -->
+                        <core:Icon src="sap-icon://less" size="2rem" color="gray"/>
+                        <core:Icon src="sap-icon://process" size="2rem" color="gray"/>
+                        <core:Icon src="sap-icon://less" size="2rem" color="gray"/>
+                        <!-- Paso 2 -->
+                        <VBox alignItems="Center">
+                                <core:Icon id="iStateES2" src="sap-icon://decline" size="3rem" color="black"/>
+                                <Label text="Rechazado" design="Bold"/>
+                        </VBox>
+                        
+                </HBox>
+                 <ScrollContainer width="100%" height="50%">
+                        <Table id="vdTable12" items="{oModelProyect>/oDetalle}"  mode="None" growingThreshold="20" headerText="Detalle de Pedido" popinLayout="GridSmall"  class="sapUiSmallMargin" >
+                                <columns>
+                                <Column width="80px" hAlign="Center" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false">
+                                        <header>
+                                        <Text text="{i18n>titleDetNumPosition}" width="auto" />
+                                        </header>
+                                </Column>
+                                <Column width="100px" hAlign="Center" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false">
+                                        <header>
+                                        <Text text="{i18n>titleDetMaterials}" width="auto" />
+                                        </header>
+                                </Column>
+                                <Column width="120px" hAlign="Center" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false">
+                                        <header>
+                                        <Text text="{i18n>titleDetDescription}" width="auto" />
+                                        </header>
+                                </Column>
+                                <Column width="80px" hAlign="Center" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false">
+                                        <header>
+                                        <Text text="{i18n>titleDetUM}" width="auto" />
+                                        </header>
+                                        <footer>
+                                                <Text text="Total" width="auto" />
+                                        </footer>
+                                </Column>
+                                <Column width="100px" hAlign="Center" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false">
+                                        <header>
+                                        <Text text="{i18n>titleDetQuantityOrdered}" width="auto" />
+                                        </header>
+                                        <footer>
+                                                <Text text="{oModelProyect>/oValoresVGECantPedi}" width="auto" />
+                                        </footer>
+                                </Column>
+                                <Column width="100px" hAlign="Center" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false">
+                                        <header>
+                                        <Text text="{i18n>titleDetQuantityShipped}" width="auto" />
+                                        </header>
+                                        <footer>
+                                                <Text text="{oModelProyect>/oValoresVGECantDesp}" width="auto" />
+                                        </footer>
+                                </Column>
+                                <Column width="100px" hAlign="Center" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false">
+                                        <header>
+                                        <Text text="{i18n>titleDetQuantityAmount}" width="auto" />
+                                        </header>
+                                        <footer>
+                                                <Text text="{oModelProyect>/oValoresVGECantPend}" width="auto" />
+                                        </footer>
+                                </Column>
+                                <Column width="50px" hAlign="Center" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false"  visible="{= ${oModelUser>/bDetCeramicos}}" >
+                                        <header>
+                                        <Text text="{i18n>titleDetNroPallets}" width="auto" />
+                                        </header>
+                                        <footer>
+                                                <Text text="{oModelProyect>/oValoresVGECantPaletas}" width="auto" />
+                                        </footer>
+                                </Column>
+                                <Column width="50px" hAlign="Center" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false"  visible="{= ${oModelUser>/bDetCeramicos}}" >
+                                        <header>
+                                        <Text text="{i18n>titleDetNroBox}" width="auto" />
+                                        </header>
+                                        <footer>
+                                                <Text text="{oModelProyect>/oValoresVGECantCaja}" width="auto" />
+                                        </footer>
+                                </Column>
+                                <Column width="80px" hAlign="Center" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false"  visible="{= ${oModelUser>/bDetCeramicos}}" >
+                                        <header>
+                                        <Text text="{i18n>titleDetBulkType}" width="auto" />
+                                        </header>
+                                        
+                                        
+                                </Column>
+                                <Column width="80px" hAlign="Center" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false">
+                                        <header>
+                                        <Text text="{i18n>titleDetStatusPosition}" width="auto" />
+                                        </header>
+                                </Column>
+                                
+                                </columns>
+                                <items>
+                                        <ColumnListItem type="Inactive">
+                                                <cells>
+                                                <Text text="{path:'oModelProyect>SalesDocumentItem'}" />
+                                                <Text text="{path:'oModelProyect>Material'}"/>
+                                                <Text text="{path:'oModelProyect>SalesDocumentItemText'}"/>
+                                                <Text text="{path:'oModelProyect>OrderQuantityUnit'}"/>
+                                                <Text text="{path:'oModelProyect>OrderQuantity'}"/>
+                                                <Text text="{path:'oModelProyect>TotalDelivered'}"/>
+                                                <Text text="{path:'oModelProyect>PendingQuantity'}"/>
+                                                <Text text="{path:'oModelProyect>txt9'}"/>
+                                                <Text text="{path:'oModelProyect>txt10'}"/>
+                                                <Text text="{path:'oModelProyect>txt11'}"/>
+                                                <Text text="{path:'oModelProyect>txt12'}"/>
+                                                </cells>
+                                        </ColumnListItem>
+                                </items>
+                        </Table>
+                         </ScrollContainer>   
+           </VBox>
+</core:FragmentDefinition>

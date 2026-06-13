@@ -1,0 +1,158 @@
+{
+  "_version": "1.76.0",
+  "sap.app": {
+    "id": "aris.com.clientes.controlstock.pe",
+    "type": "application",
+    "i18n": {
+          "bundleUrl": "i18n/i18n.properties",
+          "supportedLocales": [
+              "",
+              "esp",
+              "ing"
+          ]
+      },
+    "applicationVersion": {
+      "version": "0.0.1"
+    },
+    "title": "{{appTitle}}",
+    "description": "{{appDescription}}",
+    "resources": "resources.json",
+    "sourceTemplate": {
+      "id": "@sap/generator-fiori:basic",
+      "version": "1.18.5",
+      "toolsId": "7cdd8039-7ce5-42ef-941e-33160cf50a03"
+    },
+      "crossNavigation": {
+          "inbounds": {
+              "intent1": {
+                  "signature": {
+                      "parameters": {},
+                      "additionalParameters": "allowed"
+                  },
+                  "semanticObject": "Dynamic",
+                  "action": "display",
+                  "title": "{{appTitle}}",
+                  "icon": "sap-icon://shipping-status"
+              }
+          }
+      }
+  },
+  "sap.ui": {
+    "technology": "UI5",
+    "icons": {
+      "icon": "",
+      "favIcon": "",
+      "phone": "",
+      "phone@2": "",
+      "tablet": "",
+      "tablet@2": ""
+    },
+    "deviceTypes": {
+      "desktop": true,
+      "tablet": true,
+      "phone": true
+    }
+  },
+  "sap.ui5": {
+    "flexEnabled": false,
+    "dependencies": {
+      "minUI5Version": "1.139.0",
+      "libs": {
+        "sap.m": {},
+        "sap.ui.core": {},
+        "sap.f": {},
+        "sap.suite.ui.generic.template": {},
+        "sap.ui.comp": {},
+        "sap.ui.generic.app": {},
+        "sap.ui.table": {},
+        "sap.ushell": {}
+      }
+    },
+    "contentDensities": {
+      "compact": true,
+      "cozy": true
+    },
+    "models": {
+      "i18n": {
+        "type": "sap.ui.model.resource.ResourceModel",
+        "settings": {
+          "bundleName": "aris.com.clientes.controlstock.pe.i18n.i18n"
+        }
+      },
+      "oModelUser": {
+        "type": "sap.ui.model.json.JSONModel",
+        "preload": true,
+        "settings": {}
+      },
+      "oModelProyect": {
+        "type": "sap.ui.model.json.JSONModel",
+        "preload": true,
+        "settings": {}
+      },
+      "oModelData": {
+        "type": "sap.ui.model.json.JSONModel",
+        "preload": true,
+        "settings": {}
+      }
+    },
+    "resources": {
+      "css": [
+        {
+          "uri": "css/style.css"
+        }
+      ]
+    },
+    "routing": {
+      "config": {
+        "routerClass": "sap.m.routing.Router",
+        "controlAggregation": "pages",
+        "controlId": "app",
+        "transition": "slide",
+        "type": "View",
+        "viewType": "XML",
+        "path": "aris.com.clientes.controlstock.pe.view",
+        "async": true,
+        "viewPath": "aris.com.clientes.controlstock.pe.view"
+      },
+      "routes": [
+        {
+          "name": "View",
+          "pattern": ":?query:",
+          "target": [
+            "View"
+          ]
+        },
+        {
+          "name": "Detail",
+          "pattern": "Detail/{app}/{header}",
+          "target": [
+            "Detail"
+          ]
+        }
+      ],
+      "targets": {
+        "View": {
+          "id": "View",
+          "name": "View"
+        },
+        "Detail": {
+          "viewType": "XML",
+          "transition": "slide",
+          "clearControlAggregation": false,
+          "viewId": "Detail",
+          "viewName": "Detail"
+        }
+      }
+    },
+    "rootView": {
+      "viewName": "aris.com.clientes.controlstock.pe.view.App",
+      "type": "XML",
+      "id": "App",
+      "async": true
+    }
+  },
+  "sap.cloud": {
+      "public": true,
+      "service": "ariscomclientescontrolstockpe"
+  }
+}

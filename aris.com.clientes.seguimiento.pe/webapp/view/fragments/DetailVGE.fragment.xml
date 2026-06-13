@@ -1,0 +1,353 @@
+<core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core" xmlns:l="sap.ui.layout"  
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns:n="sap.n"
+    xmlns:f="sap.f"
+    xmlns:microchart="sap.suite.ui.microchart"
+    xmlns:si="sap.suite.ui.commons.statusindicator"
+    xmlns:co="sap.suite.ui.commons"
+    xmlns:svm="sap.ui.comp.smartvariants">
+     <VBox alignItems="Center">
+                <HBox
+                        alignItems="Center"
+                        justifyContent="Center"
+                        class="sapUiSmallMargin"
+                        wrap="Wrap">
+
+                        <!-- Paso 1 -->
+                        <VBox alignItems="Center" class="estadoPaso">
+                                <core:Icon id="iState1" src="sap-icon://accounting-document-verification"
+                                class="responsiveIcon"
+                                color="{= ${oModelProyect>/oDataEsta/0/PendienteAprobacion}==='OK' ? 'green' : 'gray'}"/>
+                                <Label text="Pendiente de Aprobación" design="Bold" class="responsiveLabel"/>
+                        </VBox>
+
+                        <!-- Flechas -->
+                        <HBox class="arrowGroup">
+                                <core:Icon src="sap-icon://less" class="responsiveArrow"/>
+                                <core:Icon src="sap-icon://process" class="responsiveArrow"/>
+                                <core:Icon src="sap-icon://less" class="responsiveArrow"/>
+                        </HBox>
+
+                        <!-- Paso 2 -->
+                        <VBox alignItems="Center" class="estadoPaso">
+                                <core:Icon id="iState2" src="sap-icon://approvals"
+                                class="responsiveIcon"
+                                color="{= ${oModelProyect>/oDataEsta/0/Aprobado}==='OK' ? 'green' : 'gray'}"/>
+                                <Label text="Aprobado" design="Bold" class="responsiveLabel"/>
+                        </VBox>
+
+                        <!-- Flechas -->
+                        <HBox class="arrowGroup">
+                                <core:Icon src="sap-icon://less" class="responsiveArrow"/>
+                                <core:Icon src="sap-icon://process" class="responsiveArrow"/>
+                                <core:Icon src="sap-icon://less" class="responsiveArrow"/>
+                        </HBox>
+
+                        <!-- Paso 3 -->
+                        <VBox alignItems="Center" class="estadoPaso">
+                                <core:Icon id="iState3" src="sap-icon://shipping-status"
+                                class="responsiveIcon"
+                                color="{= ${oModelProyect>/oDataEsta/0/EnPreparacion}==='OK' ? 'green' :
+                                        ${oModelProyect>/oDataEsta/0/EnPreparacion}==='Parcial' ? 'orange' : 'gray'}"/>
+                                <Label text="En Preparación" design="Bold" class="responsiveLabel"/>
+                        </VBox>
+
+                        <!-- Flechas -->
+                        <HBox class="arrowGroup">
+                                <core:Icon src="sap-icon://less" class="responsiveArrow"/>
+                                <core:Icon src="sap-icon://process" class="responsiveArrow"/>
+                                <core:Icon src="sap-icon://less" class="responsiveArrow"/>
+                        </HBox>
+
+                        <!-- Paso 4 -->
+                        <VBox alignItems="Center" class="estadoPaso">
+                                <core:Icon id="iState4" src="sap-icon://payment-approval"
+                                class="responsiveIcon"
+                                color="{= ${oModelProyect>/oDataEsta/0/Facturacion}==='OK' ? 'green' :
+                                        ${oModelProyect>/oDataEsta/0/Facturacion}==='Parcial' ? 'orange' : 'gray'}"/>
+                                <Label text="Facturado" design="Bold" class="responsiveLabel"/>
+                        </VBox>
+
+                        <!-- Flechas -->
+                        <HBox class="arrowGroup">
+                                <core:Icon src="sap-icon://less" class="responsiveArrow"/>
+                                <core:Icon src="sap-icon://process" class="responsiveArrow"/>
+                                <core:Icon src="sap-icon://less" class="responsiveArrow"/>
+                        </HBox>
+
+                        <!-- Paso 5 -->
+                        <VBox alignItems="Center" class="estadoPaso">
+                                <core:Icon id="iState5" src="sap-icon://complete"
+                                class="responsiveIcon"
+                                color="{= ${oModelProyect>/oDataEsta/0/Finalizado}==='OK' ? 'green' : 'gray'}"/>
+                                <Label text="Finalizado" design="Bold" class="responsiveLabel"/>
+                        </VBox>
+
+                 </HBox>
+
+
+                 <ScrollContainer width="100%" height="50%">
+                        <Table id="vdTable1" items="{oModelProyect>/oDetalle}"  mode="None" growingThreshold="20" headerText="{i18n>titleDetDetailPed}" popinLayout="GridSmall"  class="sapUiSmallMargin" >
+                                <columns>
+                                <Column width="6%" hAlign="Center" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false">
+                                        <header>
+                                        <Text text="{i18n>titleDetNumPosition}" width="auto" />
+                                        </header>
+                                </Column>
+                                <Column width="10%" hAlign="Center" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false">
+                                        <header>
+                                        <Text text="{i18n>titleDetMaterials}" width="auto" />
+                                        </header>
+                                </Column>
+                                <Column width="19%" hAlign="Begin" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false">
+                                        <header>
+                                                <HBox justifyContent="Center" width="100%">
+                                                        <Text text="{i18n>titleDetDescription}" width="auto" />
+                                                </HBox>
+                                        </header>
+                                </Column>
+                                <Column width="6%" hAlign="Center" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false">
+                                        <header>
+                                                <Text text="{i18n>titleDetUM}" width="auto" />
+                                        </header>
+                                        <footer>
+                                                <Text text="To." width="auto" />
+                                        </footer>
+                                </Column>
+                                <Column width="11%" hAlign="Center" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false">
+                                        <header>
+                                        <Text text="{i18n>titleDetQuantityOrdered}" width="auto" />
+                                        </header>
+                                        <footer>
+                                                <Text text="{oModelProyect>/oValoresVGECantPedi}" width="auto" />
+                                        </footer>
+                                </Column>
+                                <Column width="11%" hAlign="Center" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false">
+                                        <header>
+                                        <Text text="{i18n>titleDetQuantityShipped}" width="auto" />
+                                        </header>
+                                        <footer>
+                                                <Text text="{oModelProyect>/oValoresVGECantDesp}" width="auto" />
+                                        </footer>
+                                </Column>
+                                <Column width="11%" hAlign="Center" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false">
+                                        <header>
+                                        <Text text="{i18n>titleDetQuantityAmount}" width="auto" />
+                                        </header>
+                                        <footer>
+                                                <Text text="{oModelProyect>/oValoresVGECantPend}" width="auto" />
+                                        </footer>
+                                </Column>
+                                <Column width="8%" hAlign="Center" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false">
+                                        <header>
+                                        <Text text="{i18n>titleDetStatusPosition}" width="auto" />
+                                        </header>
+                                </Column>
+                                <Column width="6%" hAlign="Center" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false" visible="{= ${oModelUser>/bDetCeramicos}}">
+                                        <header>
+                                        <Text text="# {i18n>titleDetNroPallets}" width="auto" />
+                                        </header>
+                                        <footer>
+                                                <Text text="{oModelProyect>/oValoresVGECantPaletas}" width="auto" />
+                                        </footer>
+                                </Column>
+                                <Column width="6%" hAlign="Center" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false" visible="{= ${oModelUser>/bDetCeramicos}}">
+                                        <header>
+                                        <Text text="# {i18n>titleDetNroBox}" width="auto" />
+                                        </header>
+                                        <footer>
+                                        <Text text="{oModelProyect>/oValoresVGECantCaja}" width="auto" />
+                                        </footer>
+                                </Column>
+                                <Column width="5%" hAlign="Begin" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false" visible="{= ${oModelUser>/bDetCeramicos}}">
+                                        <header>
+                                                <HBox justifyContent="Center" width="100%">
+                                                        <Text text="{i18n>titleDetBulkType}" width="auto" />
+                                                </HBox>
+                                        </header>
+                                        
+                                        
+                                        
+                                </Column>
+                                
+                                </columns>
+                                <items>
+                                        <ColumnListItem type="Inactive">
+                                                <cells>
+                                                <Text text="{path:'oModelProyect>SalesDocumentItem'}" />
+                                                <Text text="{path:'oModelProyect>Material'}"/>
+                                                <Text text="{path:'oModelProyect>SalesDocumentItemText'}"/>
+                                                <Text text="{path:'oModelProyect>OrderQuantityUnit'}"/>
+                                                <Text text="{path:'oModelProyect>OrderQuantity'}"/>
+                                                <Text text="{path:'oModelProyect>TotalDelivered'}"/>
+                                                <Text text="{path:'oModelProyect>PendingQuantity'}"/>
+                                                <Text text="{path:'oModelProyect>EstadoPosicion'}"/>
+                                                <Text text="{path:'oModelProyect>NroPaletas'}"/>
+                                                <Text text="{path:'oModelProyect>NroCajas'}"/>
+                                                <Text text="{path:'oModelProyect>TipBulto'}"/>
+                                                </cells>
+                                        </ColumnListItem>
+                                </items>
+                        </Table>
+                         </ScrollContainer>
+                         <ScrollContainer width="100%" height="50%">
+                        <Table id="vdTable2" items="{ path: 'oModelProyect>/oListDesp', templateShareable: false }" mode="None" growingThreshold="20" headerText="{i18n>titleDesDetailDesp}"  popinLayout="GridSmall"  class="sapUiSmallMargin" >
+                                <columns>
+                                <Column width="7%" hAlign="Center" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false">
+                                        <header>
+                                        <Text text="{i18n>titleDesLink}" width="auto" />
+                                        </header>
+                                </Column>
+                                <Column width="14%" hAlign="End" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false">
+                                        <header>
+                                                <HBox justifyContent="Center" width="100%">
+                                                        <Text text="{i18n>titleDesDispatch}" width="auto" />
+                                                </HBox>
+                                        </header>
+                                </Column>
+                                <Column width="10%" hAlign="Center" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false">
+                                        <header>
+                                        <Text text="{i18n>titleDesDateGuide}" width="auto" />
+                                        </header>
+                                </Column>
+                                <Column width="27%" hAlign="Begin" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false">
+                                        <header>
+                                                <HBox justifyContent="Center" width="100%">
+                                                        <Text text="{i18n>titleDesDispatchAddress}" width="auto" />
+                                                </HBox>
+                                        </header>
+                                </Column>
+                                <Column width="15%" hAlign="Center" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false">
+                                        <header>
+                                        <Text text="{i18n>titleDesReferralGuide}" width="auto" />
+                                        </header>
+                                </Column>
+                                <Column width="10%" hAlign="Center" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false">
+                                        <header>
+                                        <Text text="{i18n>titleDesGrossWeight}" width="auto" />
+                                        </header>
+                                </Column>
+                                <Column width="10%" hAlign="End" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false">
+                                        <header>
+                                                <HBox justifyContent="Center" width="100%">
+                                                        <Text text="{i18n>titleDesNetWeight}" width="auto" />
+                                                </HBox>
+                                        </header>
+                                </Column>
+                                <Column width="7%" hAlign="End" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false" visible="{= ${oModelUser>/bDetCeramicos}}">
+                                        <header>
+                                                <HBox justifyContent="Center" width="100%">
+                                                        <Text text="{i18n>titleDesTotPallets}" width="auto" />
+                                                </HBox>
+                                        </header>
+                                </Column>
+                                </columns>
+                                <items>
+                                        <ColumnListItem type="Inactive">
+                                                <cells>
+                                                <Link text="PDF" press=".onAbrirPdfGuia" />
+                                                <Text text="{path:'oModelProyect>DeliveryDocument'}"/>
+                                                <Text text="{path:'oModelProyect>ActualGoodsMovementDate'}"/>
+                                                <Text text="{path:'oModelProyect>Direccion'}" wrapping="true" renderWhitespace="true"/>
+                                                <Text text="{path:'oModelProyect>ReferenceDocumentNumber'}"/>
+                                                <Text text="{path:'oModelProyect>HeaderGrossWeight'}"/>
+                                                <Text text="{path:'oModelProyect>HeaderNetWeight'}"/>
+                                                <Text text="{path:'oModelProyect>ActualDeliveryQuantity'}"/>
+                                               
+                                                </cells>
+                                        </ColumnListItem>
+                                </items>
+                        </Table>
+                         </ScrollContainer>
+                          <ScrollContainer width="100%" height="50%">
+                        <Table id="vdTable3" items="{ path: 'oModelProyect>/oFacturas', templateShareable: false }"   mode="None" growingThreshold="20" headerText="{i18n>titleFacList}"  popinLayout="GridSmall"  class="sapUiSmallMargin">
+                                <columns>
+                                <Column width="9%" hAlign="Center" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false">
+                                        <header>
+                                        <Text text="{i18n>titleFacLink}" width="auto" />
+                                        </header>
+                                </Column>
+                                <Column width="19%" hAlign="Center" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false">
+                                        <header>
+                                        <Text text="{i18n>titleFacInvoice}" width="auto" />
+                                        </header>
+                                </Column>
+                               
+                                <Column width="7%" hAlign="Center" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false">
+                                        <header>
+                                        <Text text="{i18n>titleFacCurrency}" width="auto" />
+                                        </header>
+                                </Column>
+                               
+                                <Column width="12%" hAlign="End" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false" visible="{= ${oModelUser>/bUniNeg} === 'QUIMICOS' }">
+                                        <header>
+                                                <HBox justifyContent="Center" width="100%">
+                                                        <Text text="{i18n>titleFacTax}" width="auto" />
+                                                </HBox>
+                                        </header>
+                                </Column>
+                                <Column width="12%" hAlign="End" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false">
+                                        <header>
+                                                <HBox justifyContent="Center" width="100%">
+                                                        <Text text="{i18n>titleFacTotal}" width="auto" />
+                                                </HBox>
+                                        </header>
+                                </Column>
+                                <Column width="8%" hAlign="Center" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false"
+                                >
+                                        <header>
+                                        <Text text="{i18n>titleFacDateIssue}" width="auto" />
+                                        </header>
+                                </Column>
+                                <Column width="18%" hAlign="Begin" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false">
+                                        <header>
+                                                <HBox justifyContent="Center" width="100%">
+                                                        <Text text="{i18n>titleFacPaymentCondition}" width="auto" />
+                                                </HBox>
+                                        </header>
+                                </Column>
+                                 <Column width="15%" hAlign="End" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false">
+                                        <header>
+                                                <HBox justifyContent="Center" width="100%">
+                                                        <Text text="{i18n>titleFacRelatedInvoice}" width="auto" />
+                                                </HBox>
+
+                                        </header>
+                                </Column>
+                                </columns>
+                                <items>
+                                        <ColumnListItem type="Inactive">
+                                                <cells>
+                                                <Link text="PDF" press=".onAbrirTestEcomprobantes"/>
+                                                <Text text="{path:'oModelProyect>DocumentReferenceID'}"/>
+                                                <Text text="{path:'oModelProyect>TransactionCurrency'}"/>
+                                                <Text text="{path:'oModelProyect>TotalTaxAmount',
+                                                type: 'sap.ui.model.type.Float',
+                                                formatOptions: {
+                                                        groupingEnabled: true,
+                                                        groupingSeparator: ',',
+                                                        decimalSeparator: '.',
+                                                        minFractionDigits: 2,
+                                                        maxFractionDigits: 2
+                                                        }
+                                                }"/>
+                                                <Text text="{path:'oModelProyect>MontoTotal',
+                                                type: 'sap.ui.model.type.Float',
+                                                formatOptions: {
+                                                        groupingEnabled: true,
+                                                        groupingSeparator: ',',
+                                                        decimalSeparator: '.',
+                                                        minFractionDigits: 2,
+                                                        maxFractionDigits: 2
+                                                        }
+                                                }"/>
+                                                <Text text="{path:'oModelProyect>BillingDocumentDate'}"/>
+                                                <Text text="{path:'oModelProyect>DscPaymentTerms'}"/>
+                                                <Text text="{path:'oModelProyect>DocumentosNCND'}" wrapping="true" renderWhitespace="true"/>
+                                                </cells>
+                                        </ColumnListItem>
+                                </items>
+                        </Table>
+                        </ScrollContainer>
+           </VBox>
+</core:FragmentDefinition>

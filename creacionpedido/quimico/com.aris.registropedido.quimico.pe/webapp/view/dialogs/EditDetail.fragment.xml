@@ -1,0 +1,70 @@
+<core:FragmentDefinition
+    xmlns:core="sap.ui.core"
+    xmlns="sap.m"
+    xmlns:f="sap.ui.layout.form"
+    xmlns:fb="sap.ui.comp.filterbar"
+    xmlns:l="sap.ui.layout"
+    xmlns:custom="http://schemas.sap.com/sapui5/extension/sap.ui.core.CustomData/1"
+    xmlns:u="sap.ui.unified"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns:footer="sap.ushell.ui.footerbar"
+        >
+    <Dialog
+        title="{i18n>textbtnModificar}"
+        contentHeight="auto"
+        contentWidth="40%"
+        afterOpen="_afterOpenAddPedido"
+    >
+            <VBox justifyContent="Center" alignItems="Center" class="sapUiMediumMargin">
+                <Title text="MODIFICAR POSICIÓN" class="sapUiLargeMarginBottom"/>
+                <core:Icon
+                    src="sap-icon://cart"
+                    size="4rem"
+                    color="#E69A17"
+                    class="sapUiSmallMarginBottom "/>
+                <HBox justifyContent="Start" class="sapUiSmallMarginBottom">
+                    <Label text="Código:"/>
+                    <Text text="{oModelProyect>/oMaterialesSelectedMatnr}" class="sapUiSmallMarginBegin"/>
+                </HBox>
+                
+                <HBox justifyContent="Start" class="sapUiSmallMarginBottom">
+                    <Label text="Descripción:"/>
+                    <Text text="{oModelProyect>/oMaterialesSelectedDesc}" class="sapUiSmallMarginBegin"/>
+                </HBox>
+
+                <!-- Grid con 3 columnas: vacío | CTD | UMV -->
+                <l:Grid defaultSpan="L4 M4 S12" hSpacing="2">
+                    <l:content>
+                        <!-- Fila: espacio vacío para alinear títulos -->
+                        <Text text=""/>
+                        <Title text="CTD"/>
+                        <Title text="UMV"/>
+
+                        <!-- Fila: Stock -->
+                        <Label text="Stock"/>
+                        <Input width="100%"  value="{oModelProyect>/oSelecTableDetalle/StockCTD}" enabled="false" visible="{= !${oModelUser>/hideAdvancedFields}" />
+                        <Input width="100%"  value="{oModelProyect>/oSelecTableDetalle/StockUMV}" enabled="false" visible="{= !${oModelUser>/hideAdvancedFields}"/>
+
+                        <!-- Fila: Cantidad -->
+                        <Label text="Cantidad"/>
+                        <Input width="100%"  id="inputCantidadModificada" value="{oModelProyect>/oSelecTableDetalle/cantidad}"/>
+                        <Input width="100%"  value="{oModelProyect>/oSelecTableDetalle/UMV}" enabled="false"/>
+                    </l:content>
+                </l:Grid>
+            </VBox>
+            <HBox  justifyContent="End">
+                <Button
+                text="{i18n>textbtnGuardar}"
+                type="Accept"
+                icon="sap-icon://save"
+                press="_onAcceptEditCantidad"/>
+
+                <Button
+                text="{i18n>cancelText}"
+                type="Reject"
+                icon="sap-icon://decline"
+                class="sapUiSmallMarginBegin"
+                press="_onClose"/>
+            </HBox>
+    </Dialog>
+</core:FragmentDefinition>

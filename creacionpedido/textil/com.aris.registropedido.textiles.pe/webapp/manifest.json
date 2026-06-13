@@ -1,0 +1,201 @@
+{
+  "_version": "1.65.0",
+  "sap.app": {
+    "id": "com.aris.registropedido.textiles.pe",
+    "type": "application",
+    "i18n": "i18n/i18n.properties",
+    "applicationVersion": {
+      "version": "0.0.1"
+    },
+    "title": "{{appTitle}}",
+    "description": "{{appDescription}}",
+    "resources": "resources.json",
+    "sourceTemplate": {
+      "id": "@sap/generator-fiori:basic",
+      "version": "1.17.1",
+      "toolsId": "7695d52e-b00e-4668-829c-89e3c509834c"
+    },
+    "dataSources": {
+			"S4HANA": {
+				"uri": "/S4HANA/sap/opu/odata/sap/ZSDWS_PORTAL_CLIENTES_SRV/",
+          "type": "OData",
+          "settings": {
+              "annotations": [],
+              "localUri": "localService/metadata.xml",
+              "odataVersion": "2.0"
+          }
+			},
+      "S4HANA_Materials": {
+      "uri": "/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/",
+      "type": "OData",
+      "settings": {
+        "odataVersion": "2.0"
+      }
+    }
+		}, 
+    "crossNavigation": {
+      "inbounds": {
+          "intent1": {
+              "signature": {
+                  "parameters": {},
+                  "additionalParameters": "allowed"
+              },
+              "semanticObject": "Dynamic",
+              "action": "display",
+              "title": "Ingreso de Pedidos",
+              "icon": "sap-icon://customer-order-entry"
+          }
+      }
+    }
+  },
+  "sap.ui": {
+    "technology": "UI5",
+    "icons": {
+      "icon": "",
+      "favIcon": "",
+      "phone": "",
+      "phone@2": "",
+      "tablet": "",
+      "tablet@2": ""
+    },
+    "deviceTypes": {
+      "desktop": true,
+      "tablet": true,
+      "phone": true
+    }
+  },
+  "sap.ui5": {
+    "flexEnabled": false,
+    "dependencies": {
+      "minUI5Version": "1.134.1",
+      "libs": {
+        "sap.m": {},
+        "sap.ui.core": {},
+        "sap.uxap": {}
+      }
+    },
+    "contentDensities": {
+      "compact": true,
+      "cozy": true
+    },
+    "models": {
+      "i18n": {
+        "type": "sap.ui.model.resource.ResourceModel",
+        "settings": {
+          "bundleName": "com.aris.registropedido.textiles.pe.i18n.i18n"
+        }
+      },
+      "oModelUser": {
+        "type": "sap.ui.model.json.JSONModel",
+        "preload": true,
+        "settings": {}
+      },
+      "oModelProyect": {
+        "type": "sap.ui.model.json.JSONModel",
+        "preload": true,
+        "settings": {}
+      },
+      "oModelData": {
+        "type": "sap.ui.model.json.JSONModel",
+        "preload": true,
+        "settings": {}
+      },
+        "oModelEntity": {
+        "dataSource": "S4HANA",
+        "preload": true,
+        "settings": {}
+      },
+      "oModelMaterials": {
+      "dataSource": "S4HANA_Materials",
+      "preload": true,
+      "settings": {}
+    }
+    },
+    "resources": {
+      "css": [
+        {
+          "uri": "css/style.css"
+        }
+      ],
+      "img": [
+        {
+          "uri": "img/prueba.png"
+        }
+      ]
+    },
+    "routing": {
+      "config": {
+        "routerClass": "sap.m.routing.Router",
+        "viewType": "XML",
+        "async": true,
+        "viewPath": "com.aris.registropedido.textiles.pe.view",
+        "controlAggregation": "pages",
+        "controlId": "app",
+        "clearControlAggregation": false
+      },
+      "routes": [
+        {
+          "name": "Main",
+          "pattern": ":?query:",
+          "target": [
+            "Main"
+          ]
+        },
+        {
+          "name": "Detail",
+          "pattern": "Detail/:app:",
+          "target": [
+            "Detail"
+          ]
+        },
+        {
+          "name": "FormClient",
+          "pattern": "FormClient/:app:",
+          "target": [
+            "FormClient"
+          ]
+        },
+        {
+            "name": "AccessDenied",
+            "pattern": "AccessDenied",
+            "target": ["AccessDenied"]
+          }
+      ],
+      "targets": {
+        
+        "Main": {
+          "viewType": "XML",
+          "transition": "slide",
+          "clearControlAggregation": false,
+          "viewId": "Main",
+          "viewName": "Main"
+        },
+        "Detail": {
+          "viewType": "XML",
+          "transition": "slide",
+          "clearControlAggregation": false,
+          "viewId": "Detail",
+          "viewName": "Detail"
+        },
+        "FormClient": {
+          "viewType": "XML",
+          "transition": "slide",
+          "clearControlAggregation": false,
+          "viewId": "FormClient",
+          "viewName": "FormClient"
+        }
+
+      }
+    },
+    "rootView": {
+      "viewName": "com.aris.registropedido.textiles.pe.view.App",
+      "type": "XML",
+      "id": "App",
+      "async": true
+    }
+  },
+  "sap.cloud": {
+    "public": true,
+    "service": "com.aris.registropedido.textiles.pe"
+  }
+}

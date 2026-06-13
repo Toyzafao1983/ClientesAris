@@ -1,0 +1,175 @@
+<core:FragmentDefinition
+    xmlns:core="sap.ui.core"
+    xmlns="sap.m"
+    xmlns:l="sap.ui.layout"
+    xmlns:f="sap.ui.layout.form">
+
+    <Dialog
+        title="{i18n>textbtnModificar}"
+        contentHeight="auto"
+        contentWidth="{= ${oModelUser>/bIsCliente} ? '32rem' : '45%' }"
+        draggable="true"
+        resizable="true">
+
+        <VBox justifyContent="Center" alignItems="Center" class="sapUiMediumMargin" width="100%">
+            <Title text="MODIFICAR POSICIÓN" class="sapUiLargeMarginBottom"/>
+            <core:Icon src="sap-icon://cart" size="4rem" color="#E69A17" class="sapUiSmallMarginBottom"/>
+
+            <HBox class="sapUiSmallMarginBottom">
+                <Label text="Código:"/>
+                <Text text="{oModelProyect>/oMaterialesSelectedMatnr}" class="sapUiSmallMarginBegin"/>
+            </HBox>
+
+            <HBox class="sapUiSmallMarginBottom">
+                <Label text="Descripción:"/>
+                <Text text="{oModelProyect>/oMaterialesSelectedDesc}" class="sapUiSmallMarginBegin"/>
+            </HBox>
+
+            <HBox class="sapUiSmallMarginBottom">
+                <Label text="UMV:"/>
+                <Text text="{oModelProyect>/oSelecTableDetalle/UMV}" class="sapUiSmallMarginBegin"/>
+            </HBox>
+
+            <!-- =========================
+                 VISTA COORDINADOR / VENDEDOR (NO CLIENTE)
+                 ========================= -->
+            <l:Grid
+                defaultSpan="L6 M6 S12"
+                hSpacing="2"
+                vSpacing="1"
+                visible="{= !${oModelUser>/bIsCliente} }"
+                width="100%">
+                <l:content>
+
+                    <!-- Columna 1: Stock Actual -->
+                    <VBox>
+                        <layoutData>
+                            <l:GridData span="L6 M6 S12"/>
+                        </layoutData>
+
+                        <Title text="Stock Actual" class="sapUiSmallMarginBottom"/>
+
+                        <HBox class="sapUiTinyMarginBottom" alignItems="Center">
+                            <Label text="Pallets:" width="6rem"/>
+                            <Input
+                                value="{
+                                    path : 'oModelProyect>/oSelecTableDetalle/stockPalletsRest',
+                                    formatter: '.formatter.formatMonto2Dec'
+                                }"
+                                editable="false"
+                                width="14rem"/>
+                        </HBox>
+
+                        <HBox class="sapUiTinyMarginBottom" alignItems="Center">
+                            <Label text="Cajas:" width="6rem"/>
+                            <Input
+                                value="{
+                                    path: 'oModelProyect>/oSelecTableDetalle/stockCajasRest',
+                                    formatter: '.formatter.formatMonto2Dec'
+                                }"
+                                editable="false"
+                                width="14rem"/>
+                        </HBox>
+
+                        <HBox class="sapUiTinyMarginBottom" alignItems="Center">
+                            <Label text="Cantidad (M2):" width="6rem"/>
+                            <Input
+                                value="{oModelProyect>/oSelecTableDetalle/cantidadM2}"
+                                editable="false"
+                                width="14rem"
+                                textAlign="End"/>
+                        </HBox>
+                    </VBox>
+
+                    <!-- Columna 2: Cantidad Editable -->
+                    <VBox>
+                        <layoutData>
+                            <l:GridData span="L6 M6 S12"/>
+                        </layoutData>
+
+                        <Title text="Cantidad Editable" class="sapUiSmallMarginBottom"/>
+
+                        <HBox class="sapUiTinyMarginBottom" alignItems="Center">
+                            <Label text="Pallets:" width="6rem"/>
+                            <StepInput
+                                value="{oModelProyect>/oSelecTableDetalle/cantidadPallets}"
+                                step="1"
+                                min="0"
+                                max="{= ${oModelProyect>/oSelecTableDetalle/stockPalletsMax} }"
+                                width="14rem"
+                                editable="{= ${oModelProyect>/oSelecTableDetalle/isPAL} }"
+                                change=".onEditDetalleCantidadChange"/>
+                        </HBox>
+
+                        <HBox class="sapUiTinyMarginBottom" alignItems="Center">
+                            <Label text="Cajas:" width="6rem"/>
+                            <StepInput
+                                value="{oModelProyect>/oSelecTableDetalle/cantidadCajas}"
+                                step="1"
+                                min="0"
+                                max="{= ${oModelProyect>/oSelecTableDetalle/stockCajasMax} }"
+                                width="14rem"
+                                editable="{= ${oModelProyect>/oSelecTableDetalle/isCJ} }"
+                                change=".onEditDetalleCantidadChange"/>
+                        </HBox>
+                    </VBox>
+
+                </l:content>
+            </l:Grid>
+
+            <!-- =========================
+                 VISTA CLIENTE (centrado, 1 columna)
+                 ========================= -->
+            <VBox visible="{= ${oModelUser>/bIsCliente} }" width="100%" alignItems="Center" class="sapUiSmallMarginTop">
+                <VBox width="22rem">
+                    <Title text="Cantidad Editable" class="sapUiSmallMarginBottom"/>
+
+                    <f:SimpleForm
+                        editable="true"
+                        layout="ResponsiveGridLayout"
+                        columnsL="1" columnsM="1"
+                        labelSpanL="4" labelSpanM="4" labelSpanS="12"
+                        adjustLabelSpan="false"
+                        emptySpanL="0" emptySpanM="0"
+                        class="sapUiNoContentPadding">
+
+                        <Label text="Pallets:"/>
+                        <StepInput
+                            value="{oModelProyect>/oSelecTableDetalle/cantidadPallets}"
+                            step="1"
+                            min="0"
+                            max="{= ${oModelProyect>/oSelecTableDetalle/stockPalletsMax} }"
+                            width="100%"
+                            editable="{= ${oModelProyect>/oSelecTableDetalle/isPAL} }"
+                            change=".onEditDetalleCantidadChange"/>
+
+                        <Label text="Cajas:"/>
+                        <StepInput
+                            value="{oModelProyect>/oSelecTableDetalle/cantidadCajas}"
+                            step="1"
+                            min="0"
+                            max="{= ${oModelProyect>/oSelecTableDetalle/stockCajasMax} }"
+                            width="100%"
+                            editable="{= ${oModelProyect>/oSelecTableDetalle/isCJ} }"
+                            change=".onEditDetalleCantidadChange"/>
+
+                        <Label text="Cantidad (M2):"/>
+                        <Input
+                            value="{oModelProyect>/oSelecTableDetalle/cantidadM2}"
+                            editable="false"
+                            width="100%"
+                            textAlign="End"/>
+                    </f:SimpleForm>
+                </VBox>
+            </VBox>
+
+        </VBox>
+
+        <endButton>
+            <Button text="{i18n>cancelText}" type="Reject" icon="sap-icon://decline" press="_onCloseEditDetail"/>
+        </endButton>
+        <beginButton>
+            <Button text="{i18n>textbtnGuardar}" type="Accept" icon="sap-icon://save" press="_onConfirmEditDetail"/>
+        </beginButton>
+    </Dialog>
+</core:FragmentDefinition>

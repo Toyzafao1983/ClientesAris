@@ -1,0 +1,59 @@
+<core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core" xmlns:l="sap.ui.layout" xmlns:f="sap.ui.layout.form">
+    <Table  items="{oModelProyect>/oStockTextilStockSep}"  mode="None" growingThreshold="20" width="auto">
+        <columns>
+            <Column width="8%" hAlign="Center" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false">
+                <header>
+                    <Text text="{i18n>titleDetTexsSepOrder}" width="auto" />
+                </header>
+            </Column>
+            <Column width="30%" hAlign="Begin" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false">
+                <header>
+                    <HBox justifyContent="Center" width="100%">
+                        <Text text="{i18n>titleDetTexsSepCustomer}" width="auto" />
+                    </HBox>
+                </header>
+            </Column>
+            <Column width="8%" hAlign="End" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false">
+                <header>
+                    <HBox justifyContent="Center" width="100%">
+                        <Text text="{i18n>titleDetTexsSepMaterial}" width="auto" />
+                    </HBox>
+                </header>
+            </Column>
+            <Column width="5%" hAlign="End" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false" visible="{= !${oModelUser>/rCliente}||${oModelUser>/rMetTextil}}">
+                <header>
+                    <HBox justifyContent="Center" width="100%">
+                        <Text text="{i18n>titleDetTexsSepEstimatedQuantity}" width="auto" />
+                    </HBox>
+                </header>
+            </Column>
+            <Column width="8%" hAlign="End" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false" visible="{= !${oModelUser>/rCliente}}">
+                <header>
+                    <HBox justifyContent="Center" width="100%">
+                        <Text text="{i18n>titleDetTexsSepPendingQuantity}" width="auto" />
+                    </HBox>
+                </header>
+            </Column>
+            <Column width="8%" hAlign="Center" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false" visible="{= !${oModelUser>/rCliente}}">
+                <header>
+                    <Text text="{i18n>titleDetTexsSepValidTo}" width="auto" />
+                </header>
+            </Column>
+            
+        </columns>
+       <items>
+            <ColumnListItem type="Inactive"  >
+                <cells>
+                    <Text text="{path:'oModelProyect>Documento'}"/>
+                    <Text text="{path:'oModelProyect>Cliente'}"/>
+                    <Text text="{path:'oModelProyect>Material'}"/>
+                    <Text text="{path:'oModelProyect>CantPrev'}"/>
+                    <Text text="{path:'oModelProyect>CantPendi'}"/>
+                    <Text text="{path:'oModelProyect>Hasta'}"/>
+
+                </cells>
+            </ColumnListItem>
+        </items>
+     
+    </Table>
+</core:FragmentDefinition>

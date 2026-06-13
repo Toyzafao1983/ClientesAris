@@ -1,0 +1,478 @@
+<mvc:View
+  xmlns:mvc="sap.ui.core.mvc"
+  xmlns="sap.m"
+  xmlns:fd="sap.f"
+  xmlns:f="sap.ui.layout.form"
+  xmlns:l="sap.ui.layout"
+  xmlns:core="sap.ui.core"
+  xmlns:uxap="sap.uxap"
+  controllerName="com.aris.registropedido.quimico.pe.controller.FormClient"
+  xmlns:u="sap.ui.unified"
+  height="100%">
+<Shell appWidthLimited="false" >
+  <fd:DynamicPage 
+    headerExpanded="true"
+    showFooter="true"
+    fitContent="false">
+    <fd:title>
+      <fd:DynamicPageTitle>
+        <fd:heading>
+          <Title 
+          text="{= 'Creación de Pedido - ' + ${oModelUser>/bUserName}}"
+          level="H1" 
+          textAlign="Center"/>
+        </fd:heading>
+          <fd:actions>
+              <Button text="{i18n>textHome}" press="_onPressNavButtonForm" type="Transparent" icon="sap-icon://home" tooltip="{i18n>tooltipbtnHome}" visible="{= !${oModelUser>/bIsCliente}}"/>
+          </fd:actions>
+      </fd:DynamicPageTitle>
+    </fd:title>
+    <fd:header>
+            <fd:DynamicPageHeader>
+<HBox width="100%" justifyContent="SpaceBetween" alignItems="Start" wrap="Wrap">
+
+    <!-- ================== IZQUIERDA: DATOS DEL CLIENTE ================== -->
+    <VBox class="sapUiTinyMarginTop">
+        <layoutData>
+            <!-- Ocupa más espacio que el derecho en desktop -->
+            <FlexItemData growFactor="2" />
+        </layoutData>
+
+        <f:SimpleForm 
+            id="SimpleFormDatosCliente"
+            editable="false"
+            layout="ResponsiveGridLayout"
+            title="{i18n>textDatsClient}"
+            class="sapUiSizeCompact myCompactForm"
+            labelSpanXL="3" labelSpanL="3" labelSpanM="3" labelSpanS="3"
+            columnsXL="1" columnsL="1" columnsM="1">
+
+            <f:content>
+                <core:Title text=""/>
+
+                <Label text="{i18n>textCodClient}"/>
+                <Text text="{oModelProyect>/oDatClient/Customer}"/>
+
+                <Label text="{i18n>txtClient}"/>
+                <Text text="{path: 'oModelProyect>/oDatClient/CustomerFullName', formatter: '.formatter.cleanCustomerFullName'}"/>
+
+                <Label text="{i18n>txtRucDNI}"/>
+                <Text text="{path: 'oModelProyect>/oDatClient', formatter: '.formatter.getDocumento'}"/>
+
+                <Label text="{i18n>textAddress}"/>
+                <Text text="{oModelProyect>/oDireccionCliente/FullAddress}"/>
+
+                <Label text="{i18n>txtPuchaserOrder}"/>
+                <Input value="{oModelProyect>/inputForm/purchaseOrder}" width="100%"/>
+
+                <ProgressIndicator
+                    id="piUpload"
+                    percentValue="0"
+                    displayValue="0%"
+                    visible="false"
+                    width="100%"
+                />
+
+                <!-- Adjuntar O/C -->
+                <Label text="{i18n>txtAdjuntOC}"/>
+                <HBox>
+                    <u:FileUploader
+                        id="fileUploader"
+                        multiple="true"
+                        buttonText="Subir"
+                        name="myFileUpload"
+                        buttonOnly="true"
+                        uploadUrl="upload/"
+                        icon="sap-icon://upload"
+                        change=".handleFileChange"
+                        uploadComplete=".handleUploadComplete" />
+
+                    <MultiInput
+                        id="fileTokenInput"
+                        width="200px"
+                        placeholder="Archivos seleccionados..."
+                        showValueHelp="false"
+                        tokenUpdate=".handleTokenUpdate">
+                        <layoutData>
+                            <FlexItemData styleClass="sapUiTinyMarginBegin" />
+                        </layoutData>
+                    </MultiInput>
+
+                    <Button
+                        text="Enviar"
+                        press=".onUploadAllFiles"
+                        type="Emphasized"
+                        class="sapUiSmallMarginBegin"
+                    />
+                </HBox>
+            </f:content>
+        </f:SimpleForm>
+    </VBox>
+
+    <!-- ================== DERECHA: CRÉDITO / SEGMENTO / FECHA ================== -->
+    <VBox class="sapUiLargeMarginTop">
+        <layoutData>
+            <!-- Menos espacio que el izquierdo en desktop -->
+            <FlexItemData growFactor="1" />
+        </layoutData>
+
+        <f:SimpleForm 
+            id="SimpleFormCreditoCliente"
+            editable="false"
+            layout="ResponsiveGridLayout"
+            class="sapUiSizeCompact myCompactForm"
+            labelSpanXL="4" labelSpanL="4" labelSpanM="4" labelSpanS="4"
+            columnsXL="1" columnsL="1" columnsM="1">
+
+            <f:content>
+                <core:Title text=""/>
+
+             <!-- Crédito Asignado -->
+                <Label text="{i18n>txtCredAsing}"/>
+                <Text
+                    text="{
+                        parts: [
+                            { path: 'oModelProyect>/oCreditoCliente/Assignedcredit' },
+                            { path: 'oModelProyect>/oCreditoCliente/WaersCustomer' },
+                            { path: 'oModelProyect>/oCreditoCliente/FlagClc' }
+                        ],
+                        formatter: '.formatter.formatAssignedCreditByFlag'
+                    }"
+                    textAlign="End"
+                    width="60%">
+                    <layoutData>
+                        <l:GridData span="L3 M3 S6" />
+                    </layoutData>
+                </Text>
+
+                <!-- Crédito Disponible -->
+                <Label text="{i18n>txtCredAvailable}"/>
+                <Text
+                    text="{
+                        parts: [
+                            { path: 'oModelProyect>/oCreditoCliente/Availablecredit' },
+                            { path: 'oModelProyect>/oCreditoCliente/WaersCustomer' }
+                        ],
+                        formatter: '.formatter.formatCreditWithCurrency'
+                    }"
+                    textAlign="End"
+                    width="60%">
+                    <layoutData>
+                        <l:GridData span="L3 M3 S6" />
+                    </layoutData>
+                </Text>
+                <!-- Segmento -->
+                <Label text="{i18n>txtSegment}" visible="{= !${oModelUser>/bIsCliente}}"/>
+                <Text
+                    text="{oModelProyect>/oClientData/DescriptionCustomerGroupPrice}" 
+                    visible="{= !${oModelUser>/bIsCliente}}"
+                    textAlign="End"
+                    width="60%">
+                    <layoutData>
+                        <l:GridData span="L3 M3 S6" />
+                    </layoutData>
+                </Text>
+                <!-- Fecha Vencimiento OC -->
+                <Label text="{i18n>txtFechExpiration}"/>
+                <DatePicker id="OCFechExpiration"
+                    value="{oModelProyect>/inputForm/ocExpDate}"
+                    textAlign="Center"
+                    valueFormat="dd/MM/yyyy"
+                    displayFormat="dd/MM/yyyy"/>
+            </f:content>
+        </f:SimpleForm>
+    </VBox>
+
+</HBox>
+      </fd:DynamicPageHeader>
+    </fd:header>
+    <fd:content>
+      <VBox>
+        <f:SimpleForm 
+          id="SimpleFormDisplay480_Trial1"
+          editable="false"
+          layout="ResponsiveGridLayout"
+          title="{i18n>txtCondComers}"
+          class="sapUiSizeCompact"
+          emptySpanXL="0" emptySpanL="0" emptySpanM="0" emptySpanS="0"
+          labelSpanXL="4" labelSpanL="4" labelSpanM="4" labelSpanS="12"
+          columnsXL="2" columnsL="2" columnsM="2">
+          <f:content>
+            <core:Title text=""/>
+            <Label text="{i18n>txtTipDocument}" required="true"/>
+            <HBox fitContainer="true">
+              <Select
+                  selectedKey="{oModelProyect>/inputForm/tipDocument}"
+                  change=".onTipDocumentChange"
+                  items="{ path: 'oModelData>/oTipDocumentData' }"
+                  forceSelection="false"
+                  editable="{oModelProyect>/inputForm/isTipDocumentEnabled}">
+                  
+                  <core:Item key="" text="-- Seleccione --" />
+                  <core:Item key="{oModelData>auart}"
+                            text="{= ${oModelData>auart} + ' - ' + ${oModelData>bezei} }" />
+                  <layoutData>
+                      <FlexItemData growFactor="1" />
+                  </layoutData>
+              </Select>
+              <Button
+                  id="btnPedidoConReferencia"
+                  text="Referencia"
+                  icon="sap-icon://chain-link"
+                  type="Transparent"
+                  class="sapUiTinyMarginBegin"
+                  width="auto"
+                  visible="{oModelProyect>/bShowBtnPedidoRef}"
+                  press=".onOpenPedidoConReferencia"/>
+          </HBox>
+            <Label text="{i18n>textMoney}" required="true"/>
+            <Select 
+              selectedKey="{oModelProyect>/inputForm/moneda}"
+              change=".onSelectMoneda"
+              items="{ path: 'oModelData>/oTipMoney' }"
+              enabled="{oModelProyect>/isFormEnabled}">
+              <core:Item key="{oModelData>sKey}" text="{oModelData>sText}" />
+            </Select>
+            <Label text="{i18n>txtConditionsPay}" required="true"/>
+              <ComboBox
+                  id="cbCondPago"
+                  items="{
+                      path: 'oModelData>/oConditionPay'
+                  }"
+                  selectedKey="{oModelProyect>/inputForm/cbCondPago}"
+                  placeholder="Seleccione condición de pago"
+                  enabled="{oModelProyect>/isFormEnabled}"
+                  editable="{= !${oModelUser>/bIsCliente}}"
+                  selectionChange=".onSelectCondPago">
+                  <core:Item key="{oModelData>Conditionn}" text="{oModelData>DesCondition}" />
+              </ComboBox>
+            <Label text="{i18n>txtConditionsDelivery}" required="true"/>
+            <VBox>
+              <RadioButton text="{i18n>txtClientCollet}" groupName="condEntrega"
+                selected="{= ${oModelProyect>/inputForm/tipoEntrega} === '1'}"
+                select=".onSelectRadioComprobante"
+                enabled="{oModelProyect>/isFormEnabled}"/>
+              <RadioButton text="{i18n>txtDirectDispatch}" groupName="condEntrega"
+                selected="{= ${oModelProyect>/inputForm/tipoEntrega} === '2'}"
+                select=".onSelectRadioComprobante"
+                enabled="{oModelProyect>/isFormEnabled}"/>
+              <RadioButton text="{i18n>txtDispatchAgency}" groupName="condEntrega"
+                selected="{= ${oModelProyect>/inputForm/tipoEntrega} === '3'}"
+                select=".onSelectRadioComprobante"
+                enabled="{oModelProyect>/isFormEnabled}"/>
+            </VBox>
+            <core:Title text=""/>
+            <Label
+              text="{i18n>txtSellerPrincipal}"
+              visible="{
+                parts: [
+                  { path: 'oModelUser>/bIsCliente' },
+                  { path: 'oModelUser>/bIsVendedor' }
+                ],
+                formatter: '.formatter.visibleNoClienteYVendedor'
+              }"
+            />
+
+            <Text
+              text="{= ${oModelProyect>/oClientData/kunn2} + ' - ' + ${oModelProyect>/oClientData/Seller} }"
+              visible="{
+                parts: [
+                  { path: 'oModelUser>/bIsCliente' },
+                  { path: 'oModelUser>/bIsVendedor' }
+                ],
+                formatter: '.formatter.visibleNoClienteYVendedor'
+              }"
+            />
+
+            <Label
+              text="{i18n>txtSellerSupport}"
+              visible="{
+                parts: [
+                  { path: 'oModelUser>/bIsCliente' },
+                  { path: 'oModelUser>/bIsCoord' }
+                ],
+                formatter: '.formatter.visibleNoClienteYCoord'
+              }"
+            />
+
+            <Input
+              value="{= ${oModelUser>/bBPFinal} + ' - ' + ${oModelUser>/bUserName} }"
+              enabled="false"
+              visible="{
+                parts: [
+                  { path: 'oModelUser>/bIsCliente' },
+                  { path: 'oModelUser>/bIsCoord' }
+                ],
+                formatter: '.formatter.visibleNoClienteYCoord'
+              }"
+            />
+            <Label text="{i18n>txtTypeChange}"/>
+            <Input value="{
+            path: 'oModelData>/oTipChangeData',
+            formatter: '.formatTipoCambioLabel'
+            }" 
+            editable="false"
+            width="100%"/>
+             <Label text="{i18n>txtReason}" required="true" visible="{oModelProyect>/inputForm/showReasonOrd}"/>
+                <Select 
+                  selectedKey="{oModelProyect>/inputForm/reasonOrd}"
+                  items="{
+                      path: 'oModelData>/oReason'
+                  }"
+                  visible="{oModelProyect>/inputForm/showReasonOrd}"
+                  change="onReasonOrdChange"
+                  enabled="{oModelProyect>/isFormEnabled}"
+                  forceSelection="false">
+                  <core:Item key="" text="-- Seleccione --" /> 
+                  <core:Item key="{oModelData>ReasonRequest}"   text="{= ${oModelData>ReasonRequest} + ' - ' + ${oModelData>Description} }" />
+                </Select>
+            <Label text="{i18n>txtTransport}" visible="{= ${oModelProyect>/inputForm/tipoEntrega} === '2' || ${oModelProyect>/inputForm/tipoEntrega} === '3'}"/>
+            <ComboBox
+              id="inputTransporte"
+              change=".onChangeComboSoloSeleccion"
+              visible="{= ${oModelProyect>/inputForm/tipoEntrega} === '2' || ${oModelProyect>/inputForm/tipoEntrega} === '3'}"
+              selectedKey="{oModelProyect>/inputForm/transporte}"
+              items="{ path: 'oModelData>/oTrasport' }"
+              showSecondaryValues="true"
+              filterSecondaryValues="true"
+              showClearIcon="true"
+              placeholder="Escriba o seleccione"
+              enabled="{oModelProyect>/isFormEnabled}">
+              <core:ListItem
+                key="{oModelData>Carrier}"
+                text="{oModelData>Name1}"
+                additionalText="{oModelData>Carrier}" />
+            </ComboBox>
+            <Label text="{i18n>txtDirectionsAgency}" visible="{= ${oModelProyect>/inputForm/tipoEntrega} === '2' || ${oModelProyect>/inputForm/tipoEntrega} === '3'}"/>
+             <ComboBox
+              id="cbDireccionAgencia"
+              change=".onChangeComboSoloSeleccion"
+              visible="{= ${oModelProyect>/inputForm/tipoEntrega} === '2' || ${oModelProyect>/inputForm/tipoEntrega} === '3'}"
+              enabled="{= !!${oModelProyect>/inputForm/transporte} }"
+              selectedKey="{oModelProyect>/inputForm/direccionAgencia}"
+              items="{ path: 'oModelProyect>/oAgenciasClienteFiltradas' }"
+              showSecondaryValues="true"
+              filterSecondaryValues="true"
+              showClearIcon="true"
+              placeholder="{= !!${oModelProyect>/inputForm/transporte} ? 'Seleccione una agencia' : 'Seleccione primero un transportista' }">
+              <core:ListItem
+                  key="{oModelProyect>Customer}"
+                  text="{oModelProyect>Agencyaddress}"
+                  additionalText="{oModelProyect>Agencyname}"/>
+          </ComboBox>
+          </f:content>
+        </f:SimpleForm>
+   <VBox width="100%">
+      <f:SimpleForm 
+        id="SimpleFormDisplay354wideDual"
+        editable="true"
+        layout="ResponsiveGridLayout"
+        labelSpanXL="1" labelSpanL="2" labelSpanM="3" labelSpanS="12"
+        columnsXL="1" columnsL="1" columnsM="1"
+        emptySpanXL="0" emptySpanL="0" emptySpanM="0"
+        width="100%">
+        <f:content>
+          <Label text="{i18n>txtDestinationTravel}" required="true"/>
+          <ComboBox
+              id="DestinationTexChemicals"
+              selectionChange=".onSelectDestinoQuimico"
+              selectedKey="{oModelProyect>/inputForm/destinoQuimicos}"
+              items="{
+                  path: 'oModelProyect>/oDestinosCliente'
+              }"
+              showSecondaryValues="true"
+              filterSecondaryValues="true"
+              showClearIcon="true"
+              placeholder="Escriba o seleccione"
+              enabled="{oModelProyect>/isFormEnabled}"
+          >
+              <core:ListItem
+                  key="{oModelProyect>Id}"
+                  text="{oModelProyect>Text}"
+                  additionalText="{oModelProyect>Name}"
+              />
+          </ComboBox>
+          <Label text="{i18n>txtDifferentFinalVenue}"/>
+          <HBox width="100%" alignItems="Center">
+            <RadioButton id="DestinationTravel1" text="{i18n>txtYes}" select=".onSelectDestinoTravelChemical" enabled="{oModelProyect>/isFormEnabled}"  selected="{= ${oModelProyect>/inputForm/sedeFinalDiferente} === true }"/>
+            <RadioButton id="DestinationTravel2" text="{i18n>txtNot}" select=".onSelectDestinoTravelChemical" enabled="{oModelProyect>/isFormEnabled}"  selected="{= ${oModelProyect>/inputForm/sedeFinalDiferente} !== true }"/>
+          </HBox>
+          <Label text="{i18n>txtDestinatiFinish}" visible="{= ${oModelProyect>/inputForm/sedeFinalDiferente} === true}" id="lblDestinatiFinish" required="true"/>
+          <ComboBox
+              id="DestinationFinishChemicals"
+              selectionChange=".onSelectDestinoFinal"
+              visible="{= ${oModelProyect>/inputForm/sedeFinalDiferente} === true}"
+              selectedKey="{oModelProyect>/inputForm/destinoFinal}"
+              items="{
+                  path: 'oModelProyect>/oFinalDestinosCliente'
+              }"
+              showSecondaryValues="true"
+              filterSecondaryValues="true"
+              showClearIcon="true"
+              placeholder="Escriba o seleccione"
+              enabled="{oModelProyect>/isFormEnabled}"
+          >
+              <core:ListItem
+                  key="{oModelProyect>Id}"
+                  text="{oModelProyect>Text}"
+                  additionalText="{oModelProyect>Name}"
+              />
+          </ComboBox>
+          <Label text="{i18n>txtObservationsPed}"/>
+          <TextArea id="ObservationsPed" value="{oModelProyect>/inputForm/obsPedido}" valueLiveUpdate="true" rows="4" width="100%" enabled="{oModelProyect>/isFormEnabled}"/>
+
+          <Label text="{i18n>txtObservationsDelivery}"/>
+          <TextArea id="ObservationsDelivery" value="{oModelProyect>/inputForm/obsDelivery}" valueLiveUpdate="true" rows="4" width="100%" enabled="{oModelProyect>/isFormEnabled}"/>
+        </f:content>
+      </f:SimpleForm>
+      
+         <f:SimpleForm id="SimpleFormSeparation"
+          editable="false"
+          layout="ResponsiveGridLayout"
+          labelSpanXL="4" labelSpanL="4" labelSpanM="4" labelSpanS="12"
+          columnsXL="3" columnsL="2" columnsM="2"
+          visible="{oModelProyect>/inputForm/showSeparationDates}">
+          <f:content>
+      <core:Title text="{i18n>txtSeparationHiring}"/>
+          <HBox width="100%" justifyContent="SpaceBetween" wrap="Wrap"
+                visible="{oModelProyect>/inputForm/showSeparationDates}">
+              <VBox width="48%">
+                  <Label text="{i18n>txtFechInit}"/>
+                  <DatePicker
+                      id="FechInit"
+                      dateValue="{oModelProyect>/Main/filter/fechInicio}"
+                      enabled="false"
+                      textAlign="Center"
+                      valueFormat="dd/MM/yyyy"
+                      displayFormat="dd/MM/yyyy"/>
+              </VBox>
+              <VBox width="48%">
+                  <Label text="{i18n>txtFechEnd}"/>
+                  <DatePicker
+                      id="FechEnd"
+                      value="{oModelProyect>/inputForm/fechFin}"
+                      textAlign="Center"
+                      valueFormat="dd/MM/yyyy"
+                      displayFormat="dd/MM/yyyy"/>
+              </VBox>
+          </HBox>
+          </f:content>
+        </f:SimpleForm>
+    </VBox>
+
+      </VBox>
+    </fd:content>
+      <fd:footer>
+        <OverflowToolbar>
+          <ToolbarSpacer />
+          <Button text="{i18n>txtAddMaterial}" 
+                  type="Emphasized" 
+                  width="40%" 
+                  press="_onPressMaterialDetail"/>
+          <ToolbarSpacer />
+        </OverflowToolbar>
+      </fd:footer>
+
+  </fd:DynamicPage>
+  </Shell>
+</mvc:View>

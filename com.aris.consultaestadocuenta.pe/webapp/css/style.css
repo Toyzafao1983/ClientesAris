@@ -1,0 +1,25 @@
+.opCompactHeader .sapUxAPObjectPageHeaderTitle,
+.opCompactHeader .sapUxAPObjectPageHeaderContent {
+  padding-top: 0.2rem !important;
+  padding-bottom: 0.2rem !important;
+}
+
+/* Quita padding interno que infla el contenido */
+.opCompactHeader .sapUxAPObjectPageHeaderContentInner {
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+/* Reduce altura mínima del bloque de título */
+.opCompactHeader .sapUxAPObjectPageHeaderTitleMain {
+  min-height: 2.0rem !important;   /* prueba 1.8rem si aún lo ves alto */
+}
+
+/* Compacta labels/text dentro del header */
+.opCompactHeader .sapMLabel,
+.opCompactHeader .sapMText {
+  line-height: 1.15 !important;
+}
+.opCompactHeader .sapMLabel {
+  margin-bottom: 0 !important;
+}

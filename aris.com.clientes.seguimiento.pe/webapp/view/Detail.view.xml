@@ -1,0 +1,40 @@
+<mvc:View controllerName="aris.com.clientes.seguimiento.pe.controller.Detail"
+    xmlns="sap.m"   
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns:l="sap.ui.layout"
+    xmlns:f="sap.f"
+    xmlns:n="sap.n"
+    xmlns:fb="sap.ui.comp.filterbar"
+    xmlns:microchart="sap.suite.ui.microchart"
+    xmlns:si="sap.suite.ui.commons.statusindicator"
+    xmlns:co="sap.suite.ui.commons"
+    xmlns:svm="sap.ui.comp.smartvariants">
+  
+        <f:DynamicPage headerExpanded="true">
+                <f:title>
+                    <f:DynamicPageTitle>
+                        <f:heading>
+                            <Title text="{oModelProyect>/oTitulo}" 
+                                wrapping="true" class="sapUiSmallMarginTop" level="H2"/>
+                        </f:heading>
+                        <f:navigationActions>
+                            <Button text="{i18n>textbtnBackTo}" icon="sap-icon://nav-back" press="_onPressNavButtonDetail"/>
+                            <Button text="{i18n>textbtnBackToCotSe}" icon="sap-icon://nav-back" press="_onPressNavRetCotSep" visible="{= ${oModelUser>/oAuxCotSep}}"/>
+                        </f:navigationActions>
+                    </f:DynamicPageTitle>
+                </f:title>
+                <f:header>
+                    <f:DynamicPageHeader>
+                        <f:content>
+                            
+                        </f:content>
+                    </f:DynamicPageHeader>
+                </f:header>
+                <f:content>
+                    <VBox width="auto" alignContent="Center">
+                            <VBox id="vbViewDetail"  >
+                            </VBox>
+                       </VBox>
+                </f:content>
+            </f:DynamicPage>
+</mvc:View>

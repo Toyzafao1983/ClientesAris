@@ -1,0 +1,26 @@
+<mvc:View
+    xmlns:core="sap.ui.core"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    controllerName="com.aris.registropedido.textiles.pe.controller.AccessDenied">
+    <FlexBox
+        alignItems="Center"
+        justifyContent="Center"
+        fitContainer="true"
+        class="sapUiSizeCompact"
+        direction="Column">
+
+        <VBox class="sapUiContentPadding sapUiAlignCenter" alignItems="Center">
+            <core:Icon src="sap-icon://private" class="bigLockedIcon" />
+            <Title text="Acceso Denegado" level="H1" class="sapUiMediumMarginTop sapUiTinyMarginBottom"/>
+            <Text
+                text="No tienes permisos para acceder a esta aplicación o unidad organizacional."
+                class="sapUiTinyMarginBottom sapUiSmallMarginTop"
+                textAlign="Center"/>
+            <Text
+                text="Por favor contacta al administrador del sistema o inicia sesión con otro usuario."
+                class="sapUiTinyMarginBottom"
+                textAlign="Center"/>
+        </VBox>
+    </FlexBox>
+</mvc:View>

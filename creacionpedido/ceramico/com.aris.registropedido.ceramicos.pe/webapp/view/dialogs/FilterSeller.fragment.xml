@@ -1,0 +1,25 @@
+<core:FragmentDefinition
+	xmlns="sap.m"
+	xmlns:core="sap.ui.core">
+	<SelectDialog   
+        contentWidth="10rem"
+        contentHeight="20rem"
+		id="FilterSellerDialog"
+		noDataText="Buscar Vendedor"
+		title="Vendedor"
+		liveChange=".onSearch"
+		multiSelect="true"
+		confirm=".onDialogClose"
+		cancel=".onDialogClose"
+		items="{
+			path: 'oModelProyect>/oVendedores'
+		}">
+		<StandardListItem
+			title="{oModelProyect>Seller}"   
+			description="{oModelProyect>kunn2}"
+			icon="sap-icon://employee"
+			iconDensityAware="false"
+			iconInset="false"
+			type="Active" />
+	</SelectDialog>
+</core:FragmentDefinition>

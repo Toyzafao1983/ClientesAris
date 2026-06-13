@@ -1,0 +1,22 @@
+<core:FragmentDefinition 
+xmlns:core="sap.ui.core" 
+xmlns="sap.m" 
+xmlns:fb="sap.ui.comp.filterbar" 
+xmlns:l="sap.ui.layout"
+xmlns:custom="http://schemas.sap.com/sapui5/extension/sap.ui.core.CustomData/1">
+	  <SelectDialog
+        id="ValueHelpMaterial"
+        title="Código de Material"
+        multiSelect="true"
+        search=".onMaterialSearch"
+        liveChange=".onMaterialLiveChange"
+        confirm=".onDialogMaterialConfirm"
+        cancel=".onDialogMaterialCancel"
+        items="{ path: 'oModelData>/oFiltroMaterial' }">
+        <StandardListItem
+            title="{oModelData>Material}"
+            description="{oModelData>Description}"
+            icon="sap-icon://product"
+            type="Active" />
+    </SelectDialog>
+</core:FragmentDefinition>

@@ -1,0 +1,192 @@
+<core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core" xmlns:l="sap.ui.layout"
+    xmlns:custom="http://schemas.sap.com/sapui5/extension/sap.ui.core.CustomData/1" xmlns:f="sap.ui.layout.form"
+    inset="false" sticky="ColumnHeaders" autoPopinMode="true" popinLayout="GridSmall">
+
+    <VBox
+        id="vbLoadingSimulacionTextil"
+        visible="{oModelProyect>/bSimulandoInicialTextil}"
+        alignItems="Center"
+        justifyContent="Center"
+        class="sapUiLargeMargin">
+
+        <BusyIndicator
+            size="2rem"
+            text="{oModelProyect>/sTextoSimulacionInicialTextil}"/>
+    </VBox>
+
+    <Table
+        id="tbProductos1"
+        items="{oModelProyect>/oMaterialUI}"
+        growingThreshold="20"
+        visible="{= !${oModelProyect>/bSimulandoInicialTextil} }">
+
+        <headerToolbar>
+            <Toolbar>
+                <ToolbarSpacer/>
+                <Button id="btnAgregarDetail" text="{i18n>textbtnAgregar}" type="Emphasized" icon="sap-icon://add" press="_onPressAddProduct"/>
+                <Button id="btnCalcBolsas" text="{i18n>txtCalcBolsas}"  type="Default" icon="sap-icon://loan" press=".onCalcularBolsas"
+                enabled="{
+                    = ${oModelProyect>/inputForm/grupoMaterial} === '01'
+                    || ${oModelProyect>/inputForm/grupoMaterial} === '02'
+                }"/>
+            </Toolbar>
+        </headerToolbar>
+
+        <columns>
+            <Column width="5rem" hAlign="End">
+                <header><Text text="{i18n>txtTabledPosition}"/></header>
+            </Column>
+            <Column width="10rem" hAlign="End">
+                <header><Text text="{i18n>txtTabledMaterial}"/></header>
+            </Column>
+            <Column width="16rem" hAlign="Begin">
+                <header><Text text="Descripción"/></header>
+            </Column>
+            <Column width="7rem" hAlign="End">
+                <header><Text text="{i18n>txtTabledAmount}"/></header>
+            </Column>
+            <Column width="5rem" hAlign="Center">
+                <header><Text text="{i18n>txtTabledUMV}"/></header>
+            </Column>
+            <Column width="5rem" visible="{=${oModelaris.com.clientes.seguimiento.pe>/DataGeneral/sStatus}==='C'}">
+                <header><Text text="{i18n>txtTabedPrice}"/></header>
+            </Column>
+            <Column width="6rem" hAlign="Center" visible="{=${oModelaris.com.clientes.seguimiento.pe>/DataGeneral/sStatus}==='C'}">
+                <header><Text text="{i18n>txtTabledSubTotal}"/></header>
+            </Column>
+            <Column width="6rem" hAlign="End" visible="{=${oModelaris.com.clientes.seguimiento.pe>/DataGeneral/sStatus}==='C'}">
+                <header><Text text="{i18n>txtTabledDiscount}"/></header>
+            </Column>
+            <Column width="7rem" hAlign="End">
+                <header><Text text="{i18n>txtTabledTotal}"/></header>
+            </Column>
+            <Column width="5rem" hAlign="Center">
+                <header><Text text="{i18n>txtTabledEdit}"/></header>
+            </Column>
+            <Column width="5rem" hAlign="Center">
+                <header><Text text="{i18n>txtTabledEliminate}"/></header>
+            </Column>
+        </columns>
+
+        <items>
+            <ColumnListItem type="Inactive">
+                <cells>
+                    <Text text="{oModelProyect>ItmNumber}"/>
+                    <Text text="{oModelProyect>Material}"/>
+                    <Text
+                    text="{= ${oModelProyect>Descriptions} || ${oModelProyect>descripcion} || ${oModelProyect>Description} || ${oModelProyect>Bezei} || '' }"
+                    wrapping="false"/>
+                    <Input value="{
+                            path: 'oModelProyect>cantidad',
+                            formatter: '.formatter.formatCantidad'
+                        }"
+                        editable="false" textAlign="End"/>
+
+                   <Text text="{
+                        parts: [
+                            { path: 'oModelProyect>UMV' },
+                            { path: 'oModelProyect>/inputForm/grupoMaterial' },
+                            { path: 'oModelProyect>Brand' }
+                        ],
+                        formatter: '.formatter.formatUMVTextil'
+                    }"/>
+                    <Text text="{
+                            path: 'oModelProyect>precioUnit',
+                            formatter: '.formatter.formatMonto2Dec'
+                        }"/>
+                    <Text text="{
+                            path: 'oModelProyect>precioBase',
+                            formatter: '.formatter.formatMonto2Dec'
+                        }"/>
+                    <Text text="{
+                            path: 'oModelProyect>descuentos',
+                            formatter: '.formatter.formatMonto2Dec'
+                        }"/>
+                    <Text text="{
+                            path: 'oModelProyect>importeTabla',
+                            formatter: '.formatter.formatMonto2Dec'
+                        }"/>
+                    <VBox >  
+                    <Button icon="sap-icon://edit" type="Emphasized" press="_onPressEditDetail"  visible="{= !${oModelProyect>esBolsa} }"/>
+                    <Button icon="sap-icon://edit" type="Emphasized" press=".onEditarBolsa"  visible="{= ${oModelProyect>esBolsa} }"/>
+                    </VBox>  
+                    <Button icon="sap-icon://delete" type="Reject" press="_onDeleteProduct"/>
+                </cells>
+            </ColumnListItem>
+        </items>
+    </Table>
+    <VBox
+        class="sapUiSmallMarginTop table-footer"
+        visible="{= !${oModelProyect>/bSimulandoInicialTextil} }">
+    <HBox class="footer-row" alignItems="Start" justifyContent="End">
+
+        <!-- COLUMNA IZQUIERDA: N/C y Anticipo -->
+        <VBox class="footer-col footer-col-left">
+            <HBox class="footer-field" alignItems="Center">
+                <Label text="N/C" class="footer-label"/>
+                <Input value="{
+                        path: 'oModelData>/NotaCredito/NotaCredito',
+                        formatter: '.formatter.formatMonto2Dec'
+                    }"
+                    editable="false"
+                    class="footer-input"/>
+            </HBox>
+
+            <HBox class="footer-field" alignItems="Center">
+                <Label text="Anticipo" class="footer-label"/>
+                <Input value="{
+                        path: 'oModelData>/Anticipo/OutstandingAmount',
+                        formatter: '.formatter.formatMonto2Dec'
+                    }"
+                    editable="false"
+                    class="footer-input"/>
+            </HBox>
+        </VBox>
+
+        <!-- COLUMNA DERECHA: Totales -->
+        <VBox class="footer-col footer-col-right">
+            <HBox class="footer-field" alignItems="Center">
+                <Label text="{i18n>txtTabledSubTotal}" class="footer-label"/>
+                <Input value="{
+                        path: 'oModelProyect>/oDatCalculo/subtotalGeneral',
+                        formatter: '.formatter.formatMonto2Dec'
+                    }"
+                    editable="false"
+                    class="footer-input"/>
+            </HBox>
+
+            <HBox class="footer-field" alignItems="Center">
+                <Label text="{i18n>txtTableEmba}" class="footer-label"/>
+                <Input value="{
+                        path: 'oModelProyect>/oDatCalculo/embalaje',
+                        formatter: '.formatter.formatMonto2Dec'
+                    }"
+                    editable="false"
+                    class="footer-input"/>
+            </HBox>
+
+            <HBox class="footer-field" alignItems="Center">
+                <Label text="{i18n>txtTableIGV}" class="footer-label"/>
+                <Input value="{
+                        path: 'oModelProyect>/oDatCalculo/totalImpuesto',
+                        formatter: '.formatter.formatMonto2Dec'
+                    }"
+                    editable="false"
+                    class="footer-input"/>
+            </HBox>
+
+            <HBox class="footer-field" alignItems="Center">
+                <Label text="{i18n>titleFooterColProducto}" class="footer-label"/>
+                <Input value="{
+                        path: 'oModelProyect>/oDatCalculo/totalGeneral',
+                        formatter: '.formatter.formatMonto2Dec'
+                    }"
+                    editable="false"
+                    class="footer-input"/>
+            </HBox>
+        </VBox>
+
+    </HBox>
+</VBox>
+
+</core:FragmentDefinition>

@@ -1,0 +1,100 @@
+/* Enter your custom styles here */
+.bigBoldLabel {
+   font-size: 1rem;
+   /* más grande */
+   font-weight: bold;
+   /* negrita */
+}
+
+/* Ajustes de espaciado y alineación */
+.estadoPaso {
+   margin: 0.5rem;
+   text-align: center;
+}
+
+/* Íconos grandes en escritorio, medianos en tablet, pequeños en móvil */
+.responsiveIcon {
+   font-size: 3rem !important;
+}
+
+.responsiveLabel {
+   font-size: 0.9rem;
+}
+
+/* Flechas entre pasos */
+.arrowGroup {
+   margin: 0 0.5rem;
+}
+
+.responsiveArrow {
+   font-size: 1.5rem !important;
+}
+
+/* 🔹 Ajustes automáticos para pantallas pequeñas */
+@media (max-width: 1024px) {
+   .responsiveIcon {
+      font-size: 2.5rem !important;
+   }
+}
+
+@media (max-width: 768px) {
+   .responsiveIcon {
+      font-size: 2rem !important;
+   }
+
+   .responsiveLabel {
+      font-size: 0.75rem !important;
+   }
+
+   .arrowGroup {
+      display: none;
+      /* Oculta las flechas en pantallas muy pequeñas */
+   }
+}
+
+/* Default (desktop/tablet) */
+.welcomeTitle {
+   line-height: 1.2rem;
+}
+
+/* Teléfonos */
+@media (max-width: 600px) {
+   .welcomeTitle {
+      font-size: 0.85rem !important;
+      line-height: 1rem !important;
+      margin: 0 !important;
+   }
+}
+
+.table-footer {
+    width: 100%;
+    padding-right: 1rem;
+}
+
+.footer-row {
+    width: 100%;
+}
+
+.footer-col {
+    display: flex;
+    flex-direction: column;
+}
+
+.footer-col-left {
+    margin-right: 2rem;
+}
+
+.footer-field {
+    height: 2.25rem;
+}
+
+.footer-label {
+    width: 4.5rem;
+    min-width: 4.5rem;
+    text-align: right;
+    padding-right: 0.5rem;
+}
+
+.footer-input {
+    width: 12.5rem;
+}

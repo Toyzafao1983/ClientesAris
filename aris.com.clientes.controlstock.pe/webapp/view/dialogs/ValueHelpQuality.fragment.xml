@@ -1,0 +1,20 @@
+<core:FragmentDefinition 
+xmlns:core="sap.ui.core" 
+xmlns="sap.m" 
+xmlns:fb="sap.ui.comp.filterbar" 
+xmlns:l="sap.ui.layout"
+xmlns:custom="http://schemas.sap.com/sapui5/extension/sap.ui.core.CustomData/1">
+	  <SelectDialog
+        id="ValueHelpQuality"
+        title="Calidad"
+        multiSelect="true"
+        search=".onQualityLiveChange"
+        liveChange=".onQualityLiveChange"
+        confirm=".onDialogQualityConfirm"
+        cancel=".onDialogQualityCancel"
+        items="{ path: 'oModelData>/oFiltroQuality' }">
+        <StandardListItem
+            title="{oModelData>Display}"
+            type="Active" />
+    </SelectDialog>
+</core:FragmentDefinition>

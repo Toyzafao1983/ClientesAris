@@ -1,0 +1,56 @@
+<core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core" xmlns:l="sap.ui.layout" xmlns:f="sap.ui.layout.form">
+    <Table items="{oModelProyect>/oStockQuimico}"  mode="None" growingThreshold="20" updateFinished=".onUpdateFinishedQuimicos">
+    <headerToolbar>
+            <Toolbar>
+                <ToolbarSpacer/>
+                 <Button text="{i18n>ExportExcel}" press="onPressExportarExcel" type="Accept" icon="sap-icon://excel-attachment" tooltip="{i18n>textbtnDelivery}" visible="{= !${oModelUser>/rCliente}}"/>
+            </Toolbar>
+        </headerToolbar>
+        <columns>
+            <Column width="auto" hAlign="Center" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false">
+                <header>
+                    <Text text="{i18n>titleColTabQuiCode}" width="auto" />
+                </header>
+            </Column>
+            <Column width="auto" hAlign="Begin" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false">
+                <header>
+                    <HBox justifyContent="Center" width="100%">
+                        <Text text="{i18n>titleColTabQucbDescMaterial}" width="auto" />
+                    </HBox>
+                </header>
+            </Column>
+            <Column width="auto" hAlign="End" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false" visible="{= !${oModelUser>/rCliente}}">
+                <header>
+                    <HBox justifyContent="Center" width="100%">
+                        <Text text="{i18n>titleColTabQuiPhysicalStock}" width="auto" />
+                    </HBox>
+                </header>
+            </Column>
+            <Column width="auto" hAlign="End" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false" visible="{= !${oModelUser>/rCliente}}">
+                <header>
+                    <HBox justifyContent="Center" width="100%">
+                        <Text text="{i18n>titleColTabQuiAvailableStock}" width="auto" />
+                    </HBox>
+                </header>
+            </Column>
+            <Column width="auto" hAlign="Center" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false">
+                <header>
+                    <Text text="{i18n>titleColTabQuium}" width="auto" />
+                </header>
+            </Column>
+            
+        </columns>
+       <items>
+            <ColumnListItem type="Inactive">
+                <cells>
+                    <Text text="{path:'oModelProyect>Matnr'}"/>
+                    <Text text="{path:'oModelProyect>Maktx'}"/>
+                    <Text text="{path:'oModelProyect>Stockf'}"/>
+                    <Text text="{path:'oModelProyect>Clabs'}"/>
+                    <Text text="{path:'oModelProyect>Meins'}"/>
+                </cells>
+            </ColumnListItem>
+        </items>
+     
+    </Table>
+</core:FragmentDefinition>

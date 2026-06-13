@@ -1,0 +1,62 @@
+.myRedText .sapMText {
+    color: red !important;
+}
+
+.myRedText .sapMBtn .sapMBtnInner {
+    color: red !important;
+}
+
+.welcomeTitle span[id$="titleText-inner"] {
+    font-size: 0.95rem !important;
+    /* ajusta 0.9rem / 0.85rem */
+    font-weight: 600 !important;
+    /* opcional */
+    line-height: 1.2 !important;
+    /* opcional */
+}
+
+.myPlomText .sapMText {
+    color: #6a6d70 !important;
+    /* plomo */
+}
+
+.myPlomText .sapMBtn .sapMBtnInner {
+    color: #6a6d70 !important;
+    /* plomo */
+}
+
+/* 🔹 Ajustes automáticos para pantallas pequeñas */
+@media (max-width: 1024px) {
+    .responsiveIcon {
+        font-size: 2.5rem !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .responsiveIcon {
+        font-size: 2rem !important;
+    }
+
+    .responsiveLabel {
+        font-size: 0.75rem !important;
+    }
+
+    .arrowGroup {
+        display: none;
+        /* Oculta las flechas en pantallas muy pequeñas */
+    }
+}
+
+/* Default (desktop/tablet) */
+.welcomeTitle {
+    line-height: 1.2rem;
+}
+
+/* Teléfonos */
+@media (max-width: 600px) {
+    .welcomeTitle {
+        font-size: 0.85rem !important;
+        line-height: 1rem !important;
+        margin: 0 !important;
+    }
+}

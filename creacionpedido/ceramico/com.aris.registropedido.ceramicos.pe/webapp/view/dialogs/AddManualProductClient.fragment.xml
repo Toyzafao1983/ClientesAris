@@ -1,0 +1,277 @@
+<core:FragmentDefinition
+    xmlns:core="sap.ui.core"
+    xmlns="sap.m"
+    xmlns:f="sap.ui.layout.form"
+    xmlns:table="sap.ui.table"
+    xmlns:l="sap.ui.layout"
+    displayBlock="true"
+>
+    <Dialog
+        title="{i18n>titleDialogAddProducto}"
+        contentWidth="80rem"
+        contentHeight="50rem"
+        resizable="true"
+        draggable="true"
+        afterOpen="_afterOpenAddManualProduct"
+        id="frgIdAddManualProductClient"
+    >
+        <content>
+            <f:SimpleForm
+                id="SimpleFormDisplay480_Trial2"
+                title="{i18n>txtsearchMaterialD}"
+                editable="false"
+                layout="ResponsiveGridLayout"
+                labelSpanXL="4"
+                labelSpanL="4"
+                labelSpanM="4"
+                labelSpanS="12"
+                columnsXL="3"
+                columnsL="2"
+                columnsM="2">
+
+                <f:content>
+                    <core:Title text=""/>
+
+                    <!-- Código material -->
+                    <Label text="{i18n>txtCodMaterialD}" />
+                    <MultiInput
+                        id="miMaterial"
+                        showSuggestion="true"
+                        suggest=".onSuggestMaterial"
+                        suggestionItemSelected=".onMaterialSuggestionSelected"
+                        tokenUpdate=".onMaterialTokenUpdate"
+                        placeholder="Escriba o seleccione un material"
+                        width="100%"
+                        suggestionItems="{
+                            path: 'oModelData>/oFilterMaterial'
+                        }">
+                        <suggestionItems>
+                            <core:Item
+                                key="{oModelData>Material}"
+                                text="{
+                                    parts: [
+                                        'oModelData>Material',
+                                        'oModelData>Description'
+                                    ],
+                                    formatter: '.formatter.formatMaterialWithDesc'
+                                }" />
+                        </suggestionItems>
+                    </MultiInput>
+
+                    <!-- Descripción -->
+                    <Label text="{i18n>txtDescriptionsD}" />
+                    <MultiInput
+                        id="miDescription"
+                        showSuggestion="true"
+                        suggest=".onSuggestDescription"
+                        suggestionItemSelected=".onDescriptionSuggestionSelected"
+                        tokenUpdate=".onDescriptionTokenUpdate"
+                        placeholder="Escriba o seleccione"
+                        width="100%"
+                        suggestionItems="{
+                            path: 'oModelData>/ListDescriptionSug'
+                        }">
+                        <suggestionItems>
+                            <core:Item key="{oModelData>}" text="{oModelData>}" />
+                        </suggestionItems>
+                    </MultiInput>
+
+                    <core:Title text=""/>
+
+                    <!-- Grupo de material -->
+                    <Label text="{i18n>txtGroupMaterialD}" />
+                    <ComboBox
+                        id="cbGrupoMaterialClient"
+                        selectedKey="{oModelProyect>/oSelectDetail/grupoMaterial}"
+                        items="{ path: 'oModelData>/oMaterialGroup' }"
+                        showClearIcon="true"
+                        placeholder="Seleccione un grupo de material">
+                        <core:Item
+                            key="{oModelData>MaterailGroup}"
+                            text="{= ${oModelData>MaterailGroup} + ' - ' + ${oModelData>Description} }" />
+                    </ComboBox>
+
+                    <!-- Marca -->
+                    <Label text="{i18n>txtBrand}" />
+                    <ComboBox
+                        id="cbBrandClient"
+                        selectedKey="{oModelProyect>/oSelectDetail/Brand}"
+                        items="{ path: 'oModelData>/ListBrandSug' }"
+                        showClearIcon="true"
+                        placeholder="Seleccione una marca">
+                        <core:Item
+                            key="{oModelData>Brand}"
+                            text="{= ${oModelData>Brand} + ' - ' + ${oModelData>DscBrand} }"/>
+                    </ComboBox>
+
+                </f:content>
+            </f:SimpleForm>
+
+            <f:SimpleForm
+                id="SimpleFormDisplay480_Trial5"
+                editable="false"
+                layout="ResponsiveGridLayout"
+                title=""
+                labelSpanXL="4"
+                labelSpanL="4"
+                labelSpanM="4"
+                labelSpanS="12"
+                columnsXL="3"
+                columnsL="2"
+                columnsM="2">
+
+                <f:content>
+
+                    <core:Title text=""/>
+
+                    <!-- Tipo -->
+                    <Label text="{i18n>txtTypeD}" />
+                    <HBox>
+                        <RadioButton id="rbtype4" text="{i18n>txtComplet}" />
+                        <RadioButton id="rbtype5" text="{i18n>txtSaldos}" />
+                        <RadioButton id="rbtype6" text="{i18n>txtTodos}" />
+                    </HBox>
+
+                    <!-- Formato -->
+                    <Label text="{i18n>txtFormatD}" />
+                    <ComboBox
+                        id="cbFormatoClient"
+                        selectedKey="{oModelProyect>/oSelectDetail/Formato}"
+                        items="{ path: 'oModelData>/aFormats' }"
+                        showClearIcon="true"
+                        placeholder="Seleccione formato">
+                        <core:Item key="{oModelData>Code}"
+                        text="{= ${oModelData>Code} + ' - ' + ${oModelData>Description} }" />
+                    </ComboBox>
+
+                    <!-- Calidad -->
+                    <Label text="{i18n>txtQualityD}" />
+                    <ComboBox
+                        id="cbCalidadClient"
+                        selectedKey="{oModelProyect>/oSelectDetail/Calidad}"
+                        items="{ path: 'oModelData>/aQualities' }"
+                        showClearIcon="true"
+                        placeholder="Seleccione calidad">
+                        <core:Item key="{oModelData>Code}"
+                        text="{= ${oModelData>Code} + ' - ' + ${oModelData>Description} }" />
+                    </ComboBox>
+
+                    <!-- Estilo -->
+                    <Label text="{i18n>txtStyle}" />
+                    <ComboBox
+                        id="cbEstiloClient"
+                        value="{oModelProyect>/oSelectDetail/Estilo}"
+                        selectedKey="{oModelProyect>/oSelectDetail/Estilo}"
+                        items="{ path: 'oModelData>/aStyles' }"
+                        showClearIcon="true"
+                        placeholder="Seleccione estilo">
+                        <core:Item key="{oModelData>}" text="{oModelData>}" />
+                    </ComboBox>
+
+                    <core:Title text=""/>
+
+                    <!-- Metros mínimos -->
+                    <Label text="{i18n>txtMetMayor}" />
+                    <Input
+                        id="inpMetMayorClient"
+                        value="{oModelProyect>/oSelectDetail/MetrosMin}"
+                        placeholder="Metros (M2)"
+                        type="Number"/>
+                </f:content>
+            </f:SimpleForm>
+
+            <ScrollContainer width="100%" height="100%" horizontal="true" vertical="true">
+                <Table
+                    id="tblStockCliente2"
+                    items="{path: 'oModelProyect>/oMaterialSelect'}"
+                    growing="true"
+                    growingScrollToLoad="true"
+                    inset="false"
+                    alternateRowColors="true"
+                    mode="MultiSelect"
+                    rememberSelections="false">
+                    <headerToolbar>
+                        <OverflowToolbar>
+                            <Button text="Buscar" icon="sap-icon://search" type="Emphasized" press=".onBuscarPress"/>
+                            <Button
+                                text="Limpiar"
+                                icon="sap-icon://refresh"
+                                type="Transparent"
+                                press=".onClearFiltersAndTableClient"/>
+                        </OverflowToolbar>
+                    </headerToolbar>
+
+                    <columns>
+                        <Column><Text text="Código"/></Column>
+                        <Column><Text text="Descripción"/></Column>
+                        <Column><Text text="UM"/></Column>
+                        <Column><Text text="Stock Físico"/></Column>
+                        <Column><Text text="Pallets Stock"/></Column>
+                        <Column><Text text="Cajas Stock"/></Column>
+                        <Column><Text text="Cantidad"/></Column>
+                        <Column><Text text="Pallets"/></Column>
+                        <Column><Text text="Cajas "/></Column>
+                    </columns>
+
+                    <items>
+                        <ColumnListItem>
+                            <cells>
+                                <Text text="{oModelProyect>Matnr}"/>
+                                <Text text="{oModelProyect>Descripcion}"/>
+                                <Text text="{oModelProyect>Um}"/>
+                                <ObjectNumber
+                                    number="{
+                                        path: 'oModelProyect>StockFisico',
+                                        formatter: '.formatter.formatMonto2Dec'
+                                    }"
+                                    emphasized="true"
+                                />
+                                <Text
+                                    text="{
+                                        path: 'oModelProyect>Pallets',
+                                        formatter: '.formatter.formatMonto2Dec'
+                                    }"
+                                />
+                                <Text
+                                    text="{
+                                        path: 'oModelProyect>Saldos',
+                                        formatter: '.formatter.formatMonto2Dec'
+                                    }"
+                                />
+                                <Text
+                                    text="{
+                                        path: 'oModelProyect>Cantidad',
+                                        formatter: '.formatter.formatMonto2Dec'
+                                    }"
+                                />
+                                <StepInput
+                                    value="{oModelProyect>cantidadPallets}"
+                                    step="1"
+                                    min="0"
+                                    enabled="{= !${oModelProyect>isGroup} }"
+                                    width="8rem"
+                                    change=".onValidateCantidad"
+                                    editable="{= (+${oModelProyect>Pallets}) > 0 }"
+                                />
+                                <StepInput
+                                    value="{oModelProyect>cantidadCajas}"
+                                    step="1"
+                                    min="0"
+                                    enabled="{= !${oModelProyect>isGroup} }"
+                                    width="8rem"
+                                    change=".onValidateCantidad"
+                                    editable="{= (+${oModelProyect>Saldos}) > 0 }"
+                                />
+                            </cells>
+                        </ColumnListItem>
+                    </items>
+                </Table>
+            </ScrollContainer>
+        </content>
+
+        <buttons>
+            <Button text="{i18n>confirmProductText}" press="_onAcceptProductManual" type="Emphasized" icon="sap-icon://accept"/>
+            <Button text="{i18n>cancelText}" press="_onPressClose" type="Reject" icon="sap-icon://cancel"/>
+        </buttons>
+    </Dialog>
+</core:FragmentDefinition>

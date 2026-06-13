@@ -1,0 +1,88 @@
+<core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core" xmlns:l="sap.ui.layout" xmlns:f="sap.ui.layout.form">
+    <Table items="{oModelProyect>/oStockTextil}"  mode="None" growingThreshold="20" width="auto" updateFinished=".onUpdateFinishedTextil">
+    <headerToolbar>
+            <Toolbar>
+                <ToolbarSpacer/>
+                 <Button text="{i18n>ExportExcel}" press="onPressExportarExcel" type="Accept" icon="sap-icon://excel-attachment" tooltip="{i18n>textbtnDelivery}"/>
+            </Toolbar>
+        </headerToolbar>
+        <columns>
+            <Column width="3%" hAlign="Center" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false">
+                <header>
+                    <Text text="{i18n>titleColLine}" width="auto" />
+                </header>
+            </Column>
+            <Column width="20%" hAlign="Center" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false">
+                <header>
+                        <Text text="{i18n>titleColCod}" width="auto" />
+                </header>
+            </Column>
+            <Column width="20%" hAlign="Begin" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false">
+                <header>
+                 <HBox justifyContent="Center" width="100%">
+                    <Text text="{i18n>titleColBrand}" width="auto" />
+                </HBox>
+                </header>
+            </Column>
+            <Column width="10%" hAlign="End" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false" visible="{= !${oModelUser>/rCliente}||${oModelUser>/rMetTextil}}">
+                <header>
+                    <HBox justifyContent="Center" width="100%">
+                        <Text text="{i18n>titleStockAvailable}" width="auto" />
+                    </HBox>
+                </header>
+            </Column>
+            <Column width="10%" hAlign="End" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false" visible="{= !${oModelUser>/rCliente}}">
+                <header>
+                    <HBox justifyContent="Center" width="100%">
+                        <Text text="{i18n>titleColPhysicalStock}" width="auto" />
+                    </HBox>
+                </header>
+            </Column>
+            <Column width="10%" hAlign="End" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false" visible="{= !${oModelUser>/rCliente}}">
+                <header>
+                    <HBox justifyContent="Center" width="100%">
+                        <Text text="{i18n>titleColContractedStock}" width="auto" />
+                    </HBox>
+                </header>
+            </Column>
+            <Column width="10%" hAlign="End" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false" visible="{= !${oModelUser>/rCliente}}">
+                <header>
+                    <HBox justifyContent="Center" width="100%">
+                        <Text text="{i18n>titleColPendingDispachtStock}" width="auto" />
+                    </HBox>
+                </header>
+            </Column>
+            <Column width="10%" hAlign="End" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false" visible="{= !${oModelUser>/rCliente}}">
+                <header>
+                    <HBox justifyContent="Center" width="100%">
+                        <Text text="{i18n>titleColSeparationStock}" width="auto" />
+                    </HBox>
+                </header>
+            </Column>
+            <Column width="7%" hAlign="Center" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false" visible="{= !${oModelUser>/rCliente}||${oModelUser>/rMetTextil}}">
+                <header>
+                    <Text text="UMV" width="auto" />
+                </header>
+            </Column>
+            
+            
+        </columns>
+       <items>
+            <ColumnListItem   
+            type="Inactive">
+                <cells>
+                    <Text text="{path:'oModelProyect>Linea'}"/>
+                    <Text text="{path:'oModelProyect>Material'}"/>
+                    <Text text="{path:'oModelProyect>Bezei'}"/>
+                     <Text text="{path:'oModelProyect>StockDispo'}"/>
+                    <Button type="Transparent" text="{path:'oModelProyect>StockFisico'}" press="_onPressNavigateDetailPieza"/>
+                    <Button type="Transparent" text="{path:'oModelProyect>StockContrato'}" press="_onPressNavigateDetailStockContrato"/>
+                    <Button type="Transparent" text="{path:'oModelProyect>StockPedido'}" press="_onPressNavigateDetailStockPendiente"/>
+                    <Button type="Transparent" text="{path:'oModelProyect>StockSepara'}" press="_onPressNavigateDetailStockSeparacion"/>
+                    <Text text="{path:'oModelProyect>Um'}" />
+                </cells>
+            </ColumnListItem>
+        </items>
+     
+    </Table>
+</core:FragmentDefinition>

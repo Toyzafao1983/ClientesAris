@@ -1,0 +1,188 @@
+<core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core" xmlns:l="sap.ui.layout" xmlns:f="sap.ui.layout.form" xmlns:table="sap.ui.table">
+    <VBox fitContainer="true" width="100%">
+        <!-- Toolbar global del fragment -->
+        <Toolbar>
+            <ToolbarSpacer/>
+            <Button
+                text="{i18n>ExportExcel}"
+                press="onPressExportarExcel"
+                type="Accept"
+                icon="sap-icon://excel-attachment"
+                tooltip="{i18n>ExportExcel}" />
+        </Toolbar>
+      <IconTabBar
+                    id="idIconTabBarCerSup"
+                    expanded="{device>/isNoPhone}"
+                    class="sapUiResponsiveContentPadding sapUiNoContentPadding" >
+                        <items >
+                                    <IconTabFilter icon="sap-icon://drop-down-list" 
+                                    key="info" 
+                                    text="{i18n>titleColTabCerCliListView}" 
+                                    design="Horizontal" >
+                                    <VBox fitContainer="true" height="100%">
+                                     <layoutData><FlexItemData growFactor="1"/></layoutData>
+
+                                     <table:TreeTable id="ttCer"
+                                        rows="{
+                                            path: 'oModelProyect>/oTreeCer',
+                                            parameters: { arrayNames: ['children'] }
+                                        }"
+                                        selectionMode="None"
+                                        visibleRowCountMode="Auto"
+                                        alternateRowColors="true"
+                                        expandFirstLevel="true">
+
+                                        <!-- Desglose / Código (muestra código en el padre) -->
+                                        <table:Column width="11%">
+                                        <table:label><Label text="Desglose"/></table:label>
+                                        <table:template>
+                                            <HBox>
+                                            <Text text="{= ${oModelProyect>isGroup} ? '+' : '-' }" width="1.5rem" textAlign="Center"/>
+                                            </HBox>
+                                        </table:template>
+                                        </table:Column>
+
+                                        <!-- Código (para los hijos) -->
+                                        <table:Column width="8%">
+                                        <table:label><Label text="Código"/></table:label>
+                                        <table:template>
+                                            <Text text="{= ${oModelProyect>isGroup} ? ${oModelProyect>Matnr} : '' }"/>
+                                        </table:template>
+                                        </table:Column>
+                                        <!-- Descripción (solo en el padre) -->
+                                        <table:Column width="33%">
+                                        <table:label><Label text="Descripción"/></table:label>
+                                        <table:template>
+                                            <Text text="{= ${oModelProyect>isGroup} ? ${oModelProyect>Descripcion} : '' }"/>
+                                        </table:template>
+                                        </table:Column>
+
+                                        <!-- Calibre/Tono (solo hijos) -->
+                                        <table:Column width="7%">
+                                        <table:label><Label text="Calibre"/></table:label>
+                                        <table:template><Text text="{oModelProyect>Calibre}"/></table:template>
+                                        </table:Column>
+
+                                        <table:Column width="7%">
+                                        <table:label><Label text="Tono"/></table:label>
+                                        <table:template><Text text="{oModelProyect>Tono}"/></table:template>
+                                        </table:Column>
+
+                                        <!-- UN -->
+                                        <table:Column width="6%">
+                                        <table:label><Label text="UN"/></table:label>
+                                        <table:template><Text text="{oModelProyect>Um}"/></table:template>
+                                        </table:Column>
+
+                                        <table:Column width="11%" hAlign="Center">
+                                        <table:label><Label text="Stock M2" textAlign="Center" /></table:label>
+                                        <table:template>
+                                            <ObjectNumber
+                                            textAlign="Center"
+                                             number="{
+                                                parts:[
+                                                    'oModelProyect>TotalStockFisicoFmt',
+                                                    'oModelProyect>StockFisicoFmt'
+                                                ],
+                                                formatter: '.formatter.stockDisplay'
+                                            }" emphasized="true"/>
+
+                                        </table:template>
+                                        </table:Column>
+
+                                        <table:Column
+                                            visible="{= ${oModelProyect>/Main/filter/iTipoIndex} !== 1 }"
+                                            width="8%"
+                                            hAlign="Center">
+                                        <table:label>
+                                            <Label text="Pallets" textAlign="Center"/>
+                                        </table:label>
+                                        <table:template>
+                                            <ObjectNumber
+                                            number="{
+                                                parts:['oModelProyect>TotalPalletsFmt','oModelProyect>PalletsFmt'],
+                                                formatter: '.formatter.stockDisplay'
+                                            }"
+                                            textAlign="Center"
+                                            unit=""
+                                            />
+                                        </table:template>
+                                        </table:Column>
+
+                                      <table:Column
+                                            visible="{= ${oModelProyect>/Main/filter/iTipoIndex} !== 0 }"
+                                            width="9%"
+                                            hAlign="Center">
+                                        <table:label>
+                                            <Label text="Cajas" textAlign="Center"/>
+                                        </table:label>
+                                        <table:template>
+                                            <ObjectNumber
+                                            number="{
+                                                parts:['oModelProyect>TotalSaldosFmt','oModelProyect>SaldosFmt'],
+                                                formatter: '.formatter.stockDisplay'
+                                            }"
+                                            textAlign="Center"
+                                            unit=""
+                                            />
+                                        </table:template>
+                                        </table:Column>
+
+                                    </table:TreeTable>
+                                    </VBox>
+                                    </IconTabFilter>
+                                    <IconTabFilter
+                                        icon="sap-icon://image-viewer"
+                                        key="attachments"
+                                        text="{i18n>titleColTabCerCliImageView}" 
+                                        design="Horizontal">
+                                        <l:Grid
+                                            defaultSpan="L4 M6 S12"
+                                            width="100%"
+                                            class="sapUiSmallMarginTop"
+                                            content="{oModelProyect>/oTreeCer}">
+                                            <l:content>
+                                                <Panel
+                                                    class="sapUiResponsiveMargin"
+                                                    width="auto">
+                                                    <headerToolbar>
+                                                        <Toolbar>
+                                                            <Title text="{path:'oModelProyect>Descripcion'}" wrapping="true" />
+                                                        </Toolbar>
+                                                    </headerToolbar>
+                                                    <f:SimpleForm editable="false" layout="ResponsiveGridLayout">
+                                                        <HBox justifyContent="SpaceBetween">
+                                                        <VBox >
+                                                        <Label text="{i18n>titleColTabCerCliCode}" />
+                                                        <Text text="{oModelProyect>Matnr}" wrapping="false" />
+
+                                                        <Label text="{i18n>titleColTabCerCliStockM2}" />
+                                                        <Text text="{oModelProyect>TotalStockFisicoFmt}" wrapping="false" />
+
+                                                        <Label text="{i18n>titleColTabCerCliPallets}" />
+                                                        <Text text="{oModelProyect>TotalPalletsFmt}" wrapping="false" />
+
+                                                        <Label text="{i18n>titleColTabCerCliBoxes}" />
+                                                        <Text text="{oModelProyect>TotalSaldosFmt}" wrapping="false" />
+                                                        </VBox>
+                                                        <VBox alignContent="End" >
+                                                            
+                                                            <Image src="{path: 'oModelProyect>Matnr', formatter: '.formatter.absImgPath'}"
+                                                                width="100px"
+                                                                height="100px"
+                                                                press="onImagePress" >
+                                                                <customData>
+                                                                    <core:CustomData key="titulo" value="{oModelProyect>Descripcion}" />
+                                                                </customData>
+                                                            </Image>
+                                                        </VBox>
+                                                        </HBox>
+                                                    </f:SimpleForm>
+                                                </Panel>
+                                            </l:content>
+                                        </l:Grid>
+                                    </IconTabFilter>
+                        </items>
+                    </IconTabBar>
+                     </VBox>
+</core:FragmentDefinition>

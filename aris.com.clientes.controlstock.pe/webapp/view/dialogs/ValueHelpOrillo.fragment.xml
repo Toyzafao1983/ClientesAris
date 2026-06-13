@@ -1,0 +1,24 @@
+<core:FragmentDefinition 
+    xmlns:core="sap.ui.core" 
+    xmlns="sap.m" 
+    xmlns:fb="sap.ui.comp.filterbar" 
+    xmlns:l="sap.ui.layout"
+    xmlns:custom="http://schemas.sap.com/sapui5/extension/sap.ui.core.CustomData/1">
+
+    <SelectDialog
+        id="ValueHelpOrillo"
+        title="Orillo / Estilo"
+        multiSelect="true"
+        search=".onOrilloLiveChange"
+        liveChange=".onOrilloLiveChange"
+        confirm=".onDialogOrilloConfirm"
+        cancel=".onDialogOrilloCancel"
+        items="{ path: 'oModelData>/oFiltroOrillo' }">
+
+        <StandardListItem
+            title="{oModelData>Display}"
+            description=""
+            type="Active"
+            icon="sap-icon://multi-select" />
+    </SelectDialog>
+</core:FragmentDefinition>

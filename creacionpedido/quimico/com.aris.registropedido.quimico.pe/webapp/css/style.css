@@ -1,0 +1,41 @@
+.myCompactForm .sapUiFormResLayout > div {
+  margin-bottom: 0.25rem; /* reduce espacio vertical */
+}
+
+
+.bigLockedIcon {
+  font-size: 16rem !important;   
+  color: rgb(26, 224, 46) !important;  
+  margin-top: 3rem;
+  margin-bottom: 2rem;
+  opacity: 0.95;
+  transition: transform 0.25s ease;
+}
+
+.bigLockedIcon:hover {
+  transform: scale(1.05);
+}
+/* Plomo para texto normal */
+.myPlomText .sapMText,
+.myPlomText .sapMObjectStatusText,
+.myPlomText .sapMObjStatusText,
+.myPlomText .sapMObjStatusTitle {
+  color: #6a6d70 !important;
+}
+
+/* Si tu ObjectStatus trae icono */
+.myPlomText .sapUiIcon {
+  color: #6a6d70 !important;
+}
+
+/* Plomo para el Input */
+.myPlomText .sapMInputBaseInner,
+.myPlomText .sapMInputBaseContentWrapper,
+.myPlomText .sapMInputBaseReadonlyInner {
+  color: #6a6d70 !important;
+}
+
+/* (Opcional) bajar un poco la opacidad de toda la fila */
+.myPlomText {
+  opacity: 0.85;
+}

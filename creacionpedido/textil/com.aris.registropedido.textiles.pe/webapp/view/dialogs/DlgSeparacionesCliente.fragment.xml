@@ -1,0 +1,46 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core">
+    <Dialog
+        id="dlgSeparacionesCliente"
+        title="Separaciones por cliente"
+        contentWidth="30rem"
+        stretchOnPhone="true">
+         <VBox class="sapUiMediumMargin">
+            <Label text="Cliente" labelFor="inpClienteSep"/>
+            <Input
+                id="inpClienteSep"
+                value="{oModelProyect>/inputForm/clienteSepDisplay}"
+                width="100%"
+                showSuggestion="true"
+                suggest=".onClienteSepSuggest"
+                suggestionItems="{
+                    path: 'oModelProyect>/aClientesReferencia'
+                }"
+                suggestionItemSelected=".onClienteSepSuggestionItemSelected"
+                placeholder="Ingrese código de cliente o ayúdese con búsqueda...">
+                <suggestionItems>
+                    <SuggestionItem
+                        key="{oModelProyect>Cliente}"
+                        text="{oModelProyect>Display}" />
+                </suggestionItems>
+            </Input>
+        </VBox>
+            <buttons>
+                <Button
+                    text="Atrás"
+                    type="Transparent"
+                    press=".onSepClienteBack"/>
+
+                <Button
+                    text="Confirmar"
+                    type="Emphasized"
+                    class="sapUiTinyMarginEnd"
+                    press=".onSepClienteConfirmar"/>
+
+                <Button
+                    text="Cancelar"
+                    press=".onSepClienteCancelar"/>
+            </buttons>
+    </Dialog>
+</core:FragmentDefinition>

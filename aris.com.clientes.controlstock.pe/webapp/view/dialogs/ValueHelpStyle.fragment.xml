@@ -1,0 +1,20 @@
+<core:FragmentDefinition 
+xmlns:core="sap.ui.core" 
+xmlns="sap.m" 
+xmlns:fb="sap.ui.comp.filterbar" 
+xmlns:l="sap.ui.layout"
+xmlns:custom="http://schemas.sap.com/sapui5/extension/sap.ui.core.CustomData/1">
+	 <SelectDialog
+        id="ValueHelpStyle"
+        title="Estilo"
+        multiSelect="true"
+        search=".onStyleLiveChange"
+        liveChange=".onStyleLiveChange"
+        confirm=".onDialogStyleConfirm"
+        cancel=".onDialogStyleCancel"
+        items="{ path: 'oModelData>/oFiltroStyle' }">
+        <StandardListItem
+            title="{oModelData>OrilloStyle}"
+            type="Active" />
+    </SelectDialog>
+</core:FragmentDefinition>

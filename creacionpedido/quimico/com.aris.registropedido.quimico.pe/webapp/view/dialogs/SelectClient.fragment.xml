@@ -1,0 +1,131 @@
+<core:FragmentDefinition xmlns:core="sap.ui.core" xmlns="sap.m" xmlns:fb="sap.ui.comp.filterbar" xmlns:l="sap.ui.layout" xmlns:uxap="sap.uxap"
+	xmlns:custom="http://schemas.sap.com/sapui5/extension/sap.ui.core.CustomData/1" xmlns:f="sap.f">
+	<Dialog contentHeight="auto" contentWidth="80%" afterOpen="_afterOpenAddPedido">
+         <customHeader>
+            <Bar>
+                <contentMiddle>
+                    <Title text="{i18n>textSearchCliente}" />
+                </contentMiddle>
+            </Bar>
+        </customHeader>
+        <f:DynamicPage  headerExpanded="true">
+            <f:header>
+                <f:DynamicPageHeader pinnable="false">
+                    <f:content>
+                        <fb:FilterBar filterContainerWidth="15rem" reset="onReset" search="_onSearchFB" showFilterConfiguration="true"
+                            showRestoreButton="false" showClearOnFB="true" clear="_onClear" useToolbar="false">
+                            <fb:filterItems>
+                                <fb:FilterItem name="A" label="{i18n>lblVendedores}">
+                                    <fb:control> 
+                                        <Input width="100%"
+                                            showValueHelp="true"
+                                            valueHelpRequest="onValueHelpRequest"
+                                            placeholder="Enter value" />
+                                    </fb:control>
+                                </fb:FilterItem>
+                                
+                                <fb:FilterItem name="B" label="{i18n>lblCodCliente}">
+                                    <fb:control>
+                                        <Input width="100%"
+                                            showValueHelp="true"
+                                            valueHelpRequest="onValueHelpRequest"
+                                            placeholder="Enter value" />
+                                    </fb:control>
+                                </fb:FilterItem>
+                                
+                                <fb:FilterItem name="D" label="{i18n>lblRazonSocial}">
+                                    <fb:control>
+                                        <Input width="100%"
+                                            showValueHelp="true"
+                                            valueHelpRequest="onValueHelpRequest"
+                                            placeholder="Enter value" />
+                                    </fb:control>
+                                </fb:FilterItem>
+
+                                <fb:FilterItem name="E" label="{i18n>lblDocumento}">
+                                    <fb:control>
+                                        <!-- <ComboBox id="cbFilterEstado" selectedKey="{oModelcom.aris.registropedido.quimico.pe>/DataGeneral/filter/sEstado}" 
+                                            items="{oModelGetcom.aris.registropedido.quimico.pe>/oEstado}" change="onValidateChange">
+                                            <core:ListItem key="{oModelGetcom.aris.registropedido.quimico.pe>desc}" text="{oModelGetcom.aris.registropedido.quimico.pe>desc}"/>
+                                        </ComboBox> -->
+                                        <Input width="100%"
+                                            showValueHelp="true"
+                                            valueHelpRequest="onValueHelpRequest"
+                                            placeholder="Enter value" />
+                                    </fb:control>
+                                </fb:FilterItem>
+                            </fb:filterItems>
+                        </fb:FilterBar>
+                    </f:content>
+                </f:DynamicPageHeader>
+            </f:header>
+        </f:DynamicPage>
+        <content>
+            <VBox width="auto" class="sapUiSmallMargin">
+                <!-- <Table mode="SingleSelect" growingThreshold="20" id="SelectClient"
+               items="{oModelProyect>/oCliente}">
+                    <columns>
+                        <Column width="5rem" hAlign="Left" vAlign="Middle" minScreenWidth="Phone" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false">
+                            <header>
+                                <Text text="{i18n>titleColCodeClient}" width="auto" maxLines="2" wrapping="true" textAlign="Begin" textDirection="Inherit" visible="true"/>
+                            </header>
+                        </Column>
+                        <Column width="auto" hAlign="Center" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false">
+                            <header>
+                                <Text text="{i18n>titleColCompanyName}" width="auto" maxLines="1" wrapping="false" textAlign="Begin" textDirection="Inherit" visible="true"/>
+                            </header>
+                        </Column>
+                        <Column width="8rem" hAlign="Left" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false">
+                            <header>
+                                <Text text="{i18n>titleColDoc}" width="auto" maxLines="2" wrapping="true" textAlign="Begin" textDirection="Inherit" visible="true"/>
+                            </header>
+                        </Column>
+                        <Column width="6rem" hAlign="Left" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false">
+                            <header>
+                                <Text text="{i18n>titleColGroup}" width="auto" maxLines="1" wrapping="false" textAlign="Begin" textDirection="Inherit" visible="true"/>
+                            </header>
+                        </Column>
+                        <Column width="auto" hAlign="Center" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false">
+                            <header>
+                                <Text text="{i18n>titleColCredAsig}" width="auto" maxLines="1" wrapping="false" textAlign="Begin" textDirection="Inherit" visible="true"/>
+                            </header>
+                        </Column>
+                        <Column width="auto" hAlign="Center" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false">
+                            <header>
+                                <Text text="{i18n>titleColDirFiscal}" width="auto" maxLines="1" wrapping="false" textAlign="Begin" textDirection="Inherit" visible="true"/>
+                            </header>
+                        </Column>
+                        <Column width="6rem" hAlign="Left" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false">
+                            <header>
+                                <Text text="{i18n>titleColPhone}" width="auto" maxLines="2" wrapping="true" textAlign="Begin" textDirection="Inherit" visible="true"/>
+                            </header>
+                        </Column>
+                        <Column width="5rem" hAlign="Center" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false">
+                            <header>
+                                <Text text="{i18n>titleColEmail}" width="auto" maxLines="2" wrapping="true" textAlign="Begin" textDirection="Inherit" visible="true"/>
+                            </header>
+                        </Column>
+                    </columns>
+                    <items>
+                        <ColumnListItem type="Inactive">
+                            <cells>
+                                <Text text="{oModelProyect>txt0}"/>
+                                <Text text="{oModelProyect>txt1}"/>
+                                <Text text="{oModelProyect>txt2}"/>
+                                <Text text="{oModelProyect>txt3}"/>
+                                <Text text="{oModelProyect>txt4}"/>
+                                <Text text="{oModelProyect>txt5}"/>
+                                <Text text="{oModelProyect>txt6}"/>
+                                <Text text="{oModelProyect>txt7}"/>
+                            </cells>
+                        </ColumnListItem>
+                    </items>
+                </Table> -->
+            </VBox>
+        </content>
+		<buttons>
+			<Button text="{i18n>continueText}" press="_onDetailCliente" custom:custom="default" type="Critical" icon="sap-icon://accept"/>
+			<Button text="{i18n>cancelText}" press="_onPressClose" custom:custom="SelectClient" type="Reject" icon="sap-icon://cancel"/>
+		</buttons>
+	</Dialog>
+</core:FragmentDefinition>

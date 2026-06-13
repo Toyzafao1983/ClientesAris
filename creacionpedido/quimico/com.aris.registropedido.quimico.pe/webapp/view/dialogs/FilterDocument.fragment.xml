@@ -1,0 +1,25 @@
+<core:FragmentDefinition
+	xmlns="sap.m"
+	xmlns:core="sap.ui.core">
+	<SelectDialog   
+        contentWidth="10rem"
+        contentHeight="20rem"
+		id="FilterDocumentDialog"
+		noDataText="Buscar RUC"
+		title="RUC"
+		multiSelect="true"
+		liveChange=".onSearch"
+		confirm=".onDialogClose"
+		cancel=".onDialogClose"
+		items="{
+			path: 'oModelProyect>/oCliente'
+		}">
+		<StandardListItem
+			title="{path: 'oModelProyect>', formatter: '.formatter.getFirstTaxNumber'}"
+			description="{oModelProyect>CustomerFullName}"
+			icon="sap-icon://business-card"
+			iconDensityAware="false"
+			iconInset="false"
+			type="Active" />
+	</SelectDialog>
+</core:FragmentDefinition>

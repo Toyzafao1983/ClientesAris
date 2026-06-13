@@ -1,0 +1,295 @@
+<mvc:View controllerName="aris.com.clientes.controlstock.pe.controller.View"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns:core="sap.ui.core"
+    xmlns="sap.m"
+    xmlns:f="sap.f"
+    xmlns:fb="sap.ui.comp.filterbar"
+    xmlns:svm="sap.ui.comp.smartvariants"
+    xmlns:custom="http://schemas.sap.com/sapui5/extension/sap.ui.core.CustomData/1">
+
+        <f:DynamicPage headerExpanded="true">
+                <f:title>
+                    <f:DynamicPageTitle>
+                        <f:heading>
+                            <Title
+                                text="{= 'Bienvenido(a): ' + (${oModelUser>/WelcomeDisplay} || '') }"
+                                level="H6"
+                                titleStyle="H6"
+                                wrapping="true"
+                                class="welcomeTitle"
+                            />
+                        </f:heading>
+                        
+                        <f:actions>
+                            <Button text="{i18n>textHome}" press="_onbtnHome" type="Back" icon="sap-icon://home" tooltip="{i18n>tooltipbtnHome}"/>
+                            <MenuButton text="{i18n>titleButtonLanguaje}">
+                                    <menu>
+                                        <Menu itemSelected="onMenuAction">
+                                            <MenuItem text="{i18n>titleButtonLanguajeEN}" press="onLanguageEng"/>
+                                            <MenuItem text="{i18n>titleButtonLanguajeES}" press="onLanguageEsp"/>
+                                        </Menu>
+                                    </menu>
+                                </MenuButton>
+
+                        </f:actions>
+                    </f:DynamicPageTitle>
+                </f:title>
+                <f:header>
+                    <f:DynamicPageHeader>
+                        <f:content>
+                        <VBox visible="{= !${oModelUser>/bUiReady} }" class="sapUiSmallMargin">
+                            <BusyIndicator size="2rem"/>
+                        </VBox>
+                        <VBox visible="{oModelUser>/bUiReady}">
+                        <VBox>
+                            <fb:FilterBar id="idFilterBar" filterContainerWidth="10rem" reset="onReset" search="_onSearchFB" showFilterConfiguration="false"
+                                showRestoreButton="false" showClearOnFB="false" showGoOnFB="false" clear="_clearComponent" useToolbar="false" >
+                                <fb:filterItems>
+
+                                 <fb:FilterItem name="A" label="{i18n>txtGroupMaterials}" 
+                                 visible="{= ${oModelUser>/rTextil} ? (( ${oModelUser>/rCliente} || ${oModelUser>/rVendedor}) ? false : true ) : true }">
+                                        <fb:control >
+                                       <MultiComboBox
+                                            id="cbMaterialGroup"
+                                            width="250px"
+                                            tooltip="{i18n>tooltipinp}"
+                                            selectedKeys="{oModelProyect>/Main/filter/cbMaterialGroup}"
+                                            items="{
+                                                path: 'oModelMaterialGroup>/d/results',
+                                                sorter: { path: 'sText' }
+                                            }"
+                                            custom:custom="cbMaterialGroup/MaterialGroup">
+                                            <core:Item key="{oModelMaterialGroup>sKey}" text="{oModelMaterialGroup>sText}" />
+                                        </MultiComboBox> 
+                                        </fb:control>
+                                    </fb:FilterItem>
+                                
+                                    <fb:FilterItem name="B" label="{i18n>txtMaterialCode}">
+                                        <fb:control>
+                                            <MultiInput
+                                                id="miMaterial"
+                                                width="300px"
+                                                showClearIcon="true"
+                                                showSuggestion="true"
+                                                showValueHelp="true"
+                                                valueHelpRequest=".onOpenMaterialDialog"
+                                                liveChange="onChangeMaterial"
+                                                suggest="onChangeMaterial"
+                                                suggestionItems="{
+                                                    path: 'oModelData>/oFiltroMaterial'
+                                                }"
+                                                custom:custom="cbCodMaterial/Material"
+                                                tokenUpdate="ChangeMultiImput">
+
+                                                <suggestionItems>
+                                                    <core:Item 
+                                                        key="{oModelData>Material}" 
+                                                        text="{oModelData>Display}" />
+                                                </suggestionItems>
+                                            </MultiInput>
+                                        </fb:control>
+                                    </fb:FilterItem>
+                                    
+                                   
+
+                                        <fb:FilterItem name="C" label="{i18n>txtDescription}"
+                                        visible="{= ${oModelUser>/rTextil} ? false : true }">
+                                            <fb:control > 
+                                                <MultiInput
+                                                    id="miDescMaterial"
+                                                    width="300px"
+                                                    showClearIcon="true"
+                                                    showSuggestion="true"
+                                                    showValueHelp="true"
+                                                    valueHelpRequest=".onOpenDescMaterialDialog"
+                                                    suggest="onChangeDescMaterial"
+                                                    suggestionItems="{ path: 'oModelData>/oFiltroDescMaterial' }"
+                                                    custom:custom="cbDescMaterial/Description">
+                                                    <suggestionItems>
+                                                        <core:Item key="{oModelData>key}" text="{oModelData>Display}" />
+                                                    </suggestionItems>
+                                                </MultiInput>                          
+                                            </fb:control>
+                                        </fb:FilterItem>
+                                    
+                                    <fb:FilterItem name="D" label="{i18n>txtBrand}"
+                                    visible="{= ${oModelUser>/rTextil} ? false : true }">
+                                            <fb:control>
+                                                <MultiComboBox
+                                                    id="cbBrand"
+                                                    width="300px"
+                                                    tooltip="{i18n>tooltipinp}"
+                                                    selectedKeys="{oModelProyect>/Main/filter/cbBrand}"
+                                                    items="{
+                                                        path: 'oModelBrand>/d/results',
+                                                        sorter: { path: 'sText' }
+                                                    }"
+                                                    custom:custom="cbBrand/Brand">
+                                                    <core:Item key="{oModelBrand>sKey}" text="{oModelBrand>sText}" />
+                                                </MultiComboBox>
+                                            </fb:control>
+                                        </fb:FilterItem>
+
+                                    <fb:FilterItem name="E" label="{i18n>txtTextileArticle}" visible="{= ${oModelUser>/rTextil}}">
+                                        <fb:control>
+                                         <MultiInput
+                                            id="miTextileArticle"
+                                            width="300px"
+                                            showClearIcon="true"
+                                            showSuggestion="true"
+                                            showValueHelp="true"
+                                            valueHelpRequest=".onOpenTextileArticleDialog"
+                                            suggest="onChangeTextileArticle"
+                                            suggestionItems="{ path: 'oModelData>/oFiltroTextileArticleSug' }"
+                                            custom:custom="cbTextileArticle/TextileArticleQuality">
+                                            <suggestionItems>
+                                                <core:Item key="{oModelData>key}" text="{oModelData>Display}" />
+                                            </suggestionItems>
+                                        </MultiInput>
+                                        </fb:control>
+                                    </fb:FilterItem>
+
+                                    <fb:FilterItem name="F" label="{i18n>txtSelvedge}" visible="{= ${oModelUser>/rTextil}}">
+                                        <fb:control>
+                                             <MultiInput
+                                                id="miOrillo"
+                                                width="300px"
+                                                showClearIcon="true"
+                                                showSuggestion="true"
+                                                showValueHelp="true"
+                                                valueHelpRequest=".onOpenOrilloDialog"
+                                                liveChange="onChangeOrillo"
+                                                suggest="onChangeOrillo"
+                                                tokenUpdate="ChangeMultiImput"
+                                                suggestionItemSelected=".onOrilloSuggestionItemSelected"
+                                                suggestionItems="{ path: 'oModelData>/oFiltroOrilloSuggest' }"
+                                                custom:custom="cbOrillo/cbOrilloPrefix2">
+                                                <suggestionItems>
+                                                    <core:Item key="{oModelData>key}" text="{oModelData>Display}" />
+                                                </suggestionItems>
+                                            </MultiInput>
+                                        </fb:control>
+                                    </fb:FilterItem>
+
+                                  <fb:FilterItem 
+                                        name="G" 
+                                        label="{i18n>txtMinimumFootage}" 
+                                        visible="{= ${oModelUser>/rTextil}}">
+                                        <fb:control>
+                                            <Input 
+                                                id="inpMinimumFootage"
+                                                value="{oModelProyect>/Main/filter/iMinimumFootage}" 
+                                                type="Number"
+                                                width="150px"
+                                                liveChange=".onChangeMinimumFootage"
+                                                description="MTS"/>
+                                        </fb:control>
+                                    </fb:FilterItem>
+
+                                   <fb:FilterItem 
+                                        name="H" 
+                                        label="{i18n>txtGreaterFootage}" 
+                                        visible="{= ${oModelUser>/rCeramicos}}">
+                                        <fb:control>
+                                            <Input 
+                                                id="inpGreaterFootage"
+                                                value="{oModelProyect>/Main/filter/iGreaterFootage}" 
+                                                type="Number"
+                                                width="150px"
+                                                description="M2"/>
+                                        </fb:control>
+                                    </fb:FilterItem>
+
+                                    <fb:FilterItem name="I" label="{i18n>txtFormat}" visible="{= ${oModelUser>/rCeramicos}}">
+                                        <fb:control>
+                                         <MultiInput
+                                            id="miFormat"
+                                            width="300px"
+                                            showClearIcon="true"
+                                            showSuggestion="true"
+                                            showValueHelp="true"
+                                            valueHelpRequest=".onOpenFormatDialog"
+                                            suggest="onChangeFormat"
+                                            suggestionItems="{ path: 'oModelData>/oFiltroFormat' }"
+                                            custom:custom="cbFormat/Formatt">
+                                            <suggestionItems>
+                                                <core:Item key="{oModelData>key}" text="{oModelData>Display}" />
+                                            </suggestionItems>
+                                        </MultiInput>
+                                        </fb:control>
+                                    </fb:FilterItem>
+
+                                     <fb:FilterItem name="J" label="{i18n>txtQuality}" visible="{= ${oModelUser>/rCeramicos}}">
+                                        <fb:control>
+                                            <MultiInput
+                                                id="miQuality"
+                                                width="300px"
+                                                showClearIcon="true"
+                                                showSuggestion="true"
+                                                showValueHelp="true"
+                                                valueHelpRequest=".onOpenQualityDialog"
+                                                suggest=".onChangeQuality"
+                                                suggestionItems="{ path: 'oModelData>/oFiltroQuality' }"
+                                                custom:custom="cbQuality/TextileArticleQuality">
+                                                <suggestionItems>
+                                                    <core:Item key="{oModelData>key}" text="{oModelData>Display}" />
+                                                </suggestionItems>
+                                            </MultiInput>
+                                        </fb:control>
+                                    </fb:FilterItem>
+
+                                    <fb:FilterItem name="K" label="{i18n>txtStyle}" visible="{= ${oModelUser>/rCeramicos}}">
+                                        <fb:control>
+                                           <MultiInput
+                                                id="miStyle"
+                                                width="300px"
+                                                showClearIcon="true"
+                                                showSuggestion="true"
+                                                showValueHelp="true"
+                                                valueHelpRequest=".onOpenStyleDialog"
+                                                suggest=".onChangeStyle"
+                                                suggestionItems="{ path: 'oModelData>/oFiltroStyle' }"
+                                                custom:custom="cbStyle/OrilloStyle">
+                                                <suggestionItems>
+                                                    <core:Item key="{oModelData>OrilloStyle}" text="{oModelData>OrilloStyle}" />
+                                                </suggestionItems>
+                                            </MultiInput>
+                                        </fb:control>
+                                    </fb:FilterItem>
+                                    <fb:FilterItem name="L" label="{i18n>txtTipe}" visible="{= ${oModelUser>/rCeramicos}}">
+                                        <fb:control>
+                                            <RadioButtonGroup
+                                            id="rbTipo"
+                                            columns="3"
+                                            selectedIndex="{oModelProyect>/Main/filter/iTipoIndex}"
+                                            select="onTipoRadioSelect">
+                                            <buttons>
+                                                <RadioButton text="Completos"/>
+                                                <RadioButton text="Saldos"/>
+                                                <RadioButton text="Todos"/>
+                                            </buttons>
+                                            </RadioButtonGroup>
+                                        </fb:control>
+                                        </fb:FilterItem>
+                                </fb:filterItems>
+                            </fb:FilterBar>
+                         </VBox>
+                         
+                            <HBox>
+                                <Button text="{i18n>textFind}" press="_onPressExecute" icon="sap-icon://detail-view" tooltip="{i18n>tooltipbtnFind}"/>
+                                <Button text="{i18n>textClear}" press="_onClearComponent" icon="sap-icon://clear-filter" tooltip="{i18n>tooltipbtnClear}"/>
+                            </HBox>
+                        </VBox>
+                        </f:content>
+                    </f:DynamicPageHeader>
+                </f:header>
+                <f:content >
+                    <VBox width="auto">
+                        <VBox width="auto">
+                         <VBox id="vbTableMain" width="auto">
+                        </VBox>
+                        </VBox>
+                    </VBox>
+                </f:content>
+            </f:DynamicPage>
+</mvc:View>
