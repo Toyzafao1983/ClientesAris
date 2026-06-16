@@ -3,7 +3,13 @@
     <headerToolbar>
             <Toolbar>
                 <ToolbarSpacer/>
-                 <Button text="{i18n>ExportExcel}" press="onPressExportarExcel" type="Accept" icon="sap-icon://excel-attachment" tooltip="{i18n>textbtnDelivery}"/>
+                <Button
+    text="{i18n>ExportExcel}"
+    press="onPressExportarExcel"
+    type="Accept"
+    icon="sap-icon://excel-attachment"
+    tooltip="{i18n>textbtnDelivery}"
+    visible="{= !${oModelUser>/rCliente}}" />
             </Toolbar>
         </headerToolbar>
         <columns>
@@ -27,7 +33,7 @@
             <Column width="10%" hAlign="End" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false" visible="{= !${oModelUser>/rCliente}||${oModelUser>/rMetTextil}}">
                 <header>
                     <HBox justifyContent="Center" width="100%">
-                        <Text text="{i18n>titleStockAvailable}" width="auto" />
+                        <Text text="{= ${oModelUser>/rCliente} &amp;&amp; ${oModelUser>/rMetTextil} ? ${i18n>titleColTextilCantidad} : ${i18n>titleStockAvailable} }" width="auto" />
                     </HBox>
                 </header>
             </Column>
@@ -61,7 +67,7 @@
             </Column>
             <Column width="7%" hAlign="Center" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false" visible="{= !${oModelUser>/rCliente}||${oModelUser>/rMetTextil}}">
                 <header>
-                    <Text text="UMV" width="auto" />
+                    <Text text="{= ${oModelUser>/rCliente} &amp;&amp; ${oModelUser>/rMetTextil} ? ${i18n>titleColUM} : 'UMV' }" width="auto" />
                 </header>
             </Column>
             

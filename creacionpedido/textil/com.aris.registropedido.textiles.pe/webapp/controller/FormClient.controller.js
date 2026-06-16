@@ -1325,6 +1325,9 @@ sap.ui.define([
             if (bExteriorZPEF) {
                 oData.bClienteExteriorZPEF = true;
 
+                oData.grupoMaterial = "01";
+                oData.grupoMaterialText = "01 - Lanas";
+
                 oData.cbCondPago = "4000";
                 oData.txtCondPago = "Contado a la Fecha de Embarque";
 
@@ -1342,6 +1345,9 @@ sap.ui.define([
 
             if (!oData.tipDocument) {
                 aErrors.push("Debe seleccionar el tipo de documento");
+            }
+            if (!oData.grupoMaterial || String(oData.grupoMaterial).trim() === "") {
+                aErrors.push("Debe seleccionar el grupo de material");
             }
 
             let sCondPago = oData.cbCondPago;

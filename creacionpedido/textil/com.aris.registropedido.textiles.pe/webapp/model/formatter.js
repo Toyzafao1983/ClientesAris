@@ -410,6 +410,72 @@ sap.ui.define([
 				maximumFractionDigits: 2
 			});
 		},
+		formatTotalMtsPedido: function (aMateriales) {
+			if (!Array.isArray(aMateriales)) {
+				return "0.000";
+			}
+
+			const fnParse = function (vValue) {
+				if (vValue === null || vValue === undefined || vValue === "") {
+					return 0;
+				}
+
+				if (typeof vValue === "number") {
+					return Number.isFinite(vValue) ? vValue : 0;
+				}
+
+				let sValue = String(vValue).trim().replace(/\s/g, "");
+
+				if (!sValue) {
+					return 0;
+				}
+
+				if (sValue.indexOf(",") > -1 && sValue.indexOf(".") > -1) {
+					sValue = sValue.replace(/,/g, "");
+				} else {
+					sValue = sValue.replace(",", ".");
+				}
+
+				const nValue = parseFloat(sValue);
+				return isNaN(nValue) ? 0 : nValue;
+			};
+
+			let nTotal = 0;
+
+			aMateriales.forEach(function (oItem) {
+				if (!oItem || oItem.esBolsa) {
+					return;
+				}
+
+				const sUM = String(
+					oItem.UMV ||
+					oItem.TargetQu ||
+					oItem.Um ||
+					oItem.Uom ||
+					"MTS"
+				).trim().toUpperCase();
+
+				if (sUM && sUM !== "MTS") {
+					return;
+				}
+
+				const nCantidad = fnParse(
+					oItem.cantidad ||
+					oItem.Cantidad ||
+					oItem.ReqQty ||
+					"0"
+				);
+
+				if (nCantidad > 0) {
+					nTotal += nCantidad;
+				}
+			});
+
+			return nTotal.toLocaleString("en-US", {
+				minimumFractionDigits: 3,
+				maximumFractionDigits: 3
+			});
+		},
 		formatMaterialWithDesc: function (sMaterial, sDescription) {
 			if (!sMaterial) {
 				return "";

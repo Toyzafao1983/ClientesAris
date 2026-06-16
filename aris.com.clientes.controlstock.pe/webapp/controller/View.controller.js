@@ -68,6 +68,23 @@ sap.ui.define([
 
 
         },
+
+        _hasIASGroup: function (oUser, sGroupName) {
+            const sTarget = String(sGroupName || "").trim().toUpperCase();
+            const aGroups = oUser && Array.isArray(oUser.groups) ? oUser.groups : [];
+
+            if (!sTarget || !aGroups.length) {
+                return false;
+            }
+
+            return aGroups.some(function (oGroup) {
+                const sValue = String(oGroup && oGroup.value || "").trim().toUpperCase();
+                const sDisplay = String(oGroup && oGroup.display || "").trim().toUpperCase();
+
+                return sValue === sTarget || sDisplay === sTarget;
+            });
+        },
+
         handleRouteMatched: async function (bInit) {
             sap.ui.core.BusyIndicator.show(0);
 
@@ -118,6 +135,13 @@ sap.ui.define([
                         sCustomAttribute = "customAttribute3";
                     }
                 }
+
+                that.tMetTextil = (
+                    tUniNeg === "TEXTILES" &&
+                    tipoBP === "CLIENTE" &&
+                    this._hasIASGroup(oUser, "INT_CLIENTES_VISUALIZACION_STOCK")
+                    //this._hasIASGroup(oUser, "AYC_INT_CLIENTES_VISUALIZACION_STOCK")
+                );
 
                 that.oModelUser && that.oModelUser.setProperty("/customAttribute", sCustomAttribute);
 
@@ -223,7 +247,7 @@ sap.ui.define([
                     return;
                 }
 
-                // 🔤 Configuración de idioma
+                // Configuración de idioma
                 if (!sIdioma) {
                     that._setLanguageModel("esp");
                 } else {
@@ -247,6 +271,7 @@ sap.ui.define([
                 that.oModelData.setProperty("/oUniNeg", tUniNeg);
                 that.oModelData.setProperty("/rRol", tRol);
                 that.oModelUser.setProperty("/rMetTextil", that.tMetTextil);
+                that.oModelUser.setProperty("/rClienteTextilVisualizaStock", that.tMetTextil);
 
                 // ✅ Traer Razón Social (solo para CLIENTE)
                 let sRazonSocial = "";
@@ -3145,6 +3170,16 @@ sap.ui.define([
             });
         },
         onPressExportarExcel: function () {
+            const bEsClienteTextil = (
+                String(tUniNeg || "").toUpperCase() === "TEXTILES" &&
+                String(tRol || "").toUpperCase() === "CLIENTES"
+            );
+
+            if (bEsClienteTextil) {
+                sap.m.MessageBox.warning("No tiene permisos para exportar el stock de Textiles en Excel.");
+                return;
+            }
+
             this.onExportStockExcel({
                 uniNeg: tUniNeg,
                 rol: tRol

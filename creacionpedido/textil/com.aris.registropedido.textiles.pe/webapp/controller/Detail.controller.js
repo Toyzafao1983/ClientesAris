@@ -538,6 +538,11 @@ sap.ui.define([
         },
         _onPressAddProduct: function () {
             const oModel = this.getView().getModel("oModelProyect");
+
+            if (!this._validateGrupoMaterialRequired("agregar materiales")) {
+                return;
+            }
+
             const bValidaBolsas = this._shouldValidateBolsas();
 
             if (bValidaBolsas && oModel) {
@@ -1668,6 +1673,19 @@ sap.ui.define([
 
             return aPartners;
         },
+        _validateGrupoMaterialRequired: function (sActionText) {
+            const oModel = this.getView().getModel("oModelProyect");
+            const sGrupo = oModel ? String(oModel.getProperty("/inputForm/grupoMaterial") || "").trim() : "";
+
+            if (!sGrupo) {
+                sap.m.MessageBox.warning(
+                    "Debe seleccionar el grupo de material antes de " + (sActionText || "continuar") + "."
+                );
+                return false;
+            }
+
+            return true;
+        },
 
         _validateOrderHasMaterials: function (sActionText) {
             const oModelProyect = this.getView().getModel("oModelProyect");
@@ -1806,6 +1824,10 @@ sap.ui.define([
             const isClienteIAS =
                 oModelUser?.getProperty("/customAttribute") === "customAttribute1" ||
                 oModelUser?.getProperty("/bIsCliente") === true;
+
+            if (!this._validateGrupoMaterialRequired("simular")) {
+                return;
+            }
 
             if (!this._validateOrderHasMaterials("simular")) {
                 return;
@@ -2168,6 +2190,10 @@ sap.ui.define([
             const isClienteIAS =
                 oModelUser?.getProperty("/customAttribute") === "customAttribute1" ||
                 oModelUser?.getProperty("/bIsCliente") === true;
+
+            if (!this._validateGrupoMaterialRequired("grabar el pedido")) {
+                return;
+            }
 
             if (!this._validateOrderHasMaterials("grabar el pedido")) {
                 return;
@@ -3264,6 +3290,10 @@ sap.ui.define([
         },
         onConfirmCreateOrder: function () {
             const that = this;
+
+            if (!this._validateGrupoMaterialRequired("grabar el pedido")) {
+                return;
+            }
 
             if (!this._validateOrderHasMaterials("grabar el pedido")) {
                 return;

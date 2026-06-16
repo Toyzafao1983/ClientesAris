@@ -104,6 +104,18 @@
         <HBox class="footer-row" alignItems="Start" justifyContent="SpaceBetween" width="100%">
 
                 <VBox width="58%" class="sapUiSmallMarginEnd">
+                    <HBox alignItems="Center" class="sapUiTinyMarginBottom">
+                        <Label text="{i18n>txtTotalMtsPedido}" class="footer-label sapUiTinyMarginEnd"/>
+                        <Input
+                            value="{
+                                path: 'oModelProyect>/oMaterialUI',
+                                formatter: '.formatter.formatTotalMtsPedido'
+                            }"
+                            editable="false"
+                            class="footer-input"/>
+                        <Text text="MTS" class="sapUiTinyMarginBegin"/>
+                    </HBox>
+
                     <TextArea
                         id="taMensajeFleteExteriorZPEF"
                         value="{oModelProyect>/inputForm/mensajeFleteZPEF}"
