@@ -375,26 +375,31 @@
                                             width="100%"
                                             class="entregaField"
                                             wrapping="true"/>
-                                        <Label
-                                            text="Agencia (Razón social)"
+                                     
+
+                                       <Label
+                                            text="{= ${oModelProyect>/inputForm/tipoEntrega} === '2' ? 'Transportista' : 'Agencia (Razón social)' }"
                                             class="sapUiSmallMarginTop"
                                             visible="{= ${oModelProyect>/inputForm/tipoEntrega} === '2' || ${oModelProyect>/inputForm/tipoEntrega} === '3'}"/>
+
                                         <Text
-                                            text="{oModelProyect>/inputForm/direccionAgenciaText}"
+                                            text="{= ${oModelProyect>/inputForm/tipoEntrega} === '2' ? ${oModelProyect>/inputForm/transporteText} : ${oModelProyect>/inputForm/direccionAgenciaText} }"
                                             width="100%"
                                             class="entregaField"
                                             visible="{= ${oModelProyect>/inputForm/tipoEntrega} === '2' || ${oModelProyect>/inputForm/tipoEntrega} === '3'}"
                                             wrapping="true"/>
+
                                         <Label
-                                                text="Dirección agencia"
-                                                class="sapUiSmallMarginTop"
-                                                visible="{= ${oModelProyect>/inputForm/tipoEntrega} === '2' || ${oModelProyect>/inputForm/tipoEntrega} === '3'}"/>
-                                            <Text
-                                                text="{oModelProyect>/inputForm/direccionAgenciaAddrText}"
-                                                width="100%"
-                                                class="entregaField"
-                                                visible="{= ${oModelProyect>/inputForm/tipoEntrega} === '2' || ${oModelProyect>/inputForm/tipoEntrega} === '3'}"
-                                                wrapping="true"/>
+                                            text="Dirección agencia"
+                                            class="sapUiSmallMarginTop"
+                                            visible="{= ${oModelProyect>/inputForm/tipoEntrega} === '3'}"/>
+
+                                        <Text
+                                            text="{oModelProyect>/inputForm/direccionAgenciaAddrText}"
+                                            width="100%"
+                                            class="entregaField"
+                                            visible="{= ${oModelProyect>/inputForm/tipoEntrega} === '3'}"
+                                            wrapping="true"/>
                                     </VBox>
                                 </content>
                             </Panel>

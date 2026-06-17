@@ -776,51 +776,526 @@ sap.ui.define([
             oModelProyect.setProperty("/oSelectDetail/aBrands", aKeys);
             oModelProyect.setProperty("/oSelectDetail/Brand", aKeys.length ? aKeys[aKeys.length - 1] : "");
         },
+
+        _getTokenKeysFromMultiInput: function (oControl) {
+            if (!oControl || !oControl.getTokens) {
+                return [];
+            }
+
+            return Array.from(new Set(
+                (oControl.getTokens() || [])
+                    .map(function (oToken) {
+                        return String(oToken.getKey() || oToken.getText() || "").trim();
+                    })
+                    .filter(Boolean)
+            ));
+        },
+
+        _auditMultiInputToken: function (sControlId, sLabel) {
+            const oControl = this._byId(this.frgIdAddManualProduct + "--" + sControlId);
+
+            if (!oControl) {
+                return {
+                    ok: true,
+                    keys: []
+                };
+            }
+
+            const aKeys = this._getTokenKeysFromMultiInput(oControl);
+            const sRawValue = String(oControl.getValue ? (oControl.getValue() || "") : "").trim();
+
+            if (sRawValue) {
+                return {
+                    ok: false,
+                    keys: aKeys,
+                    message: sLabel + ": el valor escrito '" + sRawValue + "' no fue seleccionado como token. Seleccione una sugerencia válida antes de buscar."
+                };
+            }
+
+            return {
+                ok: true,
+                keys: aKeys
+            };
+        },
+
+        _auditMultiComboBoxSelection: function (sControlId, sLabel) {
+            const oControl = this._byId(this.frgIdAddManualProduct + "--" + sControlId);
+
+            if (!oControl) {
+                return {
+                    ok: true,
+                    keys: []
+                };
+            }
+
+            const aKeys = oControl.getSelectedKeys ? (oControl.getSelectedKeys() || []) : [];
+            const sRawValue = String(oControl.getValue ? (oControl.getValue() || "") : "").trim();
+
+            if (sRawValue) {
+                return {
+                    ok: false,
+                    keys: aKeys,
+                    message: sLabel + ": el valor escrito '" + sRawValue + "' no fue seleccionado. Seleccione una marca válida antes de buscar."
+                };
+            }
+
+            return {
+                ok: true,
+                keys: aKeys
+            };
+        },
+
+        onOrilloTokenUpdate: function (oEvent) {
+            const oMI = oEvent.getSource();
+            const oModelProyect = this.getView().getModel("oModelProyect");
+
+            const aKeys = this._getTokenKeysFromMultiInput(oMI);
+
+            oModelProyect.setProperty("/oSelectDetail/aOrillo", aKeys);
+            oModelProyect.setProperty("/oSelectDetail/Orillo", aKeys.length ? aKeys[aKeys.length - 1] : "");
+        },
+
+        _getAddManualControl: function (sId) {
+            return sap.ui.getCore().byId(this.frgIdAddManualProduct + "--" + sId) ||
+                this.byId(sId) ||
+                sap.ui.getCore().byId(sId);
+        },
+
+        _getTokenKeysFromMultiInput: function (oControl) {
+            if (!oControl || !oControl.getTokens) {
+                return [];
+            }
+
+            return Array.from(new Set(
+                (oControl.getTokens() || [])
+                    .map(function (oToken) {
+                        return String(oToken.getKey() || oToken.getText() || "").trim();
+                    })
+                    .filter(Boolean)
+            ));
+        },
+
+        _syncMultiInputTokensToModel: function (oControl, sArrayPath, sLastPath) {
+            const oModel = this.getView().getModel("oModelProyect");
+            const aKeys = this._getTokenKeysFromMultiInput(oControl);
+
+            oModel.setProperty(sArrayPath, aKeys);
+            oModel.setProperty(sLastPath, aKeys.length ? aKeys[aKeys.length - 1] : "");
+
+            return aKeys;
+        },
+
+        _refreshDialogItems: function (oDialog) {
+            const oBinding = oDialog && oDialog.getBinding ? oDialog.getBinding("items") : null;
+
+            if (oBinding) {
+                oBinding.filter([]);
+                if (oBinding.refresh) {
+                    oBinding.refresh(true);
+                }
+            }
+        },
+
+        _prepareVHMaterialItems: function (sValue) {
+            const oModelData = this.getView().getModel("oModelData");
+            const oModel = this.getView().getModel("oModelProyect");
+
+            const sSearch = String(sValue || "").trim().toUpperCase();
+            const sGrupo = String(oModel.getProperty("/inputForm/grupoMaterial") || "").trim();
+
+            const aBase =
+                oModelData.getProperty("/oFilterMaterialFull") ||
+                oModelData.getProperty("/oFilterMaterial") ||
+                [];
+
+            const aOut = [];
+            const mSeen = {};
+            const iMax = sSearch ? 200 : 100;
+
+            for (let i = 0; i < aBase.length; i++) {
+                const item = aBase[i] || {};
+                const sMaterial = String(item.Material || "").trim();
+                const sDesc = String(item.Description || "").trim();
+                const sMatGroup = String(item.MaterialGroup || "").trim();
+
+                if (!sMaterial || mSeen[sMaterial]) {
+                    continue;
+                }
+
+                if (sGrupo && sMatGroup && sMatGroup !== sGrupo) {
+                    continue;
+                }
+
+                if (sSearch) {
+                    const sCompare = (sMaterial + " " + sDesc).toUpperCase();
+                    if (!sCompare.includes(sSearch)) {
+                        continue;
+                    }
+                }
+
+                mSeen[sMaterial] = true;
+
+                aOut.push({
+                    Material: sMaterial,
+                    Description: sDesc
+                });
+
+                if (aOut.length >= iMax) {
+                    break;
+                }
+            }
+
+            oModelData.setProperty("/oVHMaterialItems", aOut);
+        },
+
+        _prepareVHArtTextilItems: function (sValue) {
+            const oModelData = this.getView().getModel("oModelData");
+            const sSearch = String(sValue || "").trim().toUpperCase();
+
+            const aBase = oModelData.getProperty("/ListArtTextil") || [];
+            const aOut = [];
+            const mSeen = {};
+
+            for (let i = 0; i < aBase.length; i++) {
+                const item = aBase[i] || {};
+
+                const sKey = String(item.key || item.TextileArticleQuality || "").trim();
+                const sText = String(item.text || "").trim();
+                const sDesc = String(item.desc || "").trim();
+
+                if (!sKey || mSeen[sKey]) {
+                    continue;
+                }
+
+                if (sSearch) {
+                    const sCompare = (sKey + " " + sText + " " + sDesc).toUpperCase();
+                    if (!sCompare.includes(sSearch)) {
+                        continue;
+                    }
+                }
+
+                mSeen[sKey] = true;
+
+                aOut.push({
+                    key: sKey,
+                    text: sText || sKey,
+                    desc: sDesc || sText || sKey
+                });
+
+                if (aOut.length >= 200) {
+                    break;
+                }
+            }
+
+            oModelData.setProperty("/oVHArtTextilItems", aOut);
+        },
+
+        _prepareVHOrilloItems: function (sValue) {
+            const oModelData = this.getView().getModel("oModelData");
+            const sSearch = String(sValue || "").trim();
+
+            let aBase = oModelData.getProperty("/ListOrilloSug") || [];
+
+            const mUnique = {};
+
+            (aBase || []).forEach(function (item) {
+                const sRaw = typeof item === "string"
+                    ? item
+                    : String(item.key || item.Display || item.OrilloPrefix2 || "").trim();
+
+                const m = String(sRaw || "").match(/(\d+)/);
+                if (!m || !m[1]) {
+                    return;
+                }
+
+                const sPrefix = m[1].substring(0, 2);
+
+                if (!sPrefix || !/^\d{2}$/.test(sPrefix)) {
+                    return;
+                }
+
+                if (sSearch && !sPrefix.includes(sSearch)) {
+                    return;
+                }
+
+                mUnique[sPrefix] = {
+                    key: sPrefix,
+                    Display: sPrefix
+                };
+            });
+
+            const aOut = Object.values(mUnique).sort(function (a, b) {
+                return String(a.key).localeCompare(String(b.key), undefined, { numeric: true });
+            });
+
+            oModelData.setProperty("/oVHOrilloItems", aOut);
+        },
+
+        onOpenMaterialDialog: function () {
+            if (!this._oVHMaterialRegistro) {
+                this._oVHMaterialRegistro = sap.ui.xmlfragment(
+                    this.getView().getId(),
+                    "com.aris.registropedido.textiles.pe.view.dialogs.ValueHelpMaterialRegistro",
+                    this
+                );
+                this.getView().addDependent(this._oVHMaterialRegistro);
+            }
+
+            const oMI = this._getAddManualControl("miMaterial");
+            const sTyped = oMI && oMI.getValue ? oMI.getValue() : "";
+
+            this._prepareVHMaterialItems(sTyped);
+            this._oVHMaterialRegistro.open(sTyped);
+        },
+
+        onMaterialDialogSearch: function (oEvent) {
+            const sValue = String(oEvent.getParameter("value") || "").trim();
+            this._prepareVHMaterialItems(sValue);
+            this._refreshDialogItems(oEvent.getSource());
+        },
+
+        onDialogMaterialConfirm: function (oEvent) {
+            const oMI = this._getAddManualControl("miMaterial");
+            if (!oMI) {
+                return;
+            }
+
+            const aExisting = this._getTokenKeysFromMultiInput(oMI);
+            const aSelectedItems = oEvent.getParameter("selectedItems") || [];
+
+            aSelectedItems.forEach(function (oItem) {
+                const sKey = String(oItem.getTitle() || "").trim();
+                const sDesc = String(oItem.getDescription() || "").trim();
+
+                if (!sKey || aExisting.includes(sKey)) {
+                    return;
+                }
+
+                oMI.addToken(new Token({
+                    key: sKey,
+                    text: sDesc ? (sKey + " - " + sDesc) : sKey
+                }));
+
+                aExisting.push(sKey);
+            });
+
+            oMI.setValue("");
+
+            this._syncMultiInputTokensToModel(
+                oMI,
+                "/oSelectDetail/aMaterials",
+                "/oSelectDetail/material"
+            );
+
+            this._refreshDialogItems(oEvent.getSource());
+        },
+
+        onDialogMaterialCancel: function (oEvent) {
+            this._refreshDialogItems(oEvent.getSource());
+        },
+
+        onOpenArtTextilDialog: function () {
+            if (!this._oVHArtTextilRegistro) {
+                this._oVHArtTextilRegistro = sap.ui.xmlfragment(
+                    this.getView().getId(),
+                    "com.aris.registropedido.textiles.pe.view.dialogs.ValueHelpArtTextilRegistro",
+                    this
+                );
+                this.getView().addDependent(this._oVHArtTextilRegistro);
+            }
+
+            const oMI = this._getAddManualControl("miArtTextil");
+            const sTyped = oMI && oMI.getValue ? oMI.getValue() : "";
+
+            this._prepareVHArtTextilItems(sTyped);
+            this._oVHArtTextilRegistro.open(sTyped);
+        },
+
+        onArtTextilDialogSearch: function (oEvent) {
+            const sValue = String(oEvent.getParameter("value") || "").trim();
+            this._prepareVHArtTextilItems(sValue);
+            this._refreshDialogItems(oEvent.getSource());
+        },
+
+        onDialogArtTextilConfirm: function (oEvent) {
+            const oMI = this._getAddManualControl("miArtTextil");
+            if (!oMI) {
+                return;
+            }
+
+            const aExisting = this._getTokenKeysFromMultiInput(oMI);
+            const aSelectedItems = oEvent.getParameter("selectedItems") || [];
+
+            aSelectedItems.forEach(function (oItem) {
+                const sKey = String(oItem.getTitle() || "").trim();
+                const sDesc = String(oItem.getDescription() || "").trim();
+
+                if (!sKey || aExisting.includes(sKey)) {
+                    return;
+                }
+
+                oMI.addToken(new Token({
+                    key: sKey,
+                    text: sDesc && sDesc !== sKey ? (sKey + " - " + sDesc) : sKey
+                }));
+
+                aExisting.push(sKey);
+            });
+
+            oMI.setValue("");
+
+            this._syncMultiInputTokensToModel(
+                oMI,
+                "/oSelectDetail/aArtTextil",
+                "/oSelectDetail/ArtTextil"
+            );
+
+            this._refreshDialogItems(oEvent.getSource());
+        },
+
+        onDialogArtTextilCancel: function (oEvent) {
+            this._refreshDialogItems(oEvent.getSource());
+        },
+
+        onOpenOrilloDialog: function () {
+            if (!this._oVHOrilloRegistro) {
+                this._oVHOrilloRegistro = sap.ui.xmlfragment(
+                    this.getView().getId(),
+                    "com.aris.registropedido.textiles.pe.view.dialogs.ValueHelpOrilloRegistro",
+                    this
+                );
+                this.getView().addDependent(this._oVHOrilloRegistro);
+            }
+
+            const oMI = this._getAddManualControl("miOrillo");
+            const sTyped = oMI && oMI.getValue ? oMI.getValue() : "";
+
+            this._prepareVHOrilloItems(sTyped);
+            this._oVHOrilloRegistro.open(sTyped);
+        },
+
+        onOrilloDialogSearch: function (oEvent) {
+            const sValue = String(oEvent.getParameter("value") || "").trim();
+            this._prepareVHOrilloItems(sValue);
+            this._refreshDialogItems(oEvent.getSource());
+        },
+
+        onDialogOrilloConfirm: function (oEvent) {
+            const oMI = this._getAddManualControl("miOrillo");
+            if (!oMI) {
+                return;
+            }
+
+            const aExisting = this._getTokenKeysFromMultiInput(oMI);
+            const aSelectedItems = oEvent.getParameter("selectedItems") || [];
+
+            aSelectedItems.forEach(function (oItem) {
+                const sKey = String(oItem.getTitle() || "").trim();
+
+                if (!sKey || aExisting.includes(sKey)) {
+                    return;
+                }
+
+                oMI.addToken(new Token({
+                    key: sKey,
+                    text: sKey
+                }));
+
+                aExisting.push(sKey);
+            });
+
+            oMI.setValue("");
+
+            this._syncMultiInputTokensToModel(
+                oMI,
+                "/oSelectDetail/aOrillo",
+                "/oSelectDetail/Orillo"
+            );
+
+            this._refreshDialogItems(oEvent.getSource());
+        },
+
+        onDialogOrilloCancel: function (oEvent) {
+            this._refreshDialogItems(oEvent.getSource());
+        },
+
+        onOrilloTokenUpdate: function (oEvent) {
+            const oMI = oEvent.getSource();
+
+            this._syncMultiInputTokensToModel(
+                oMI,
+                "/oSelectDetail/aOrillo",
+                "/oSelectDetail/Orillo"
+            );
+        },
+
         onBuscarPress: async function () {
             const oModel = this.getView().getModel("oModelProyect");
-            const oSelectDetail = oModel.getProperty("/oSelectDetail") || {};
             const oInputForm = oModel.getProperty("/inputForm") || {};
 
-            const oMiMaterial = this._byId(this.frgIdAddManualProduct + "--miMaterial");
+            const oMatAudit = this._auditMultiInputToken("miMaterial", "Código de Material");
+            if (!oMatAudit.ok) {
+                this.getMessageBox("warning", oMatAudit.message);
+                return;
+            }
 
-            if (oMiMaterial) {
-                const aMaterialTokens = Array.from(new Set(
-                    (oMiMaterial.getTokens() || [])
-                        .map(function (oToken) {
-                            return String(oToken.getKey() || oToken.getText() || "").trim();
-                        })
-                        .filter(Boolean)
-                ));
+            const oArtAudit = this._auditMultiInputToken("miArtTextil", "Artículo Textil");
+            if (!oArtAudit.ok) {
+                this.getMessageBox("warning", oArtAudit.message);
+                return;
+            }
 
-                oSelectDetail.aMaterials = aMaterialTokens;
-                oModel.setProperty("/oSelectDetail/aMaterials", aMaterialTokens);
-                oModel.setProperty(
-                    "/oSelectDetail/material",
-                    aMaterialTokens.length ? aMaterialTokens[aMaterialTokens.length - 1] : ""
+            const oOriAudit = this._auditMultiInputToken("miOrillo", "Orillo");
+            if (!oOriAudit.ok) {
+                this.getMessageBox("warning", oOriAudit.message);
+                return;
+            }
+
+            const oBrandAudit = this._auditMultiComboBoxSelection("mcBrand", "Marca");
+            if (!oBrandAudit.ok) {
+                this.getMessageBox("warning", oBrandAudit.message);
+                return;
+            }
+
+            const aMaterialTokens = oMatAudit.keys || [];
+            const aArtTextilTokens = oArtAudit.keys || [];
+            const aOrilloTokens = oOriAudit.keys || [];
+            const aBrandKeys = oBrandAudit.keys || [];
+
+            oModel.setProperty("/oSelectDetail/aMaterials", aMaterialTokens);
+            oModel.setProperty("/oSelectDetail/material", aMaterialTokens.length ? aMaterialTokens[aMaterialTokens.length - 1] : "");
+
+            oModel.setProperty("/oSelectDetail/aArtTextil", aArtTextilTokens);
+            oModel.setProperty("/oSelectDetail/ArtTextil", aArtTextilTokens.length ? aArtTextilTokens[aArtTextilTokens.length - 1] : "");
+
+            oModel.setProperty("/oSelectDetail/aOrillo", aOrilloTokens);
+            oModel.setProperty("/oSelectDetail/Orillo", aOrilloTokens.length ? aOrilloTokens[aOrilloTokens.length - 1] : "");
+
+            oModel.setProperty("/oSelectDetail/aBrands", aBrandKeys);
+            oModel.setProperty("/oSelectDetail/Brand", aBrandKeys.length ? aBrandKeys[aBrandKeys.length - 1] : "");
+
+            const bTieneFiltroReal =
+                aMaterialTokens.length > 0 ||
+                aArtTextilTokens.length > 0 ||
+                aOrilloTokens.length > 0 ||
+                aBrandKeys.length > 0;
+
+            if (!bTieneFiltroReal) {
+                this.getMessageBox(
+                    "warning",
+                    "Debe seleccionar al menos un token válido de Material, Artículo Textil u Orillo, o seleccionar una Marca. No se ejecutará la búsqueda solo con Grupo de Material para evitar una consulta masiva."
                 );
-
-                console.log("Materiales finales para búsqueda:", aMaterialTokens);
+                return;
             }
 
             sap.ui.core.BusyIndicator.show(0);
 
             try {
-                let aOrilloTokens = [];
-                const oMiOrillo = this._byId(this.frgIdAddManualProduct + "--miOrillo");
-
-                if (oMiOrillo) {
-                    aOrilloTokens = (oMiOrillo.getTokens() || [])
-                        .map(t => (t.getKey() || t.getText() || "").trim())
-                        .filter(Boolean);
-                }
-
-                console.log("🔎 Tokens Orillo:", aOrilloTokens);
-
                 const jFilter = {
                     cbMaterialGroup: oInputForm.grupoMaterial ? [oInputForm.grupoMaterial] : [],
-                    cbCodMaterial: oSelectDetail.aMaterials || [],
-                    cbBrand: oSelectDetail.aBrands || [],
-                    cbTextileArticleQuality: oSelectDetail.aArtTextil || [],
+                    cbCodMaterial: aMaterialTokens,
+                    cbBrand: aBrandKeys,
+                    cbTextileArticleQuality: aArtTextilTokens,
                     cbOrilloPrefix2: aOrilloTokens,
                     iMinimumFootage: ""
                 };

@@ -1,0 +1,22 @@
+<core:FragmentDefinition
+    xmlns:core="sap.ui.core"
+    xmlns="sap.m">
+
+    <SelectDialog
+        id="ValueHelpMaterialRegistro"
+        title="Código de Material"
+        multiSelect="true"
+        search=".onMaterialDialogSearch"
+        liveChange=".onMaterialDialogSearch"
+        confirm=".onDialogMaterialConfirm"
+        cancel=".onDialogMaterialCancel"
+        items="{ path: 'oModelData>/oVHMaterialItems' }">
+
+        <StandardListItem
+            title="{oModelData>Material}"
+            description="{oModelData>Description}"
+            icon="sap-icon://product"
+            type="Active" />
+    </SelectDialog>
+
+</core:FragmentDefinition>

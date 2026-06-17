@@ -1,0 +1,21 @@
+<core:FragmentDefinition
+    xmlns:core="sap.ui.core"
+    xmlns="sap.m">
+
+    <SelectDialog
+        id="ValueHelpOrilloRegistro"
+        title="Orillo"
+        multiSelect="true"
+        search=".onOrilloDialogSearch"
+        liveChange=".onOrilloDialogSearch"
+        confirm=".onDialogOrilloConfirm"
+        cancel=".onDialogOrilloCancel"
+        items="{ path: 'oModelData>/oVHOrilloItems' }">
+
+        <StandardListItem
+            title="{oModelData>Display}"
+            icon="sap-icon://multi-select"
+            type="Active" />
+    </SelectDialog>
+
+</core:FragmentDefinition>

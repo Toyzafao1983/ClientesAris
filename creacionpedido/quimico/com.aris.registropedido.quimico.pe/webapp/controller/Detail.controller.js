@@ -159,6 +159,10 @@ sap.ui.define([
                 that.oModelData.setProperty("/oTrasport", values[11].oResults);
                 that.oModelData.setProperty("/oConditionPay", values[12].oResults);
 
+                if (that._syncEntregaEditData) {
+                    that._syncEntregaEditData();
+                }
+
                 const oAnticipoResp = values[13];
                 const oNotaCreditoResp = values[14];
 
@@ -3589,10 +3593,35 @@ sap.ui.define([
         onSelectTransporte: function (oEvent) {
             const oModel = this.getView().getModel("oModelProyect");
             const oItem = oEvent.getParameter("selectedItem");
-            if (!oItem) { return; }
 
-            oModel.setProperty("/inputForm/transporte", oItem.getKey());
-            oModel.setProperty("/inputForm/transporteText", oItem.getText() || "");
+            if (!oItem) {
+                oModel.setProperty("/inputForm/transporte", "");
+                oModel.setProperty("/inputForm/transporteText", "");
+                oModel.setProperty("/inputForm/direccionAgencia", "");
+                oModel.setProperty("/inputForm/direccionAgenciaAddrText", "");
+                oModel.setProperty("/inputForm/direccionAgenciaText", "");
+                this._updateResumenEntrega();
+                return;
+            }
+
+            const sKey = String(oItem.getKey() || "").trim();
+            const sText = String(oItem.getText() || "").trim();
+            const sTransporteAnterior = String(oModel.getProperty("/inputForm/transporte") || "").trim();
+
+            oModel.setProperty("/inputForm/transporte", sKey);
+            oModel.setProperty("/inputForm/transporteText", sText);
+
+            if (sTransporteAnterior !== sKey) {
+                oModel.setProperty("/inputForm/direccionAgencia", "");
+                oModel.setProperty("/inputForm/direccionAgenciaAddrText", "");
+                oModel.setProperty("/inputForm/direccionAgenciaText", "");
+
+                const oComboAgencia = this.byId("cbDireccionAgenciaDetail");
+                if (oComboAgencia) {
+                    oComboAgencia.setSelectedKey("");
+                    oComboAgencia.setValue("");
+                }
+            }
 
             this._updateResumenEntrega();
         },
@@ -3604,19 +3633,17 @@ sap.ui.define([
                 oModel.setProperty("/inputForm/direccionAgencia", "");
                 oModel.setProperty("/inputForm/direccionAgenciaAddrText", "");
                 oModel.setProperty("/inputForm/direccionAgenciaText", "");
-                oModel.setProperty("/inputForm/agenciaFullText", "");
                 this._updateResumenEntrega();
                 return;
             }
 
-            const sKey = oItem.getKey();
-            const sAddrText = oItem.getText();
-            const sAgencyName = oItem.getAdditionalText();
+            const sKey = String(oItem.getKey() || "").trim();
+            const sAddrText = String(oItem.getText() || "").trim();
+            const sAgencyName = String(oItem.getAdditionalText() || "").trim();
 
             oModel.setProperty("/inputForm/direccionAgencia", sKey);
-            oModel.setProperty("/inputForm/direccionAgenciaAddrText", sAddrText || "");
-            oModel.setProperty("/inputForm/direccionAgenciaText", sAgencyName || "");
-            oModel.setProperty("/inputForm/agenciaFullText", [sAgencyName, sAddrText].filter(Boolean).join(" - "));
+            oModel.setProperty("/inputForm/direccionAgenciaAddrText", sAddrText);
+            oModel.setProperty("/inputForm/direccionAgenciaText", sAgencyName);
 
             this._updateResumenEntrega();
         },
@@ -3762,6 +3789,47 @@ sap.ui.define([
             oModelP.setProperty("/oMaterialSelect", aRows);
             oModelP.refresh(true);
         },
+
+        _syncEntregaEditData: function () {
+            const oModel = this.getView().getModel("oModelProyect");
+            const oModelData = this.getView().getModel("oModelData");
+
+            if (!oModel) {
+                return;
+            }
+
+            const oInputForm = oModel.getProperty("/inputForm") || {};
+            const aAgencias = oModel.getProperty("/oAgenciasCliente") || [];
+            const aTransportes = oModelData ? (oModelData.getProperty("/oTrasport") || []) : [];
+
+            const sCarrier = String(oInputForm.transporte || "").trim();
+            const sAgencia = String(oInputForm.direccionAgencia || "").trim();
+
+            if (sCarrier && !oInputForm.transporteText) {
+                const oTransporte = aTransportes.find(function (row) {
+                    return String(row.Carrier || "").trim() === sCarrier;
+                });
+
+                if (oTransporte) {
+                    oModel.setProperty("/inputForm/transporteText", String(oTransporte.Name1 || "").trim());
+                }
+            }
+
+            if (sAgencia) {
+                const oAgencia = aAgencias.find(function (row) {
+                    return String(row.Customer || "").trim() === sAgencia;
+                });
+
+                if (oAgencia) {
+                    oModel.setProperty("/inputForm/direccionAgenciaText", String(oAgencia.Agencyname || "").trim());
+                    oModel.setProperty("/inputForm/direccionAgenciaAddrText", String(oAgencia.Agencyaddress || "").trim());
+                }
+            }
+
+            this._updateResumenEntrega();
+        },
+
+
         _updateResumenEntrega: function () {
             const oModel = this.getView().getModel("oModelProyect");
             const oInputForm = oModel.getProperty("/inputForm") || {};
@@ -3794,8 +3862,6 @@ sap.ui.define([
             }
             oModel.setProperty("/inputForm/resumenEntrega", sResumen);
             oModel.setProperty("/inputForm/detalleEntrega", sDetalle);
-
-            oModel.setProperty("/inputForm/transportistaText", (sTipo === "2") ? (oInputForm.transporteText || "") : "");
             if (sTipo !== "2" && sTipo !== "3") {
                 oModel.setProperty("/inputForm/direccionAgenciaText", "");
                 oModel.setProperty("/inputForm/direccionAgenciaAddrText", "");

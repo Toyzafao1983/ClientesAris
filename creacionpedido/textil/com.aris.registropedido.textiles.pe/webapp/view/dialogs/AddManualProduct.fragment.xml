@@ -32,9 +32,11 @@
                 <f:content>
                     <core:Title text="" />
                     <Label text="{i18n>txtCodMaterialD}" />
-                    <MultiInput
+                   <MultiInput
                         id="miMaterial"
                         showSuggestion="true"
+                        showValueHelp="true"
+                        valueHelpRequest=".onOpenMaterialDialog"
                         suggest=".onSuggestMaterial"
                         suggestionItemSelected=".onMaterialSuggestionSelected"
                         tokenUpdate=".onMaterialTokenUpdate"
@@ -79,6 +81,8 @@
                     <MultiInput
                         id="miArtTextil"
                         showSuggestion="true"
+                        showValueHelp="true"
+                        valueHelpRequest=".onOpenArtTextilDialog"
                         suggest=".onSuggestArtTextil"
                         suggestionItemSelected=".onArtTextilSuggestionSelected"
                         tokenUpdate=".onArtTextilTokenUpdate"
@@ -101,22 +105,22 @@
                     <!-- ORILLO -->
                     <Label text="{i18n>txtOrilloD}" />
                     <MultiInput
-                    id="miOrillo"
-                    width="300px"
-                    showClearIcon="true"
-                    showSuggestion="true"
-                    showValueHelp="true"
-                    valueHelpRequest=".onOpenOrilloDialog"
-                    liveChange="onOrilloChange"
-                    suggest="onOrilloChange"
-                    tokenUpdate="ChangeMultiImput"
-                    suggestionItemSelected=".onOrilloSuggestionItemSelected"
-                    suggestionItems="{ path: 'oModelData>/oFiltroOrilloSuggest' }"
-                    custom:custom="cbOrillo/cbOrilloPrefix2">
-                    <suggestionItems>
-                        <core:Item key="{oModelData>key}" text="{oModelData>Display}" />
-                    </suggestionItems>
-                </MultiInput>
+                        id="miOrillo"
+                        width="300px"
+                        showClearIcon="true"
+                        showSuggestion="true"
+                        showValueHelp="true"
+                        valueHelpRequest=".onOpenOrilloDialog"
+                        liveChange="onOrilloChange"
+                        suggest="onOrilloChange"
+                        tokenUpdate=".onOrilloTokenUpdate"
+                        suggestionItemSelected=".onOrilloSuggestionItemSelected"
+                        suggestionItems="{ path: 'oModelData>/oFiltroOrilloSuggest' }"
+                        custom:custom="cbOrillo/cbOrilloPrefix2">
+                        <suggestionItems>
+                            <core:Item key="{oModelData>key}" text="{oModelData>Display}" />
+                        </suggestionItems>
+                    </MultiInput>
                 </f:content>
             </f:SimpleForm>
 

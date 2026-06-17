@@ -1,0 +1,21 @@
+<core:FragmentDefinition
+    xmlns:core="sap.ui.core"
+    xmlns="sap.m">
+
+    <SelectDialog
+        id="ValueHelpArtTextilRegistro"
+        title="Artículo Textil"
+        multiSelect="true"
+        search=".onArtTextilDialogSearch"
+        liveChange=".onArtTextilDialogSearch"
+        confirm=".onDialogArtTextilConfirm"
+        cancel=".onDialogArtTextilCancel"
+        items="{ path: 'oModelData>/oVHArtTextilItems' }">
+
+        <StandardListItem
+            title="{oModelData>key}"
+            description="{oModelData>desc}"
+            type="Active" />
+    </SelectDialog>
+
+</core:FragmentDefinition>
