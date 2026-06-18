@@ -2122,6 +2122,7 @@ sap.ui.define([
                 HeaderToPartners: aPartners,
                 HeaderToSchedule: aSchedule,
                 toConditionEx: [{ ClientId: "", ItmNumber: "", CondType: "", CondValue: "0.00", Condvalue: "0.00" }],
+                toItemsOut: [{ ClientId: "", ItmNumber: "", Material: "", ItemCateg: "", ShortText: "", ReqQty: "0.000", TargetQty: "0.000" }],
                 HeaderToReturn: [{ ClientId: "", Type: "", Message: "" }]
             });
 
@@ -2166,7 +2167,43 @@ sap.ui.define([
 
                     let aMaterialUI2 = oModelProyect.getProperty("/oMaterialUI") || [];
                     const aConditions = oResponse.toConditionEx?.results || [];
+                    const aItemsOut = oResponse.toItemsOut?.results || [];
                     const aReturns = oResponse.HeaderToReturn?.results || [];
+
+                    const fnNormItmBonus = function (v) {
+                        const s = String(v || "").trim();
+                        return s ? s.padStart(6, "0") : "";
+                    };
+
+                    const fnItmNumBonus = function (v) {
+                        const n = parseInt(fnNormItmBonus(v), 10);
+                        return isNaN(n) ? 0 : n;
+                    };
+
+                    const fnFindParentBonus = function (sBonusItm, sMaterial) {
+                        const nBonus = fnItmNumBonus(sBonusItm);
+
+                        let aCandidates = aMaterialUI2.filter(function (x) {
+                            return !this._isBonificacionTextilItem(x) &&
+                                fnItmNumBonus(x.ItmNumber || x.OriginalItmNumber) < nBonus;
+                        }.bind(this));
+
+                        const sMatNorm = String(sMaterial || "").trim();
+                        const aSameMaterial = sMatNorm
+                            ? aCandidates.filter(function (x) {
+                                return String(x.Material || x.Matnr || "").trim() === sMatNorm;
+                            })
+                            : [];
+
+                        if (aSameMaterial.length) {
+                            aCandidates = aSameMaterial;
+                        }
+
+                        return aCandidates.sort(function (a, b) {
+                            return fnItmNumBonus(b.ItmNumber || b.OriginalItmNumber) -
+                                fnItmNumBonus(a.ItmNumber || a.OriginalItmNumber);
+                        })[0] || null;
+                    }.bind(this);
 
                     const oReturnError = aReturns.find(function (r) {
                         return String(r.Type || "").trim().toUpperCase() === "E";
@@ -2205,7 +2242,99 @@ sap.ui.define([
                         return;
                     }
 
+                    const mBonusItm = {};
+
+                    aConditions.forEach(function (cond) {
+                        if (String(cond.CondType || "").trim().toUpperCase() === "ZABO") {
+                            const sItm = fnNormItmBonus(cond.ItmNumber);
+                            if (sItm) {
+                                mBonusItm[sItm] = true;
+                            }
+                        }
+                    });
+
+                    aMaterialUI2.forEach(function (item) {
+                        const sItm = fnNormItmBonus(item.ItmNumber || item.OriginalItmNumber);
+
+                        if (mBonusItm[sItm] || this._isBonificacionTextilItem(item)) {
+                            const oParent = fnFindParentBonus(sItm, item.Material || item.Matnr);
+                            this._markTextilBonusItem(item, oParent && (oParent.ItmNumber || oParent.OriginalItmNumber));
+                        }
+                    }.bind(this));
+
+                    aMaterialUI2 = aMaterialUI2.filter(function (item) {
+                        if (!this._isBonificacionTextilItem(item)) {
+                            return true;
+                        }
+
+                        const sItm = fnNormItmBonus(item.ItmNumber || item.OriginalItmNumber);
+
+                        const bSigueEnCondiciones = !!mBonusItm[sItm];
+
+                        const bSigueEnItemsOut = aItemsOut.some(function (io) {
+                            return fnNormItmBonus(io.ItmNumber) === sItm;
+                        });
+
+                        return bSigueEnCondiciones || bSigueEnItemsOut;
+                    }.bind(this));
+
+                    aItemsOut.forEach(function (io) {
+                        const sItm = fnNormItmBonus(io.ItmNumber);
+
+                        if (!sItm || sItm === "000000") {
+                            return;
+                        }
+
+                        const bExisteUI = aMaterialUI2.some(function (ui) {
+                            return fnNormItmBonus(ui.ItmNumber || ui.OriginalItmNumber) === sItm;
+                        });
+
+                        if (bExisteUI) {
+                            return;
+                        }
+
+                        const oParent = fnFindParentBonus(sItm, io.Material);
+                        const sMat = io.Material || (oParent && oParent.Material) || "";
+                        const nCantidad = fnToNumber(io.ReqQty != null ? io.ReqQty : io.TargetQty);
+
+                        aMaterialUI2.push(this._markTextilBonusItem({
+                            ItmNumber: sItm,
+                            Posicion: sItm,
+                            OriginalItmNumber: sItm,
+                            Material: sMat,
+                            codigo: sMat,
+                            Descriptions: io.ShortText || (oParent && oParent.Descriptions) || sMat,
+                            descripcion: io.ShortText || (oParent && oParent.descripcion) || sMat,
+                            Description: io.ShortText || (oParent && oParent.Description) || sMat,
+                            cantidad: nCantidad.toFixed(3),
+                            UMV: oParent ? oParent.UMV : "MTS",
+                            TargetQu: oParent ? oParent.TargetQu : "MTS",
+                            Brand: oParent ? oParent.Brand : "",
+                            StockDispo: "0.000",
+                            Kbetr: 0,
+                            precioUnit: 0,
+                            precioBase: 0,
+                            descuentos: 0,
+                            impuesto: 0,
+                            subtotal: 0,
+                            total: 0,
+                            importeTabla: 0,
+                            esBolsa: false,
+                            TipoOperacion: "N",
+                            Deleted: false,
+                            state: "None"
+                        }, oParent && (oParent.ItmNumber || oParent.OriginalItmNumber)));
+                    }.bind(this));
+
+                    const aMaterialSinBonificacion = (oModelProyect.getProperty("/oMaterial") || []).filter(function (item) {
+                        const sItm = fnNormItmBonus(item.ItmNumber || item.OriginalItmNumber);
+                        return !mBonusItm[sItm] && !this._isBonificacionTextilItem(item);
+                    }.bind(this));
+
+                    oModelProyect.setProperty("/oMaterial", aMaterialSinBonificacion);
+
                     sap.m.MessageBox.success("Simulación creada con éxito");
+
                     aMaterialUI2.forEach(item => {
                         item.precioUnit = 0;
                         item.precioBase = 0;
@@ -2245,12 +2374,55 @@ sap.ui.define([
                                 oItemUI.impuesto = (oItemUI.impuesto || 0) + fTotalCond;
                                 totalImpuesto += fTotalCond;
                                 break;
+                            case "ZABO":
+                                this._markTextilBonusItem(oItemUI);
+                                oItemUI.descuentos = (oItemUI.descuentos || 0) + fTotalCond;
+                                break;
+
                             case "ZREP":
                                 embalajeTotal += fTotalCond;
                                 break;
                         }
                     });
+                    const fnGetSumCondBonus = function (sCondType, sItmNumber) {
+                        return aConditions
+                            .filter(function (c) {
+                                return String(c.CondType || "").trim().toUpperCase() === sCondType &&
+                                    (!sItmNumber || fnNormItmBonus(c.ItmNumber) === fnNormItmBonus(sItmNumber));
+                            })
+                            .reduce(function (acc, c) {
+                                return acc + fnToNumber(c.Condvalue !== undefined ? c.Condvalue : c.CondValue);
+                            }, 0);
+                    };
+
+                    const fnGetNetoBonus = function (sItmNumber) {
+                        return fnGetSumCondBonus("ZPRE", sItmNumber) + fnGetSumCondBonus("ZABO", sItmNumber);
+                    };
+
                     aMaterialUI2.forEach(item => {
+                        const oItemOut = aItemsOut.find(function (io) {
+                            return fnNormItmBonus(io.ItmNumber) === fnNormItmBonus(item.ItmNumber || item.OriginalItmNumber);
+                        });
+
+                        if (oItemOut && (oItemOut.ReqQty != null || oItemOut.TargetQty != null)) {
+                            item.cantidad = fnToNumber(oItemOut.ReqQty != null ? oItemOut.ReqQty : oItemOut.TargetQty).toFixed(3);
+                        }
+
+                        if (this._isBonificacionTextilItem(item)) {
+                            const fNetoBonus = fnGetNetoBonus(item.ItmNumber || item.OriginalItmNumber);
+
+                            item.precioBase = fNetoBonus;
+                            item.precioUnit = 0;
+                            item.descuentos = 0;
+                            item.impuesto = 0;
+                            item.importeTabla = fNetoBonus;
+                            item.subtotal = fNetoBonus;
+                            item.total = fNetoBonus;
+
+                            this._markTextilBonusItem(item);
+                            return;
+                        }
+
                         const oSchedule = aSchedule.find(s => s.ItmNumber === item.ItmNumber);
                         if (oSchedule) {
                             const fReq = parseFloat(oSchedule.ReqQty) || 0;
@@ -2519,7 +2691,9 @@ sap.ui.define([
             const aItems = [];
             const aSchedule = [];
 
-            const aItemsParaGuardar = [].concat(aMaterialSAP, aDeletedItems);
+            const aItemsParaGuardar = [].concat(aMaterialSAP, aDeletedItems).filter(function (item) {
+                return !this._isBonificacionTextilItem(item);
+            }.bind(this));
 
             aItemsParaGuardar.forEach(function (item) {
                 const sMat = String(item.Material || "").trim();
@@ -2810,6 +2984,77 @@ sap.ui.define([
             ].join(" ").toUpperCase();
 
             return sUMV === "PAQ" || sTexto.indexOf("BOLSA") >= 0;
+        },
+
+        _isBonificacionTextilItem: function (oItem) {
+            oItem = oItem || {};
+
+            if (oItem.isExtraFromSAP === true || oItem._isBonificacionSAP === true) {
+                return true;
+            }
+
+            const sBonus = String(
+                oItem.Bonus ||
+                oItem.Boni ||
+                oItem.Bonificacion ||
+                oItem.Bonification ||
+                ""
+            ).trim().toUpperCase();
+
+            if (sBonus.indexOf("BONI") >= 0 || sBonus === "X") {
+                return true;
+            }
+
+            const sCondType = String(oItem.CondType || oItem.ConditionType || "").trim().toUpperCase();
+            if (sCondType === "ZABO") {
+                return true;
+            }
+
+            const sItemCateg = String(
+                oItem.ItemCateg ||
+                oItem.ItemCategory ||
+                oItem.SalesDocumentItemCategory ||
+                oItem.SalesDocumentItemType ||
+                oItem.Pstyv ||
+                oItem.PSTYV ||
+                ""
+            ).trim().toUpperCase();
+
+            if (["TANN", "ZANN", "ZBON", "ZB01", "ZABO", "BONI"].includes(sItemCateg)) {
+                return true;
+            }
+
+            const sTexto = [
+                oItem.ShortText,
+                oItem.SalesDocumentItemText,
+                oItem.MaterialDescription,
+                oItem.ProductDescription,
+                oItem.Description,
+                oItem.Descriptions,
+                oItem.descripcion,
+                oItem.Descripcion,
+                oItem.MaterialText,
+                oItem.Bezei
+            ].join(" ").toUpperCase();
+
+            return sTexto.indexOf("BONIF") >= 0;
+        },
+
+        _markTextilBonusItem: function (oItem, sParentItmNumber) {
+            if (!oItem) {
+                return oItem;
+            }
+
+            oItem.isExtraFromSAP = true;
+            oItem._isBonificacionSAP = true;
+            oItem.Bonus = oItem.Bonus || "Boni";
+
+            const sParent = String(sParentItmNumber || "").trim();
+            if (sParent && !oItem.ParentItmNumber) {
+                oItem.ParentItmNumber = sParent.padStart(6, "0");
+            }
+
+            return oItem;
         },
 
         _tieneBolsaTextil: function () {
@@ -3198,6 +3443,12 @@ sap.ui.define([
             const oModel = oView.getModel("oModelProyect");
             const oContext = oEvent.getSource().getParent().getBindingContext("oModelProyect");
             const oSelectedObj = oContext.getObject() || {};
+
+            if (this._isBonificacionTextilItem(oSelectedObj)) {
+                sap.m.MessageToast.show("La posición de bonificación es informativa y no se puede editar.");
+                return;
+            }
+
             const sMatnr = oSelectedObj.Matnr || oSelectedObj.Material || "";
             const sDesc = oSelectedObj.Descriptions || oSelectedObj.Maktx || oSelectedObj.Bezei || "";
             const sStockRaw = oSelectedObj.StockDispoRaw ?? oSelectedObj.StockDispo ?? oSelectedObj.Stock ?? "0";
@@ -3569,6 +3820,11 @@ sap.ui.define([
             const oModel = oContext.getModel();
             const oDeletedItemInicial = oContext.getObject() || {};
 
+            if (this._isBonificacionTextilItem(oDeletedItemInicial)) {
+                sap.m.MessageToast.show("La posición de bonificación es informativa y no se puede eliminar directamente.");
+                return;
+            }
+
             const fnNormItm = function (v) {
                 const s = String(v || "").trim();
                 return s ? s.padStart(6, "0") : "";
@@ -3606,6 +3862,7 @@ sap.ui.define([
                 }
 
                 const sMatDeleted = String(oDeletedItem.Material || oDeletedItem.Matnr || "").trim();
+                const aBonificacionesRemover = [];
 
                 const bExistiaAntes = aOriginalBase.some(function (it) {
                     return fnNormItm(it.ItmNumber || it.OriginalItmNumber) === sItmDeleted;
@@ -3639,8 +3896,31 @@ sap.ui.define([
 
                 aMaterialUI.splice(iIndex, 1);
 
+                aMaterialUI = aMaterialUI.filter(function (item) {
+                    if (!this._isBonificacionTextilItem(item)) {
+                        return true;
+                    }
+
+                    const sBonusItm = fnNormItm(item.ItmNumber || item.OriginalItmNumber);
+                    const sParent = fnNormItm(item.ParentItmNumber);
+                    const sMatBonus = String(item.Material || item.Matnr || "").trim();
+
+                    const bMismoPadre = !!sParent && sParent === sItmDeleted;
+                    const bMismoMaterial = !!sMatDeleted && sMatBonus === sMatDeleted;
+
+                    if (bMismoPadre || bMismoMaterial) {
+                        if (sBonusItm) {
+                            aBonificacionesRemover.push(sBonusItm);
+                        }
+                        return false;
+                    }
+
+                    return true;
+                }.bind(this));
+
                 aMaterial = aMaterial.filter(function (item) {
-                    return fnNormItm(item.ItmNumber || item.OriginalItmNumber) !== sItmDeleted;
+                    const sItmItem = fnNormItm(item.ItmNumber || item.OriginalItmNumber);
+                    return sItmItem !== sItmDeleted && aBonificacionesRemover.indexOf(sItmItem) < 0;
                 });
 
                 const oCant = oModel.getProperty("/oCantidades") || {};
@@ -3658,6 +3938,15 @@ sap.ui.define([
                 if (sItmDeleted && oCantByItm[sItmDeleted] !== undefined) {
                     delete oCantByItm[sItmDeleted];
                 }
+
+                aBonificacionesRemover.forEach(function (sBonusItm) {
+                    if (oCant[sBonusItm] !== undefined) {
+                        delete oCant[sBonusItm];
+                    }
+                    if (oCantByItm[sBonusItm] !== undefined) {
+                        delete oCantByItm[sBonusItm];
+                    }
+                });
 
                 oModel.setProperty("/oMaterialUI", aMaterialUI);
                 oModel.setProperty("/oMaterial", aMaterial);

@@ -2300,6 +2300,31 @@ sap.ui.define([
                 oModelUser?.getProperty("/customAttribute") === "customAttribute1" ||
                 oModelUser?.getProperty("/bIsCliente") === true;
 
+            const normalizeMat = function (s) {
+                if (!s) {
+                    return "";
+                }
+                return String(s).replace(/^0+/, "");
+            };
+
+            const mDescByMat = {};
+            (oData.oMaterial || []).forEach(function (m) {
+                const sMatRaw = m.Material || m.Matnr;
+                const sMatNorm = normalizeMat(sMatRaw);
+                const sDesc = m.Descriptions || m.Maktx || m.Description;
+                if (sMatNorm && sDesc) {
+                    mDescByMat[sMatNorm] = sDesc;
+                }
+            });
+            (aMaterialUI || []).forEach(function (m) {
+                const sMatRaw = m.Material || m.Matnr;
+                const sMatNorm = normalizeMat(sMatRaw);
+                const sDesc = m.Descriptions || m.Maktx || m.Description;
+                if (sMatNorm && sDesc && !mDescByMat[sMatNorm]) {
+                    mDescByMat[sMatNorm] = sDesc;
+                }
+            });
+
             if (!this._validateGrupoMaterialRequired("simular")) {
                 return;
             }
@@ -2466,6 +2491,7 @@ sap.ui.define([
                 HeaderToPartners: aPartners,
                 HeaderToSchedule: aSchedule,
                 toConditionEx: [{ ClientId: "", ItmNumber: "", CondType: "", CondValue: "0.00", Condvalue: "0.00" }],
+                toItemsOut: [{ ClientId: "", ItmNumber: "", Material: "", ItemCateg: "", ShortText: "", ReqQty: "0.000", TargetQty: "0.000" }],
                 HeaderToReturn: [{ ClientId: "", Type: "", Message: "" }]
             });
 
@@ -2514,6 +2540,15 @@ sap.ui.define([
 
                     let aMaterialUI2 = oModelProyect.getProperty("/oMaterialUI") || [];
                     const aConditions = oResponse.toConditionEx?.results || [];
+                    const aItemsOut = oResponse.toItemsOut?.results || [];
+                    const _n = function (v) {
+                        const n = parseFloat(v);
+                        return isNaN(n) ? 0 : n;
+                    };
+                    const itnToNum = function (itn) {
+                        return _n(itn);
+                    };
+
                     if (!aConditions.length) {
                         sap.m.MessageBox.error(" No se recibió información de simulación desde SAP.");
                         oModelProyect.setProperty("/oMaterialUI", []);
@@ -2525,6 +2560,119 @@ sap.ui.define([
                         });
                         return;
                     }
+
+                    aMaterialUI2 = aMaterialUI2.filter(function (item) {
+                        if (!item.isExtraFromSAP) {
+                            return true;
+                        }
+                        return aItemsOut.some(function (io) {
+                            return io.ItmNumber === item.ItmNumber;
+                        });
+                    });
+
+                    aItemsOut.forEach(function (io) {
+                        const sItm = io.ItmNumber;
+                        if (!sItm || sItm === "000000") {
+                            return;
+                        }
+
+                        const existeUI = aMaterialUI2.some(function (ui) {
+                            return ui.ItmNumber === sItm;
+                        });
+
+                        if (existeUI) {
+                            return;
+                        }
+
+                        const parent = aMaterialUI2
+                            .filter(function (x) {
+                                return !x.isExtraFromSAP && itnToNum(x.ItmNumber) < itnToNum(sItm);
+                            })
+                            .sort(function (a, b) {
+                                return itnToNum(b.ItmNumber) - itnToNum(a.ItmNumber);
+                            })[0];
+
+                        const sMat = io.Material || (parent && parent.Material) || "";
+                        const sMatNorm = normalizeMat(sMat);
+                        const sDesc = io.ShortText || mDescByMat[sMatNorm] || (parent && parent.Descriptions) || sMatNorm || sMat;
+                        const nCantidad = _n(io.ReqQty != null ? io.ReqQty : io.TargetQty);
+
+                        aMaterialUI2.push({
+                            ItmNumber: sItm,
+                            Material: sMat,
+                            Descriptions: sDesc,
+                            cantidad: nCantidad.toFixed(3),
+                            UMV: parent ? parent.UMV : "MTS",
+                            Brand: parent ? parent.Brand : "",
+                            StockDispo: "0.000",
+                            Kbetr: 0,
+                            precioUnit: 0,
+                            precioBase: 0,
+                            descuentos: 0,
+                            impuesto: 0,
+                            subtotal: 0,
+                            total: 0,
+                            importeTabla: 0,
+                            esBolsa: false,
+                            isExtraFromSAP: true,
+                            Bonus: "Boni",
+                            ParentItmNumber: parent ? parent.ItmNumber : ""
+                        });
+                    });
+
+                    const bonusItmSet = new Set(
+                        aConditions.filter(function (c) {
+                            return c.CondType === "ZABO";
+                        }).map(function (c) {
+                            return c.ItmNumber;
+                        })
+                    );
+
+                    aMaterialUI2.forEach(function (it) {
+                        if (it.isExtraFromSAP) {
+                            bonusItmSet.add(it.ItmNumber);
+                        }
+                    });
+
+                    const getSum = function (sCondType, sItmNumber) {
+                        return aConditions
+                            .filter(function (c) {
+                                return c.CondType === sCondType && (!sItmNumber || c.ItmNumber === sItmNumber);
+                            })
+                            .reduce(function (acc, c) {
+                                return acc + _n(c.Condvalue !== undefined ? c.Condvalue : c.CondValue);
+                            }, 0);
+                    };
+
+                    const getFirstCond = function (sCondType, sItmNumber) {
+                        return aConditions.find(function (c) {
+                            return c.CondType === sCondType && (!sItmNumber || c.ItmNumber === sItmNumber);
+                        });
+                    };
+
+                    const getBonusPrecioTotal = function (sItmNumber) {
+                        const fZPRE = Math.abs(getSum("ZPRE", sItmNumber));
+                        const fZABO = Math.abs(getSum("ZABO", sItmNumber));
+
+                        // La bonificación debe mostrar precio, pero quedar descontada al 100%.
+                        // Si SAP manda ZPRE, usamos ZPRE. Si no, usamos ZABO como respaldo.
+                        return fZPRE || fZABO || 0;
+                    };
+
+                    const getBonusPrecioUnit = function (sItmNumber, fCantidad) {
+                        const oCondZPRE = getFirstCond("ZPRE", sItmNumber);
+                        const fUnitZPRE = oCondZPRE
+                            ? Math.abs(_n(oCondZPRE.CondValue !== undefined ? oCondZPRE.CondValue : oCondZPRE.Condvalue))
+                            : 0;
+
+                        if (fUnitZPRE > 0) {
+                            return fUnitZPRE;
+                        }
+
+                        const fTotal = getBonusPrecioTotal(sItmNumber);
+                        return fCantidad > 0 ? fTotal / fCantidad : 0;
+                    };
+
                     sap.m.MessageBox.success("Simulación creada con éxito");
                     aMaterialUI2.forEach(item => {
                         item.precioUnit = 0;
@@ -2570,21 +2718,55 @@ sap.ui.define([
                         }
                     });
                     aMaterialUI2.forEach(item => {
-                        const oSchedule = aSchedule.find(s => s.ItmNumber === item.ItmNumber);
-                        if (oSchedule) {
-                            const fReq = parseFloat(oSchedule.ReqQty) || 0;
+                        const oItemOut = aItemsOut.find(function (io) {
+                            return io.ItmNumber === item.ItmNumber;
+                        });
 
-                            if (item.esBolsa) {
-                                const nInt = Math.floor(fReq + 1e-6);
-                                item.cantidad = nInt.toString();
-                            } else {
-                                item.cantidad = fReq.toFixed(3);
+                        if (oItemOut && (oItemOut.ReqQty != null || oItemOut.TargetQty != null)) {
+                            const fReqOut = _n(oItemOut.ReqQty != null ? oItemOut.ReqQty : oItemOut.TargetQty);
+                            item.cantidad = fReqOut.toFixed(3);
+                        } else {
+                            const oSchedule = aSchedule.find(s => s.ItmNumber === item.ItmNumber);
+                            if (oSchedule) {
+                                const fReq = parseFloat(oSchedule.ReqQty) || 0;
+
+                                if (item.esBolsa) {
+                                    const nInt = Math.floor(fReq + 1e-6);
+                                    item.cantidad = nInt.toString();
+                                } else {
+                                    item.cantidad = fReq.toFixed(3);
+                                }
                             }
                         }
+
                         const fQty = parseFloat(item.cantidad || "0") || 0;
                         if (item.esBolsa) {
                             const fUnitBolsa = parseFloat(item.precioUnit || "0") || 0;
                             item.precioBase = fQty * fUnitBolsa;
+                        }
+
+                        if (bonusItmSet.has(item.ItmNumber)) {
+                            const fPrecioBonusTotal = getBonusPrecioTotal(item.ItmNumber);
+                            const fPrecioBonusUnit = getBonusPrecioUnit(item.ItmNumber, fQty);
+
+                            item.precioUnit = fPrecioBonusUnit;
+                            item.precioBase = fPrecioBonusTotal;
+
+                            // La bonificación se muestra con precio, pero se descuenta al 100%.
+                            item.descuentos = -Math.abs(fPrecioBonusTotal);
+                            item.impuesto = 0;
+
+                            // Total visual y total general deben quedar en cero.
+                            item.importeTabla = 0;
+                            item.subtotal = 0;
+                            item.total = 0;
+                            item.totalpos = 0;
+                            item.pvNeto = "0.00";
+
+                            item.Bonus = item.Bonus || "Boni";
+                            item.isExtraFromSAP = true;
+
+                            return;
                         }
 
                         const fBase = item.precioBase || 0;
@@ -2597,8 +2779,11 @@ sap.ui.define([
                     });
 
                     let subtotalGeneral = 0, totalGeneral = 0;
+                    totalImpuesto = 0;
+
                     aMaterialUI2.forEach(item => {
                         subtotalGeneral += item.subtotal || 0;
+                        totalImpuesto += item.impuesto || 0;
                         totalGeneral += item.total || 0;
                     });
 
@@ -3692,44 +3877,78 @@ sap.ui.define([
             const oModel = oContext.getModel();
             let aMaterialUI = oModel.getProperty("/oMaterialUI") || [];
             let aMaterial = oModel.getProperty("/oMaterial") || [];
-            const iIndex = parseInt(sPath.split("/").pop());
-            if (iIndex > -1) {
-                const oDeletedItem = aMaterialUI[iIndex];
-                aMaterialUI.splice(iIndex, 1);
-                oModel.setProperty("/oMaterialUI", aMaterialUI);
-                if (oDeletedItem && oDeletedItem.ItmNumber) {
-                    aMaterial = aMaterial.filter(item => item.ItmNumber !== oDeletedItem.ItmNumber);
-                } else if (oDeletedItem && oDeletedItem.Material) {
-                    aMaterial = aMaterial.filter(item => item.Material !== oDeletedItem.Material);
+            const iIndex = parseInt(sPath.split("/").pop(), 10);
+
+            if (isNaN(iIndex) || iIndex < 0 || iIndex >= aMaterialUI.length) {
+                return;
+            }
+
+            const oDeletedItem = aMaterialUI[iIndex];
+            const sDeletedItm = oDeletedItem && oDeletedItem.ItmNumber;
+            const sDeletedMaterial = (oDeletedItem && (oDeletedItem.Material || oDeletedItem.Matnr)) || "";
+
+            aMaterialUI.splice(iIndex, 1);
+
+            if (oDeletedItem && !oDeletedItem.isExtraFromSAP) {
+                aMaterialUI = aMaterialUI.filter(function (item) {
+                    if (!item.isExtraFromSAP) {
+                        return true;
+                    }
+
+                    const bSameParent =
+                        item.ParentItmNumber &&
+                        sDeletedItm &&
+                        item.ParentItmNumber === sDeletedItm;
+
+                    const bSameMaterial =
+                        !!sDeletedMaterial &&
+                        (item.Material === sDeletedMaterial || item.Matnr === sDeletedMaterial);
+
+                    return !(bSameParent || bSameMaterial);
+                });
+
+                if (sDeletedItm) {
+                    aMaterial = aMaterial.filter(function (item) {
+                        return item.ItmNumber !== sDeletedItm;
+                    });
+                } else if (sDeletedMaterial) {
+                    aMaterial = aMaterial.filter(function (item) {
+                        return item.Material !== sDeletedMaterial && item.Matnr !== sDeletedMaterial;
+                    });
                 }
-                oModel.setProperty("/oMaterial", aMaterial);
-                if (oDeletedItem && oDeletedItem.Material) {
+
+                if (sDeletedMaterial) {
                     const oCant = oModel.getProperty("/oCantidades") || {};
-                    if (oCant[oDeletedItem.Material] !== undefined) {
-                        delete oCant[oDeletedItem.Material];
+                    if (oCant[sDeletedMaterial] !== undefined) {
+                        delete oCant[sDeletedMaterial];
                         oModel.setProperty("/oCantidades", oCant);
                     }
                 }
-                let subtotalGeneral = 0, totalImpuesto = 0, totalGeneral = 0;
-
-                aMaterialUI.forEach(item => {
-                    subtotalGeneral += item.subtotal || 0;
-                    totalImpuesto += item.impuesto || 0;
-                    totalGeneral += item.total || 0;
-                });
-                const oDatCalculo = oModel.getProperty("/oDatCalculo") || {};
-                const igvPorcentaje = oDatCalculo.igvPorcentaje ? parseFloat(oDatCalculo.igvPorcentaje) : 18;
-
-                oModel.setProperty("/oDatCalculo", {
-                    subtotalGeneral: subtotalGeneral.toFixed(2),
-                    embalaje: "0.00",
-                    totalImpuesto: totalImpuesto.toFixed(2),
-                    totalGeneral: totalGeneral.toFixed(2),
-                    igvPorcentaje: igvPorcentaje.toFixed(2)
-                });
-
-                oModel.refresh(true);
             }
+
+            oModel.setProperty("/oMaterialUI", aMaterialUI);
+            oModel.setProperty("/oMaterial", aMaterial);
+
+            let subtotalGeneral = 0, totalImpuesto = 0, totalGeneral = 0;
+
+            aMaterialUI.forEach(item => {
+                subtotalGeneral += item.subtotal || 0;
+                totalImpuesto += item.impuesto || 0;
+                totalGeneral += item.total || 0;
+            });
+
+            const oDatCalculo = oModel.getProperty("/oDatCalculo") || {};
+            const igvPorcentaje = oDatCalculo.igvPorcentaje ? parseFloat(oDatCalculo.igvPorcentaje) : 18;
+
+            oModel.setProperty("/oDatCalculo", {
+                subtotalGeneral: subtotalGeneral.toFixed(2),
+                embalaje: "0.00",
+                totalImpuesto: totalImpuesto.toFixed(2),
+                totalGeneral: totalGeneral.toFixed(2),
+                igvPorcentaje: igvPorcentaje.toFixed(2)
+            });
+
+            oModel.refresh(true);
         },
         onPressPieza: function (oEvent) {
             const oCtx = oEvent.getSource().getBindingContext("oModelProyect");
