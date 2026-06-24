@@ -390,7 +390,16 @@ sap.ui.define([
                 oMainNew.filter.cbCliente = aCliActual;
                 oMainNew.filter.cbVendor = aVenActual;
             } else if (bIsVendedor) {
-                oMainNew.filter.cbVendor = aVenActual;
+                const oUser = that.getModel("oModelUser");
+                const sUniNeg = String(
+                    (oUser && oUser.getProperty("/bUniNeg")) ||
+                    tUniNeg ||
+                    ""
+                ).toUpperCase();
+
+                if (sUniNeg !== "TEXTILES") {
+                    oMainNew.filter.cbVendor = aVenActual;
+                }
             }
             // Supervisor no preserva nada
 
@@ -2082,6 +2091,27 @@ sap.ui.define([
 
             return new Blob([aBytes], { type: "application/pdf" });
         },
+
+        _isVendedorTextilesFreeScope: function () {
+            const oProj = this.getModel("oModelProyect");
+            const oUser = this.getModel("oModelUser");
+
+            const sRol = String(
+                (oUser && oUser.getProperty("/bRol")) ||
+                (oProj && oProj.getProperty("/Main/tRol")) ||
+                tRol ||
+                ""
+            ).toUpperCase();
+
+            const sUniNeg = String(
+                (oUser && oUser.getProperty("/bUniNeg")) ||
+                tUniNeg ||
+                ""
+            ).toUpperCase();
+
+            return sRol === "VENDEDOR" && sUniNeg === "TEXTILES";
+        },
+
         _getLockedFiltersByProfile: function () {
             const oProj = this.getModel("oModelProyect");
             const oUser = this.getModel("oModelUser");
@@ -2107,14 +2137,18 @@ sap.ui.define([
             const bIsCliente = sRol === "CLIENTE" || sRol === "CLIENTES";
             const bIsVendedor = sRol === "VENDEDOR";
             const bIsSupervisor = sRol === "SUPERVISOR";
+            const bVendedorTextilesLibre = this._isVendedorTextilesFreeScope
+                ? this._isVendedorTextilesFreeScope()
+                : false;
 
             return {
                 sRol: sRol,
                 bIsCliente: bIsCliente,
                 bIsVendedor: bIsVendedor,
                 bIsSupervisor: bIsSupervisor,
+                bVendedorTextilesLibre: bVendedorTextilesLibre,
                 aClienteLocked: bIsCliente && sBP ? [sBP] : [],
-                aVendedorLocked: bIsVendedor && sVendedor ? [sVendedor] : []
+                aVendedorLocked: bIsVendedor && !bVendedorTextilesLibre && sVendedor ? [sVendedor] : []
             };
         },
         _restoreLockedFiltersByProfile: function () {
@@ -2183,6 +2217,7 @@ sap.ui.define([
             const oView = this.getView();
             const oModel = this.getModel("oModelProyect");
             const oLocked = this._getLockedFiltersByProfile();
+            const bVendedorTextilesLibre = oLocked.bVendedorTextilesLibre === true;
 
             // 1. Fechas
             const oToday = new Date();
@@ -2212,10 +2247,10 @@ sap.ui.define([
             }
 
             // 5. Vendedor:
-            // Solo Supervisor puede limpiar vendedor.
-            // Vendedor NO puede perder su BP predefinido.
+            // Supervisor puede limpiar vendedor.
+            // Textiles + Vendedor también puede dejarlo vacío para consultar todos los clientes.
             const oMcbVendedor = oView.byId("mcbVendedor");
-            if (oMcbVendedor && oLocked.bIsSupervisor && oMcbVendedor.setSelectedKeys) {
+            if (oMcbVendedor && (oLocked.bIsSupervisor || bVendedorTextilesLibre) && oMcbVendedor.setSelectedKeys) {
                 oMcbVendedor.setSelectedKeys([]);
             }
 
@@ -2255,9 +2290,9 @@ sap.ui.define([
                 }
 
                 // Vendedor:
-                // Solo Supervisor puede limpiar vendedor.
-                // Vendedor debe conservar su BP.
-                if (oLocked.bIsSupervisor) {
+                // Supervisor puede limpiar vendedor.
+                // Textiles + Vendedor también puede dejarlo vacío para consultar todos los clientes.
+                if (oLocked.bIsSupervisor || bVendedorTextilesLibre) {
                     oModel.setProperty("/Main/filter/cbVendor", []);
                 }
 
@@ -2288,8 +2323,10 @@ sap.ui.define([
             // 12. Mensaje
             let sMsg = "✅ Filtros reiniciados y tabla limpia";
 
-            if (oLocked.bIsVendedor) {
+            if (oLocked.bIsVendedor && !bVendedorTextilesLibre) {
                 sMsg = "✅ Filtros reiniciados. Se mantiene el vendedor asignado por perfil.";
+            } else if (oLocked.bIsVendedor && bVendedorTextilesLibre) {
+                sMsg = "✅ Filtros reiniciados. Puede buscar todos los clientes de Textiles sin vendedor seleccionado.";
             } else if (oLocked.bIsCliente) {
                 sMsg = "✅ Filtros reiniciados. Se mantiene el cliente asignado por perfil.";
             }
@@ -2473,6 +2510,7 @@ sap.ui.define([
             const bIsSupervisor = (sRol === "SUPERVISOR");
             const bIsCliente = (sRol === "CLIENTE" || sRol === "CLIENTES");
             const bEsQuimicos = (sUniNeg === "QUIMICOS");
+            const bEsTextiles = (sUniNeg === "TEXTILES");
 
             const aVendorKeys = (oProj.getProperty("/Main/filter/cbVendor") || [])
                 .map(v => String(v || "").trim())
@@ -2508,7 +2546,16 @@ sap.ui.define([
                 return;
             }
 
-            // VENDEDOR sin vendedor seleccionado: vacío
+            // TEXTILES + VENDEDOR sin vendedor seleccionado:
+            // debe ver todos los clientes de Textiles.
+            if (bIsVendedor && bEsTextiles && !aVendorKeys.length) {
+                oProj.setProperty("/oClienteFilter", aClientesAll);
+                oProj.setProperty("/oCliente", aClientesAll);
+                return;
+            }
+
+            // Resto de unidades con VENDEDOR sin vendedor seleccionado:
+            // se mantiene el comportamiento actual.
             if (bIsVendedor && !aVendorKeys.length) {
                 oProj.setProperty("/oClienteFilter", []);
                 oProj.setProperty("/oCliente", []);
@@ -2582,6 +2629,7 @@ sap.ui.define([
             const bIsVendedor = (sRol === "VENDEDOR");
             const bIsSupervisor = (sRol === "SUPERVISOR");
             const bEsQuimicos = (sUniNeg === "QUIMICOS");
+            const bEsTextiles = (sUniNeg === "TEXTILES");
 
             const aVendorKeys = (oProj.getProperty("/Main/filter/cbVendor") || [])
                 .map(v => String(v || "").trim())
@@ -2590,13 +2638,14 @@ sap.ui.define([
             let bEnableClientFilters = true;
             let bEnableExecuteSearch = true;
 
-            // En QUIMICOS no se obliga vendedor para habilitar filtros/clientes.
-            if (!bEsQuimicos && bIsVendedor && aVendorKeys.length === 0) {
+            // En TEXTILES y QUIMICOS no se obliga vendedor para habilitar filtros/clientes.
+            // Se mantiene el bloqueo para el resto de unidades, especialmente CERAMICOS.
+            if (!bEsQuimicos && !bEsTextiles && bIsVendedor && aVendorKeys.length === 0) {
                 bEnableClientFilters = false;
                 bEnableExecuteSearch = false;
             }
 
-            if (bIsSupervisor || bEsQuimicos) {
+            if (bIsSupervisor || bEsQuimicos || bEsTextiles) {
                 bEnableClientFilters = true;
                 bEnableExecuteSearch = true;
             }

@@ -407,6 +407,32 @@ sap.ui.define([
                 oRouter.navTo("AccessDenied");
             }
         },
+
+        _getCantidadFromMap: function (oCantidades, oItem) {
+            oCantidades = oCantidades || {};
+            oItem = oItem || {};
+
+            const sItm = String(oItem.ItmNumber || "").trim();
+            const sMat = String(oItem.Material || oItem.Matnr || "").trim();
+
+            let vCantidad = "";
+
+            // Prioridad: posición. Esto evita que dos líneas del mismo material se pisen.
+            if (sItm && oCantidades[sItm] !== undefined) {
+                vCantidad = oCantidades[sItm];
+            } else if (sMat && oCantidades[sMat] !== undefined) {
+                // Fallback para datos antiguos que todavía estén guardados por material.
+                vCantidad = oCantidades[sMat];
+            } else if (oItem.cantidad !== undefined) {
+                vCantidad = oItem.cantidad;
+            } else if (oItem.Cantidad !== undefined) {
+                vCantidad = oItem.Cantidad;
+            }
+
+            const nCantidad = parseFloat(String(vCantidad || "0").replace(",", "."));
+            return isNaN(nCantidad) ? 0 : nCantidad;
+        },
+
         _initMaterialFromReferencia: function () {
             const oModel = this.getView().getModel("oModelProyect");
             if (!oModel) { return; }
@@ -442,7 +468,7 @@ sap.ui.define([
                     : sCantPend;
 
                 // Cantidad para este material (clave = código de material)
-                oCantidades[sMat] = sCantPed;
+                oCantidades[sItmNumber] = sCantPed;
 
                 // Ítem para BAPI
                 aMaterialSAP.push({
@@ -1991,7 +2017,7 @@ sap.ui.define([
                 const sQty = nQty.toFixed(3);
 
                 // ✅ guardar en mapa por material
-                oCantidades[sMat] = sQty;
+                oCantidades[sItmNumber] = sQty;
 
                 aMaterialPrev.push({
                     ClienteId: oData.oDatClient?.Customer || "",
@@ -2415,7 +2441,7 @@ sap.ui.define([
             const aSchedule = aMaterialSim.map(item => {
                 const sMat = item.Material;
                 const sItm = item.ItmNumber || "";
-                let nQty = parseFloat(oCantidades[sMat] || "0.000") || 0;
+                let nQty = this._getCantidadFromMap(oCantidades, item);
                 const bIsBolsa = !!mBolsaByItem[sItm];
                 if (bIsBolsa) {
                     nQty = Math.floor(nQty + 1e-6);
@@ -2815,6 +2841,93 @@ sap.ui.define([
                 }.bind(this)
             });
         },
+
+        _sanitizeSharePointFileNamePart: function (sValue) {
+            return String(sValue || "")
+                .replace(/[\\/:*?"<>|#%&{}~]/g, "-")
+                .replace(/\s+/g, " ")
+                .trim();
+        },
+
+        _buildOCFileNameWithOrder: function (sOriginalName, sSalesDocument) {
+            const sName = String(sOriginalName || "archivo").trim();
+            const sDoc = this._sanitizeSharePointFileNamePart(sSalesDocument);
+
+            const iDot = sName.lastIndexOf(".");
+            const bHasExt = iDot > 0 && iDot < sName.length - 1;
+
+            const sBase = bHasExt ? sName.substring(0, iDot) : sName;
+            const sExt = bHasExt ? sName.substring(iDot) : "";
+
+            const sBaseClean = this._sanitizeSharePointFileNamePart(sBase) || "archivo";
+
+            return sBaseClean + "-" + sDoc + sExt;
+        },
+
+        _clearPendingOCFiles: function () {
+            const oModel = this.getView().getModel("oModelProyect");
+
+            if (oModel) {
+                oModel.setProperty("/aOCFilesPending", []);
+            }
+        },
+
+        _uploadPendingOCFilesAfterOrder: async function (sSalesDocument) {
+            const oModel = this.getView().getModel("oModelProyect");
+            const aPending = oModel ? (oModel.getProperty("/aOCFilesPending") || []) : [];
+
+            const oResult = {
+                total: aPending.length,
+                success: 0,
+                error: 0,
+                errors: []
+            };
+
+            if (!aPending.length || !sSalesDocument) {
+                return oResult;
+            }
+
+            for (let i = 0; i < aPending.length; i++) {
+                const oPending = aPending[i] || {};
+                const oFile = oPending.fileObj;
+
+                if (!oFile) {
+                    oResult.error++;
+                    oResult.errors.push((oPending.name || "Archivo sin nombre") + ": no se encontró el objeto File.");
+                    continue;
+                }
+
+                const sUploadName = this._buildOCFileNameWithOrder(oFile.name, sSalesDocument);
+
+                const oResp = await this._uploadSharepoint(
+                    oFile,
+                    function (percent) {
+                        console.log("Upload OC " + sUploadName + ": " + percent + "%");
+                    },
+                    sUploadName
+                );
+
+                if (oResp.sEstado === "S" && oResp.oResults && oResp.oResults.id) {
+                    oResult.success++;
+                    console.log("📎 Archivo OC subido:", {
+                        originalName: oFile.name,
+                        uploadName: sUploadName,
+                        webUrl: oResp.oResults.webUrl
+                    });
+                } else {
+                    oResult.error++;
+                    oResult.errors.push(oFile.name + ": error al subir a SharePoint.");
+                    console.error("❌ Error subiendo OC:", {
+                        originalName: oFile.name,
+                        uploadName: sUploadName,
+                        response: oResp
+                    });
+                }
+            }
+
+            return oResult;
+        },
+
         _createOrder: function () {
             const oView = this.getView();
             const oModelProyect = oView.getModel("oModelProyect");
@@ -2946,7 +3059,7 @@ sap.ui.define([
                 const sMat = item.Material;
                 const sItm = item.ItmNumber || "";
 
-                let nQty = parseFloat(oCantidades[sMat] || "0.000") || 0;
+                let nQty = this._getCantidadFromMap(oCantidades, item);
                 const bIsBolsaItem = !!mBolsaByItem[sItm];
 
                 if (bIsBolsaItem) {
@@ -3009,7 +3122,7 @@ sap.ui.define([
                     const sMat = item.Material;
                     const sItm = item.ItmNumber || "";
 
-                    let nQty = parseFloat(oCantidades[sMat] || "0.000") || 0;
+                    let nQty = this._getCantidadFromMap(oCantidades, item);
                     const bIsBolsaItem = !!mBolsaByItem[sItm];
 
                     if (bIsBolsaItem) {
@@ -3085,7 +3198,7 @@ sap.ui.define([
             sap.ui.core.BusyIndicator.show(0);
 
             oModelEntity.create("/iHeaderSet", oPayload, {
-                success: function (oResponse) {
+                success: async function (oResponse) {
                     sap.ui.core.BusyIndicator.hide();
 
                     const aErroresSap = this._getSapReturnErrors(oResponse);
@@ -3137,9 +3250,41 @@ sap.ui.define([
                     }.bind(this);
 
                     if (sNumDocumento) {
+                        sap.ui.core.BusyIndicator.show(0);
+
+                        const oUploadResult = await this._uploadPendingOCFilesAfterOrder(sNumDocumento);
+
+                        sap.ui.core.BusyIndicator.hide();
+
+                        let sUploadMessage = "";
+
+                        if (oUploadResult.total > 0) {
+                            if (oUploadResult.error > 0) {
+                                sUploadMessage =
+                                    "\n\nArchivos OC: " +
+                                    oUploadResult.success +
+                                    " de " +
+                                    oUploadResult.total +
+                                    " subidos correctamente. Revisar consola para los errores.";
+                            } else {
+                                sUploadMessage =
+                                    "\n\nArchivos OC subidos correctamente: " +
+                                    oUploadResult.success +
+                                    " de " +
+                                    oUploadResult.total +
+                                    ".";
+                            }
+                        }
+
                         sap.m.MessageBox.success(
-                            `Pedido creado exitosamente.\nNúmero de pedido: ${sNumDocumento}`,
-                            { title: "Pedido creado", onClose: fnAfterOk }
+                            `Pedido creado exitosamente.\nNúmero de pedido: ${sNumDocumento}${sUploadMessage}`,
+                            {
+                                title: "Pedido creado",
+                                onClose: function () {
+                                    this._clearPendingOCFiles();
+                                    fnAfterOk();
+                                }.bind(this)
+                            }
                         );
                     } else {
                         this._showSapErrors(
@@ -3239,20 +3384,22 @@ sap.ui.define([
         },
         _revisarBolsasTrasCambioCantidad: function () {
             const oModel = this.getView().getModel("oModelProyect");
-            if (!oModel) return;
+            if (!oModel) {
+                return false;
+            }
 
             const bValidaBolsas = this._shouldValidateBolsas && this._shouldValidateBolsas();
             if (!bValidaBolsas) {
-                return;
+                return false;
             }
 
             const aMatUI = oModel.getProperty("/oMaterialUI") || [];
-            const bHayBolsa = aMatUI.some(it => !!it.esBolsa);
+            const bHayBolsa = aMatUI.some(function (it) {
+                return !!it.esBolsa;
+            });
 
-            // Solo si ya existe bolsa, la quitamos/recalculamos manualmente luego.
-            // No debe crear bolsas automáticamente.
             if (!bHayBolsa) {
-                return;
+                return false;
             }
 
             const MIN_METROS_BOLSA = 100;
@@ -3268,8 +3415,11 @@ sap.ui.define([
                 const aMatSAP = oModel.getProperty("/oMaterial") || [];
                 if (aMatSAP.length) {
                     this.onSimulateOrder();
+                    return true;
                 }
             }
+
+            return false;
         },
 
         _buildPriceConditionsUrl: function (sSalesOrg) {
@@ -3705,6 +3855,9 @@ sap.ui.define([
             const oDetalle = oModel.getProperty("/oSelecTableDetalle") || {};
 
             const sMatnr = oDetalle.Matnr || oDetalle.Material;
+            const sItmNumber = String(oDetalle.ItmNumber || "").trim();
+            const sUMV = oDetalle.UMV || oDetalle.Um || "MTS";
+
             const sCantRaw = (oDetalle.cantidad !== undefined && oDetalle.cantidad !== null)
                 ? oDetalle.cantidad.toString().replace(",", ".")
                 : "";
@@ -3735,12 +3888,21 @@ sap.ui.define([
 
             // 🔹 Actualizar /oCantidades
             const oCantidades = oModel.getProperty("/oCantidades") || {};
-            oCantidades[sMatnr] = sCantFormat;
-            oModel.setProperty("/oCantidades", oCantidades);
+            const sCantKey = sItmNumber || sMatnr;
+
+            if (sCantKey) {
+                oCantidades[sCantKey] = sCantFormat;
+            }
+
+            oModel.setProperty("/oCantidades", oCantidades);;
 
             // 🔹 Actualizar /oMaterialUI (cantidad de la fila)
             const aMaterialUI = oModel.getProperty("/oMaterialUI") || [];
-            const oItemUI = aMaterialUI.find(item => item.Material === sMatnr);
+            const oItemUI = aMaterialUI.find(function (item) {
+                return sItmNumber && item.ItmNumber === sItmNumber;
+            }) || aMaterialUI.find(function (item) {
+                return item.Material === sMatnr;
+            });
             if (oItemUI) {
                 oItemUI.cantidad = sCantFormat;
                 oItemUI.Cantidad = sCantFormat;
@@ -3774,9 +3936,13 @@ sap.ui.define([
                 ? this._shouldValidateBolsas()
                 : false;
 
-            if (bAplicaBolsas) {
-                this._revisarBolsasTrasCambioCantidad();
-            } else {
+            let bSimuladoPorBolsas = false;
+
+            if (bAplicaBolsas && this._revisarBolsasTrasCambioCantidad) {
+                bSimuladoPorBolsas = this._revisarBolsasTrasCambioCantidad() === true;
+            }
+
+            if (!bSimuladoPorBolsas) {
                 this.onSimulateOrder();
             }
 
@@ -4015,7 +4181,8 @@ sap.ui.define([
                     actions: [sap.m.MessageBox.Action.YES, sap.m.MessageBox.Action.NO],
                     onClose: function (sAction) {
                         if (sAction === sap.m.MessageBox.Action.YES) {
-                            // Redirigir a la página principal
+                            that._clearPendingOCFiles();
+
                             var oRouter = sap.ui.core.UIComponent.getRouterFor(that);
                             oRouter.navTo("Main");
                         }

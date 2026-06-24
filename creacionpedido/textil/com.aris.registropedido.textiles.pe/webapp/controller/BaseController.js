@@ -1629,12 +1629,22 @@ sap.ui.define([
 				that.getMessageBox("error", that.getI18nText("sErrorTry"));
 			}
 		},
-		_uploadSharepoint: function (file, onProgress) {
+		_uploadSharepoint: function (file, onProgress, sFileNameOverride) {
 			const that = this;
+
 			return new Promise((resolve) => {
 				const folderPath = "Repositorio Apps/SAP Hana/Portal BTP/clientes/documentos";
-				const encodedPath = encodeURIComponent(`${folderPath}/${file.name}`);
+
+				const sFileName = String(
+					sFileNameOverride ||
+					file.name ||
+					"archivo"
+				).trim();
+
+				const encodedPath = encodeURIComponent(`${folderPath}/${sFileName}`);
+
 				let sUrl = "";
+
 				if (that.local) {
 					sUrl = that.getOwnerComponent()
 						.getManifestObject()
@@ -1646,7 +1656,13 @@ sap.ui.define([
 						jQuery.sap.getModulePath(that.route) +
 						`/SharePointAris/sites/${that.routeSharepoint}/drives/${that.driveId}/root:/${encodedPath}:/content`;
 				}
-				console.log("📤 Subiendo archivo a:", sUrl);
+
+				console.log("📤 Subiendo archivo a SharePoint:", {
+					url: sUrl,
+					originalName: file.name,
+					uploadName: sFileName
+				});
+
 				Services.sharePointUploadProgressSync(
 					sUrl,
 					file,

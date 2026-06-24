@@ -444,7 +444,12 @@
                         </IconTabBar>
                        
                             <HBox  justifyContent="End">
-                            <Button text="{i18n>txtRecalculateProduct}" icon="sap-icon://refresh" type="Attention" width="150px" />
+                            <Button
+                                text="{i18n>txtRecalculateProduct}"
+                                icon="sap-icon://refresh"
+                                type="Attention"
+                                width="150px"
+                                press="onSimulateOrder" />
                             <Button text="{i18n>txtEngrave}" icon="sap-icon://save" type="Accept" width="150px" press="onConfirmCreateOrder" class="sapUiSmallMarginBegin" />
                             <Button text="{i18n>cancelText}"  icon="sap-icon://decline" type="Reject" width="150px" class="sapUiSmallMarginBegin" press="onCancelOrder"/>
                             </HBox>

@@ -96,11 +96,12 @@
                     </MultiInput>
 
                     <Button
-                        text="Enviar"
-                        press=".onUploadAllFiles"
-                        type="Emphasized"
-                        class="sapUiSmallMarginBegin"
-                    />
+                            text="Limpiar"
+                            press=".onClearOCUploadFiles"
+                            type="Transparent"
+                            icon="sap-icon://decline"
+                            class="sapUiSmallMarginBegin"
+                        />
                 </HBox>
             </f:content>
         </f:SimpleForm>

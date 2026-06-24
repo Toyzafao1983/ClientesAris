@@ -714,6 +714,8 @@ sap.ui.define([
                     actions: [sap.m.MessageBox.Action.YES, sap.m.MessageBox.Action.NO],
                     onClose: function (sAction) {
                         if (sAction === sap.m.MessageBox.Action.YES) {
+                            that._clearPendingOCFiles();
+
                             var oRouter = sap.ui.core.UIComponent.getRouterFor(that);
                             oRouter.navTo("Main");
                         }
@@ -2777,6 +2779,103 @@ sap.ui.define([
             } catch (e) { }
             return String(matnr || "");
         },
+
+        _sanitizeSharePointFileNamePart: function (sValue) {
+            return String(sValue || "")
+                .replace(/[\\/:*?"<>|#%&{}~]/g, "-")
+                .replace(/\s+/g, " ")
+                .trim();
+        },
+
+        _buildOCFileNameWithOrder: function (sOriginalName, sSalesDocument) {
+            const sName = String(sOriginalName || "archivo").trim();
+            const sDoc = this._sanitizeSharePointFileNamePart(sSalesDocument);
+
+            const iDot = sName.lastIndexOf(".");
+            const bHasExt = iDot > 0 && iDot < sName.length - 1;
+
+            const sBase = bHasExt ? sName.substring(0, iDot) : sName;
+            const sExt = bHasExt ? sName.substring(iDot) : "";
+
+            const sBaseClean = this._sanitizeSharePointFileNamePart(sBase) || "archivo";
+
+            return sBaseClean + "-" + sDoc + sExt;
+        },
+
+        _clearPendingOCFiles: function () {
+            const oModel = this.getView().getModel("oModelProyect");
+
+            if (oModel) {
+                oModel.setProperty("/aOCFilesPending", []);
+            }
+        },
+
+        _uploadPendingOCFilesAfterOrder: async function (sSalesDocument) {
+            const oModel = this.getView().getModel("oModelProyect");
+            const aPending = oModel ? (oModel.getProperty("/aOCFilesPending") || []) : [];
+
+            const oResult = {
+                total: aPending.length,
+                success: 0,
+                error: 0,
+                errors: []
+            };
+
+            if (!aPending.length || !sSalesDocument) {
+                return oResult;
+            }
+
+            for (let i = 0; i < aPending.length; i++) {
+                const oPending = aPending[i] || {};
+                const oFile = oPending.fileObj;
+
+                if (!oFile) {
+                    oResult.error++;
+                    oResult.errors.push((oPending.name || "Archivo sin nombre") + ": no se encontró el objeto File.");
+                    continue;
+                }
+
+                const sUploadName = this._buildOCFileNameWithOrder(oFile.name, sSalesDocument);
+
+                try {
+                    const oResp = await this._uploadSharepoint(
+                        oFile,
+                        function (percent) {
+                            console.log("Upload OC " + sUploadName + ": " + percent + "%");
+                        },
+                        sUploadName
+                    );
+
+                    if (oResp.sEstado === "S" && oResp.oResults && oResp.oResults.id) {
+                        oResult.success++;
+                        console.log("📎 Archivo OC subido:", {
+                            originalName: oFile.name,
+                            uploadName: sUploadName,
+                            webUrl: oResp.oResults.webUrl
+                        });
+                    } else {
+                        oResult.error++;
+                        oResult.errors.push(oFile.name + ": error al subir a SharePoint.");
+                        console.error("❌ Error subiendo OC:", {
+                            originalName: oFile.name,
+                            uploadName: sUploadName,
+                            response: oResp
+                        });
+                    }
+                } catch (e) {
+                    oResult.error++;
+                    oResult.errors.push(oFile.name + ": excepción al subir a SharePoint.");
+                    console.error("❌ Excepción subiendo OC:", {
+                        originalName: oFile.name,
+                        uploadName: sUploadName,
+                        error: e
+                    });
+                }
+            }
+
+            return oResult;
+        },
+
         _createOrderCeramicos: async function () {
             const oView = this.getView();
             const oModelProyect = oView.getModel("oModelProyect");
@@ -3051,7 +3150,7 @@ sap.ui.define([
             sap.ui.core.BusyIndicator.show(0);
 
             oModelEntity.create("/iHeaderSet", oPayload, {
-                success: (oResponse) => {
+                success: async (oResponse) => {
                     sap.ui.core.BusyIndicator.hide();
 
                     const aMensajes = oResponse?.HeaderToReturn?.results || [];
@@ -3084,11 +3183,40 @@ sap.ui.define([
                     };
 
                     if (sNumPedido) {
+                        sap.ui.core.BusyIndicator.show(0);
+
+                        const oUploadResult = await this._uploadPendingOCFilesAfterOrder(sNumPedido);
+
+                        sap.ui.core.BusyIndicator.hide();
+
+                        let sUploadMessage = "";
+
+                        if (oUploadResult.total > 0) {
+                            if (oUploadResult.error > 0) {
+                                sUploadMessage =
+                                    "\n\nArchivos OC: " +
+                                    oUploadResult.success +
+                                    " de " +
+                                    oUploadResult.total +
+                                    " subidos correctamente. Revisar consola para los errores.";
+                            } else {
+                                sUploadMessage =
+                                    "\n\nArchivos OC subidos correctamente: " +
+                                    oUploadResult.success +
+                                    " de " +
+                                    oUploadResult.total +
+                                    ".";
+                            }
+                        }
+
                         sap.m.MessageBox.success(
-                            `Pedido Creado Exitosamente.\nNúmero de pedido: ${sNumPedido}`,
+                            `Pedido Creado Exitosamente.\nNúmero de pedido: ${sNumPedido}${sUploadMessage}`,
                             {
                                 title: "Pedido Creado",
-                                onClose: fnAfterOk
+                                onClose: function () {
+                                    this._clearPendingOCFiles();
+                                    fnAfterOk();
+                                }.bind(this)
                             }
                         );
                     } else {

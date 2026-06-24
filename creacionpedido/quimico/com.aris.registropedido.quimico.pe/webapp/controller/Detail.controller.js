@@ -404,6 +404,36 @@ sap.ui.define([
             }
             oModelP.refresh(true);
         },
+
+        _getCantidadFromMap: function (oCantidades, oItem) {
+            oCantidades = oCantidades || {};
+            oItem = oItem || {};
+
+            const sItmNumber = String(oItem.ItmNumber || oItem.Posnr || "").trim();
+            const sMaterial = String(oItem.Material || oItem.Matnr || "").trim();
+
+            let vCantidad = "";
+
+            if (sItmNumber && oCantidades[sItmNumber] !== undefined) {
+                vCantidad = oCantidades[sItmNumber];
+            } else if (oItem.cantidad !== undefined && oItem.cantidad !== null && String(oItem.cantidad).trim() !== "") {
+                vCantidad = oItem.cantidad;
+            } else if (oItem.ReqQty !== undefined && oItem.ReqQty !== null && String(oItem.ReqQty).trim() !== "") {
+                vCantidad = oItem.ReqQty;
+            } else if (oItem.TargetQty !== undefined && oItem.TargetQty !== null && String(oItem.TargetQty).trim() !== "") {
+                vCantidad = oItem.TargetQty;
+            } else if (sMaterial && oCantidades[sMaterial] !== undefined) {
+                // Fallback para datos antiguos que aún estén guardados por material.
+                vCantidad = oCantidades[sMaterial];
+            }
+
+            const nCantidad = this._parseCantidadSAP
+                ? this._parseCantidadSAP(vCantidad)
+                : parseFloat(String(vCantidad || "0").replace(",", "."));
+
+            return isNaN(nCantidad) ? 0 : nCantidad;
+        },
+
         _initMaterialFromReferencia: function () {
             const oModel = this.getView().getModel("oModelProyect");
             if (!oModel) { return; }
@@ -438,7 +468,7 @@ sap.ui.define([
                 const nCantidadFinal = nCantPed > 0 ? nCantPed : nCantPend;
                 const sCantidadFinal = nCantidadFinal.toFixed(3);
 
-                oCantidades[sMat] = sCantidadFinal;
+                oCantidades[sItmNumber] = sCantidadFinal;
 
                 aMaterialSAP.push({
                     ClienteId: sCliente,
@@ -1215,6 +1245,7 @@ sap.ui.define([
                 const mExist = new Set(
                     aMaterialPrev.map(x => `${String(x.Material || x.Matnr).trim()}|${String(x.Plant || "1000").trim()}`)
                 );
+                const bPedidoConReferencia = !!oModelProyect.getProperty("/inputForm/esConReferencia");
 
                 const aAddedItmNumbers = [];
 
@@ -1226,7 +1257,7 @@ sap.ui.define([
                     const sPlant = "1000";
                     const sDup = `${sMat}|${sPlant}`;
 
-                    if (mExist.has(sDup)) return;
+                    if (!bPedidoConReferencia && mExist.has(sDup)) return;
 
                     const sQty = _toQty3(oObj.cantidad);
                     if (!sQty) return;
@@ -1257,7 +1288,7 @@ sap.ui.define([
                         descuentoManualImporte: 0
                     });
 
-                    oCantidades[sMat] = sQty;
+                    oCantidades[sItmNumber] = sQty;
                     mExist.add(sDup);
                     aAddedItmNumbers.push(sItmNumber);
                 });
@@ -1511,10 +1542,7 @@ sap.ui.define([
                     };
 
                     const aSchedule = aMatForSap.map(function (item) {
-                        const sMat = item.Material || item.Matnr;
-                        const vCantMap = oCantidades[sMat];
-                        const vCantItem = item.cantidad || item.ReqQty || item.TargetQty;
-                        const nQty = this._parseCantidadSAP(vCantMap !== undefined ? vCantMap : vCantItem);
+                        const nQty = this._getCantidadFromMap(oCantidades, item);
 
                         return {
                             ClientId: item.ClienteId || oData.oDatClient?.Customer || "",
@@ -2306,6 +2334,107 @@ sap.ui.define([
                 }
             });
         },
+
+        _sanitizeSharePointFileNamePart: function (sValue) {
+            return String(sValue || "")
+                .replace(/[\\/:*?"<>|#%&{}~]/g, "-")
+                .replace(/\s+/g, " ")
+                .trim();
+        },
+
+        _buildOCFileNameWithOrder: function (sOriginalName, sSalesDocument) {
+            const sName = String(sOriginalName || "archivo").trim();
+            const sDoc = this._sanitizeSharePointFileNamePart(sSalesDocument);
+
+            const iDot = sName.lastIndexOf(".");
+            const bHasExt = iDot > 0 && iDot < sName.length - 1;
+
+            const sBase = bHasExt ? sName.substring(0, iDot) : sName;
+            const sExt = bHasExt ? sName.substring(iDot) : "";
+
+            const sBaseClean = this._sanitizeSharePointFileNamePart(sBase) || "archivo";
+
+            return sBaseClean + "-" + sDoc + sExt;
+        },
+
+        _clearPendingOCFiles: function () {
+            const oModel = this.getView().getModel("oModelProyect");
+
+            if (oModel) {
+                oModel.setProperty("/aOCFilesPending", []);
+            }
+        },
+
+        _uploadPendingOCFilesAfterOrder: async function (sSalesDocument) {
+            const oModel = this.getView().getModel("oModelProyect");
+            const aPending = oModel ? (oModel.getProperty("/aOCFilesPending") || []) : [];
+
+            const oResult = {
+                total: aPending.length,
+                success: 0,
+                error: 0,
+                errors: []
+            };
+
+            if (!aPending.length || !sSalesDocument) {
+                return oResult;
+            }
+
+            for (let i = 0; i < aPending.length; i++) {
+                const oPending = aPending[i] || {};
+                const oFile = oPending.fileObj;
+
+                if (!oFile) {
+                    oResult.error++;
+                    oResult.errors.push((oPending.name || "Archivo sin nombre") + ": no se encontró el objeto File.");
+                    continue;
+                }
+
+                const sUploadName = this._buildOCFileNameWithOrder(oFile.name, sSalesDocument);
+
+                try {
+                    const oResp = await this._uploadSharepoint(
+                        oFile,
+                        function (percent) {
+                            console.log("Upload OC " + sUploadName + ": " + percent + "%");
+                        },
+                        sUploadName
+                    );
+
+                    if (oResp.sEstado === "S" && oResp.oResults && oResp.oResults.id) {
+                        oResult.success++;
+
+                        console.log("📎 Archivo OC subido:", {
+                            originalName: oFile.name,
+                            uploadName: sUploadName,
+                            webUrl: oResp.oResults.webUrl
+                        });
+                    } else {
+                        oResult.error++;
+                        oResult.errors.push(oFile.name + ": error al subir a SharePoint.");
+
+                        console.error("❌ Error subiendo OC:", {
+                            originalName: oFile.name,
+                            uploadName: sUploadName,
+                            response: oResp
+                        });
+                    }
+                } catch (e) {
+                    oResult.error++;
+                    oResult.errors.push(oFile.name + ": excepción al subir a SharePoint.");
+
+                    console.error("❌ Excepción subiendo OC:", {
+                        originalName: oFile.name,
+                        uploadName: sUploadName,
+                        error: e
+                    });
+                }
+            }
+
+            return oResult;
+        },
+
+
         _createOrder: async function () {
             const oView = this.getView();
             const oModelProyect = oView.getModel("oModelProyect");
@@ -2415,7 +2544,7 @@ sap.ui.define([
                     ClientId: item.ClienteId || sCliente,
                     ItmNumber: item.ItmNumber,
                     SchedLine: "0001",
-                    ReqQty: (parseFloat(oCantidades[item.Material] || "0")).toFixed(3)
+                    ReqQty: this._getCantidadFromMap(oCantidades, item).toFixed(3)
                 }));
             }
             //  TEXTOS 
@@ -2528,7 +2657,7 @@ sap.ui.define([
 
             //  ITEMS (TargetQty para ZACN + REFERENCIA) 
             const aItems = (oData.oMaterial || []).map(item => {
-                const sQty = (parseFloat(oCantidades[item.Material] || "0")).toFixed(3);
+                const sQty = this._getCantidadFromMap(oCantidades, item).toFixed(3);
 
                 const oItemPayload = {
                     ClienteId: item.ClienteId || sCliente,
@@ -2632,7 +2761,7 @@ sap.ui.define([
             this._setMaterialesBusy(true);
             sap.ui.core.BusyIndicator.show(0);
             oModelEntity.create("/iHeaderSet", oPayload, {
-                success: function (oResponse) {
+                success: async function (oResponse) {
                     sap.ui.core.BusyIndicator.hide();
                     this._setMaterialesBusy(false);
                     let sNumPedido = "";
@@ -2690,9 +2819,41 @@ sap.ui.define([
                         this._goToLaunchpadHome();
                     }.bind(this);
                     if (sNumPedido) {
+                        sap.ui.core.BusyIndicator.show(0);
+
+                        const oUploadResult = await this._uploadPendingOCFilesAfterOrder(sNumPedido);
+
+                        sap.ui.core.BusyIndicator.hide();
+
+                        let sUploadMessage = "";
+
+                        if (oUploadResult.total > 0) {
+                            if (oUploadResult.error > 0) {
+                                sUploadMessage =
+                                    "\n\nArchivos OC: " +
+                                    oUploadResult.success +
+                                    " de " +
+                                    oUploadResult.total +
+                                    " subidos correctamente. Revisar consola para los errores.";
+                            } else {
+                                sUploadMessage =
+                                    "\n\nArchivos OC subidos correctamente: " +
+                                    oUploadResult.success +
+                                    " de " +
+                                    oUploadResult.total +
+                                    ".";
+                            }
+                        }
+
                         sap.m.MessageBox.success(
-                            ` Orden creada.\nNúmero: ${sNumPedido}`,
-                            { title: "Orden creada", onClose: fnAfterOk }
+                            ` Orden creada.\nNúmero: ${sNumPedido}${sUploadMessage}`,
+                            {
+                                title: "Orden creada",
+                                onClose: function () {
+                                    this._clearPendingOCFiles();
+                                    fnAfterOk();
+                                }.bind(this)
+                            }
                         );
                     } else {
                         sap.m.MessageBox.success(
@@ -3175,23 +3336,21 @@ sap.ui.define([
                 oInput.setValue("0");
             }
 
-            // Valor con 3 decimales para SAP
+            // Valor con 3 decimales para SAP.
+            // Esta cantidad pertenece al diálogo de agregar material; no debe modificar líneas ya agregadas.
             const sValueSAP = Number(numValue).toFixed(3);
             const oModel = oContext.getModel();
             const oCantidades = oModel.getProperty("/oCantidades") || {};
 
-            // Usamos Matnr como clave (como ya lo tenías)
-            oCantidades[oObject.Matnr] = sValueSAP;
-            oModel.setProperty("/oCantidades", oCantidades);
+            if (oObject.Matnr) {
+                oCantidades[oObject.Matnr] = sValueSAP;
+            }
 
-            // Sincronizar con /oMaterialUI
-            let aMaterialUI = oModel.getProperty("/oMaterialUI") || [];
-            aMaterialUI.forEach(item => {
-                if (item.Material === oObject.Matnr) {
-                    item.cantidad = sValueSAP;
-                }
-            });
-            oModel.setProperty("/oMaterialUI", aMaterialUI);
+            if (oContext && oContext.getPath) {
+                oModel.setProperty(oContext.getPath() + "/cantidad", sValueSAP);
+            }
+
+            oModel.setProperty("/oCantidades", oCantidades);
 
             oModel.refresh(true);
 
@@ -3273,28 +3432,60 @@ sap.ui.define([
         _onAcceptEditCantidad: function (oEvent) {
             const oModel = this.getView().getModel("oModelProyect");
             const oDetalle = oModel.getProperty("/oSelecTableDetalle") || {};
-            const sMatnr = oDetalle.Matnr || oDetalle.Material;
-            const sNuevaCantidad = parseFloat(oDetalle.cantidad) || 0;
+
+            const sMatnr = String(oDetalle.Matnr || oDetalle.Material || "").trim();
+            const sItmNumber = String(oDetalle.ItmNumber || oDetalle.Posnr || "").trim();
+            const nNuevaCantidad = this._parseCantidadSAP
+                ? this._parseCantidadSAP(oDetalle.cantidad)
+                : parseFloat(String(oDetalle.cantidad || "0").replace(",", "."));
+
             if (!sMatnr) {
                 sap.m.MessageToast.show("No se encontró el código de material seleccionado.");
                 return;
             }
-            if (sNuevaCantidad <= 0) {
+
+            if (isNaN(nNuevaCantidad) || nNuevaCantidad <= 0) {
                 sap.m.MessageToast.show("Ingrese una cantidad válida.");
                 return;
             }
+
+            const sCantidadSAP = nNuevaCantidad.toFixed(3);
+            const sCantKey = sItmNumber || sMatnr;
             const oCantidades = oModel.getProperty("/oCantidades") || {};
-            oCantidades[sMatnr] = sNuevaCantidad.toFixed(3);
-            oModel.setProperty("/oCantidades", oCantidades);
-            const aMaterialUI = oModel.getProperty("/oMaterialUI") || [];
-            const oItemUI = aMaterialUI.find(item => item.Material === sMatnr);
-            if (oItemUI) {
-                oItemUI.cantidad = sNuevaCantidad.toFixed(3);
+
+            if (sCantKey) {
+                oCantidades[sCantKey] = sCantidadSAP;
             }
+
+            oModel.setProperty("/oCantidades", oCantidades);
+
+            let aMaterialUI = oModel.getProperty("/oMaterialUI") || [];
+            aMaterialUI = aMaterialUI.map(function (item) {
+                if ((sItmNumber && item.ItmNumber === sItmNumber) || (!sItmNumber && item.Material === sMatnr)) {
+                    return Object.assign({}, item, {
+                        cantidad: sCantidadSAP
+                    });
+                }
+                return item;
+            });
             oModel.setProperty("/oMaterialUI", aMaterialUI);
+
+            let aMaterialSAP = oModel.getProperty("/oMaterial") || [];
+            aMaterialSAP = aMaterialSAP.map(function (item) {
+                if ((sItmNumber && item.ItmNumber === sItmNumber) || (!sItmNumber && item.Material === sMatnr)) {
+                    return Object.assign({}, item, {
+                        cantidad: sCantidadSAP
+                    });
+                }
+                return item;
+            });
+            oModel.setProperty("/oMaterial", aMaterialSAP);
+
             sap.m.MessageToast.show("Actualizando simulación...");
             this.onSimulateOrder();
+
             oModel.setProperty("/oSelecTableDetalle", {});
+
             if (this._oDialogEdit && this._oDialogEdit.isOpen()) {
                 this._oDialogEdit.close();
                 this._oDialogEdit.destroy();
@@ -3306,6 +3497,7 @@ sap.ui.define([
                     oDialog.destroy();
                 }
             }
+
             sap.m.MessageToast.show("Cantidad actualizada correctamente.");
         },
         _afterOpenAddPedido: function () {
@@ -3509,15 +3701,17 @@ sap.ui.define([
                 onClose: (sAction) => {
                     if (sAction !== sap.m.MessageBox.Action.OK) return;
 
+                    this._clearPendingOCFiles();
+
                     const oM = this.getOwnerComponent().getModel("oModelProyect");
                     oM.setProperty("/_nav/resetOnNextFormClient", true);
+                    oM.setProperty("/aOCFilesPending", []);
                     oM.refresh(true);
 
                     this.getRouter().navTo("Main", {}, true);
                 }
             });
         },
-
         _resetDetailHeavy: function (oM) {
             oM.setProperty("/oMaterial", []);
             oM.setProperty("/oMaterialUI", []);

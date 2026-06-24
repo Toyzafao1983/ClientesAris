@@ -45,6 +45,7 @@ sap.ui.define([
             }
             sap.ui.core.BusyIndicator.show(0)
             let sCustomer = this.oRouter.getHashChanger().hash.split("/")[1];
+            this._clearOCUploadState();
             Promise.all([that._getPrueba(), that._getTipMaterialData(),
             that._getTipChangeData(), that._getReason(), that._getTipDocumentData(),
             that._getClientPet(sCustomer), that._getAddressData(sCustomer),
@@ -433,6 +434,7 @@ sap.ui.define([
             // setear en modelo
             oModel.setProperty("/inputForm/resumenEntrega", sDescripcion);
             oModel.setProperty("/inputForm/detalleEntrega", aDetalle.join(" | "));
+            this._syncPendingOCFilesFromTokens();
             // resto de tu lógica original
             const oToday = new Date();
             const sToday = oToday.toISOString().split("T")[0];
@@ -450,6 +452,13 @@ sap.ui.define([
             }
         },
         _onPressNavButtonForm: function () {
+            this._clearOCUploadState();
+
+            const oModel = this.getView().getModel("oModelProyect");
+            if (oModel) {
+                oModel.setProperty("/aOCFilesPending", []);
+            }
+
             this.getRouter().navTo("Main");
         },
         onSelectRadioComprobante: function (oEvent) {
@@ -987,53 +996,191 @@ sap.ui.define([
             oModel.setProperty("/inputForm", oData);
             return true;
         },
-        handleFileChange: function (oEvent) {
-            var oFileUploader = oEvent.getSource();
-            var aFiles = oFileUploader.oFileUpload.files;
-            var oMultiInput = this.byId("fileTokenInput");
 
-            Array.from(aFiles).forEach(file => {
-                var oToken = new sap.m.Token({
+        _resetOCFileUploader: function () {
+            const oFileUploader = this.byId("fileUploader");
+
+            if (!oFileUploader) {
+                return;
+            }
+
+            if (oFileUploader.clear) {
+                oFileUploader.clear();
+            }
+
+            if (oFileUploader.setValue) {
+                oFileUploader.setValue("");
+            }
+
+            if (oFileUploader.oFileUpload) {
+                oFileUploader.oFileUpload.value = "";
+            }
+        },
+
+        _buildOCFileKey: function (file) {
+            return [
+                file.name || "",
+                file.size || 0,
+                file.lastModified || Date.now()
+            ].join("|");
+        },
+
+        _syncPendingOCFilesFromTokens: function () {
+            const oModel = this.getView().getModel("oModelProyect");
+            const oMultiInput = this.byId("fileTokenInput");
+
+            if (!oModel || !oMultiInput) {
+                return [];
+            }
+
+            const aPending = [];
+
+            oMultiInput.getTokens().forEach(function (oToken) {
+                const oFile = oToken.data("fileObj");
+                const sKey = oToken.getKey();
+                const sName = oToken.getText();
+
+                if (oFile && sKey && sName) {
+                    aPending.push({
+                        key: sKey,
+                        name: sName,
+                        fileObj: oFile
+                    });
+                }
+            });
+
+            oModel.setProperty("/aOCFilesPending", aPending);
+            return aPending;
+        },
+
+        _clearOCUploadState: function () {
+            const oModel = this.getView().getModel("oModelProyect");
+            const oMultiInput = this.byId("fileTokenInput");
+            const oPI = this.byId("piUpload");
+
+            if (oMultiInput) {
+                oMultiInput.removeAllTokens();
+            }
+
+            if (oPI) {
+                oPI.setVisible(false);
+                oPI.setPercentValue(0);
+                oPI.setDisplayValue("0%");
+            }
+
+            if (oModel) {
+                oModel.setProperty("/aOCFilesPending", []);
+            }
+
+            this._resetOCFileUploader();
+        },
+
+        handleFileChange: function (oEvent) {
+            const oFileUploader = oEvent.getSource();
+            const aFiles = oEvent.getParameter("files") ||
+                (oFileUploader.oFileUpload && oFileUploader.oFileUpload.files) ||
+                [];
+
+            const oMultiInput = this.byId("fileTokenInput");
+
+            if (!oMultiInput) {
+                this._resetOCFileUploader();
+                return;
+            }
+
+            /*
+             * Primero sincronizamos con lo que realmente existe en pantalla.
+             * Si el usuario eliminó un token con X, ya no debe figurar como pendiente.
+             */
+            const aPendingActual = this._syncPendingOCFilesFromTokens();
+
+            const mKeysExistentes = new Set(
+                aPendingActual.map(function (item) {
+                    return item.key;
+                })
+            );
+
+            Array.from(aFiles).forEach(function (file) {
+                if (!file) {
+                    return;
+                }
+
+                const sKey = this._buildOCFileKey(file);
+
+                if (mKeysExistentes.has(sKey)) {
+                    return;
+                }
+
+                const oToken = new sap.m.Token({
                     text: file.name,
-                    key: file.name
+                    key: sKey
                 });
 
                 oToken.data("fileObj", file);
                 oMultiInput.addToken(oToken);
-            });
 
-            oFileUploader.clear();
+                mKeysExistentes.add(sKey);
+            }.bind(this));
+
+            this._syncPendingOCFilesFromTokens();
+            this._resetOCFileUploader();
         },
         onUploadAllFiles: async function () {
-            const oMultiInput = this.byId("fileTokenInput");
-            const tokens = oMultiInput.getTokens();
-            const oPI = this.byId("piUpload");
-            if (!tokens.length) {
+            this._syncPendingOCFilesFromTokens();
+
+            const oModel = this.getView().getModel("oModelProyect");
+            const aPending = oModel ? (oModel.getProperty("/aOCFilesPending") || []) : [];
+
+            if (!aPending.length) {
                 MessageToast.show("No hay archivos seleccionados.");
                 return;
             }
-            for (const tk of tokens) {
-                const file = tk.data("fileObj");
-                oPI.setVisible(true);
-                oPI.setPercentValue(0);
-                oPI.setDisplayValue("0%");
-                const resp = await this._uploadSharepoint(
-                    file,
-                    (percent) => {
-                        oPI.setPercentValue(percent);
-                        oPI.setDisplayValue(percent + "%");
-                    }
-                );
-                if (resp.sEstado === "S" && resp.oResults && resp.oResults.id) {
-                    MessageToast.show(` ${file.name} subido correctamente`);
-                    oMultiInput.removeToken(tk);
-                } else {
-                    MessageToast.show(` Error subiendo ${file.name} (sin metadata)`);
-                }
-            }
-            oPI.setVisible(false);
+
+            MessageToast.show("Los archivos se subirán automáticamente cuando se cree el pedido.");
+        },
+
+        onClearOCUploadFiles: function () {
+            this._clearOCUploadState();
+            MessageToast.show("Archivos adjuntos limpiados.");
         },
         handleTokenUpdate: function (oEvent) {
+            const oModel = this.getView().getModel("oModelProyect");
+
+            if (!oModel) {
+                return;
+            }
+
+            const sType = oEvent.getParameter("type");
+            const aRemovedTokens = oEvent.getParameter("removedTokens") || [];
+
+            if (sType === "removedAll") {
+                oModel.setProperty("/aOCFilesPending", []);
+            }
+
+            if (aRemovedTokens.length > 0) {
+                const mRemovedKeys = {};
+
+                aRemovedTokens.forEach(function (oToken) {
+                    const sKey = oToken.getKey();
+                    if (sKey) {
+                        mRemovedKeys[sKey] = true;
+                    }
+                });
+
+                const aPending = oModel.getProperty("/aOCFilesPending") || [];
+
+                const aPendingFiltrado = aPending.filter(function (item) {
+                    return !mRemovedKeys[item.key];
+                });
+
+                oModel.setProperty("/aOCFilesPending", aPendingFiltrado);
+            }
+
+
+            setTimeout(function () {
+                this._syncPendingOCFilesFromTokens();
+                this._resetOCFileUploader();
+            }.bind(this), 0);
         },
         // Pedido Con referencia 
         // Manejo de Dialog Para Referencia 
@@ -1048,11 +1195,11 @@ sap.ui.define([
                     let sUrl = "";
 
                     if (that.local) {
-                        const sPath = "/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/SepCli?$format=json";
+                        const sPath = "/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/SepCli?$top=1000&$format=json";
                         sUrl = that.getOwnerComponent().getManifestObject().resolveUri(sPath);
                     } else {
                         const sPath = jQuery.sap.getModulePath(that.route) +
-                            "/S4HANA/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/SepCli?$format=json";
+                            "/S4HANA/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/SepCli?$top=10000&$format=jsonormat=json";
                         sUrl = sPath;
                     }
                     Services.getoDataERPSync(that, sUrl, function (result) {
