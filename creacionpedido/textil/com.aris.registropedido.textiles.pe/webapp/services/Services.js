@@ -33,12 +33,6 @@ sap.ui.define([
 		postoDataERPAsync:function(context, urlget, urlpost, data, callback){
 			utilHttp.ERPPostTokenAsync( urlget, urlpost, data, callback);
 		},
-		getSharepointSync:function( urlget, callback){
-			utilHttp.sharePointGetSync( urlget, callback);
-		},
-		postSharepointSync: function(url, body, contentType, callback) {
-			utilHttp.sharePointPostSync(url, body, contentType, callback);
-		},
 		sharePointUploadProgressSync: function (url, file, onProgress, callback) {
 			utilHttp.sharePointUploadProgressSync(url, file, onProgress, callback);
 		},

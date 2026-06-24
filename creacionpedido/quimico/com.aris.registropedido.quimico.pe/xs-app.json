@@ -5,7 +5,7 @@
     {
       "source": "^/SharePointAris/(.*)$",
       "target": "$1",
-      "destination": "SharePointAris",
+      "destination": "SharePointGraph",
       "authenticationType": "none",
       "csrfProtection": false
     },

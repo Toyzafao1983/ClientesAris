@@ -31,8 +31,7 @@ sap.ui.define([
 		AdminUser: true,
 		userSet: "kestefo@ravaconsulting.com.pe",
 		route: "com.aris.registropedido.quimico.pe",
-		routeSharepoint: "arisindustrial.sharepoint.com,e5faea81-7554-4754-ab0a-7a1615a9006f,f96740cf-8f3f-4805-b1fc-1a0a87bf4ae3",
-		driveId: "b!ger65VR1VEerCnoWFakAb9nmGbJ284hOpTWdHF4jSOLjVnYNoEj0QrJVZ7_OziEd",
+		driveId: "b!ger65VR1VEerCnoWFakAb9nmGbJ284hOpTWdHF4jSOIq-iKPjcYQRr6ew-GrzZyr",
 		_getUsers: function () {
 			that = this;
 			try {
@@ -1595,44 +1594,11 @@ sap.ui.define([
 			}
 			return sResponse;
 		},
-		_getSharepoint: function (sCustomer) {
-			that = this;
-			try {
-				var oResp = { "sEstado": "E", "oResults": [] };
-				return new Promise(function (resolve, reject) {
-					let sUrl = "";
-					if (that.local) {
-						const sPath = '/sites/' + that.routeSharepoint +
-							'/drives/b!ger65VR1VEerCnoWFakAb89AZ_k_jwVIsfwaCoe_SuOrBelpHdYGQKelpn4cbbDm';
-						sUrl = that.getOwnerComponent().getManifestObject().resolveUri(sPath);
-					} else {
-						const sPath = jQuery.sap.getModulePath(that.route) + '/SharePointAris/sites/' + that.routeSharepoint +
-							'/drives/b!ger65VR1VEerCnoWFakAb89AZ_k_jwVIsfwaCoe_SuOrBelpHdYGQKelpn4cbbDm';
-						sUrl = sPath;
-					}
-					Services.getSharepointSync(sUrl, function (result) {
-						util.response.validateAjaxGetERPNotMessage(result, {
-							success: function (oData, message) {
-								oResp.sEstado = "S";
-								oResp.oResults = oData.data;
-								resolve(oResp);
-							},
-							error: function (message) {
-								oResp.oResults = [];
-								resolve(oResp);
-							}
-						});
-					});
-				});
-			} catch (oError) {
-				that.getMessageBox("error", that.getI18nText("sErrorTry"));
-			}
-		},
 		_uploadSharepoint: function (file, onProgress, sFileNameOverride) {
 			const that = this;
 
 			return new Promise((resolve) => {
-				const folderPath = "Repositorio Apps/SAP Hana/Portal BTP/clientes/documentos";
+				const folderPath = "Pruebas BTP/Clientes/documentos/quimicos";
 
 				const sFileName = String(
 					sFileNameOverride ||
@@ -1640,7 +1606,10 @@ sap.ui.define([
 					"archivo"
 				).trim();
 
-				const encodedPath = encodeURIComponent(`${folderPath}/${sFileName}`);
+				const encodedPath = `${folderPath}/${sFileName}`
+					.split("/")
+					.map(encodeURIComponent)
+					.join("/");
 
 				let sUrl = "";
 
@@ -1648,12 +1617,12 @@ sap.ui.define([
 					sUrl = that.getOwnerComponent()
 						.getManifestObject()
 						.resolveUri(
-							`/sites/${that.routeSharepoint}/drives/${that.driveId}/root:/${encodedPath}:/content`
+							`/drives/${that.driveId}/root:/${encodedPath}:/content`
 						);
 				} else {
 					sUrl =
 						jQuery.sap.getModulePath(that.route) +
-						`/SharePointAris/sites/${that.routeSharepoint}/drives/${that.driveId}/root:/${encodedPath}:/content`;
+						`/SharePointAris/drives/${that.driveId}/root:/${encodedPath}:/content`;
 				}
 
 				console.log("📤 Subiendo archivo a SharePoint:", {

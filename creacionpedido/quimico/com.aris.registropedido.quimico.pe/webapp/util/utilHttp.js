@@ -701,65 +701,6 @@ sap.ui.define([
 
 			return resultFTP;
 		},
-				sharePointGetSync: function (url, callback) {
-			$.ajax({
-				url: url,
-				method: "GET",
-				async: false,
-				contentType: 'application/json',
-				dataType: 'json',
-				success: function (result) {
-					var respuestaService = {
-						iCode:1,
-						c: "suc",
-						u: url,
-						m: "Exito HTTP - GET",
-						data: result
-					};
-					return callback(respuestaService);
-				},
-				error: function (xhr, status, error) {
-					var respuestaService = {
-						iCode:-1,
-						c: "ex",
-						u: url,
-						m: "Error HTTP - GET",
-						data: error
-					};
-					return callback(respuestaService);
-				}
-			});
-		},
-		sharePointPostSync: function (url, data, contentType, callback) {
-			$.ajax({
-				url: url,
-				method: "POST",
-				async: false,
-				contentType: contentType,     
-				processData: false,           
-				data: data,                   
-				success: function (result) {
-					var respuestaService = {
-						iCode: 1,
-						c: "suc",
-						u: url,
-						m: "Exito HTTP - POST",
-						data: result
-					};
-					return callback(respuestaService);
-				},
-				error: function (xhr, status, error) {
-					var respuestaService = {
-						iCode: -1,
-						c: "ex",
-						u: url,
-						m: "Error HTTP - POST",
-						data: error
-					};
-					return callback(respuestaService);
-				}
-			});
-		},
 		sharePointUploadProgressSync: function (url, file, onProgress, callback) {
 
 		const xhr = new XMLHttpRequest();

@@ -3309,6 +3309,8 @@ sap.ui.define([
             const oInput = oEvent.getSource();
             const oContext = oInput.getBindingContext("oModelProyect");
             const oObject = oContext.getObject();
+            const oModel = oContext.getModel();
+            const sContextPath = oContext.getPath();
 
             // Tomamos el valor nuevo (si viene) o el actual
             let sValue = oEvent.getParameter("newValue");
@@ -3316,43 +3318,55 @@ sap.ui.define([
                 sValue = oInput.getValue();
             }
 
-            const cleanValue = (sValue || "").toString().replace(/[^\d.]/g, '');
-            let numValue = parseFloat(cleanValue);
-            if (isNaN(numValue)) numValue = 0;
+            let sCleanValue = String(sValue || "")
+                .replace(",", ".")
+                .replace(/[^\d.]/g, "");
+
+            const iFirstDot = sCleanValue.indexOf(".");
+            if (iFirstDot !== -1) {
+                sCleanValue =
+                    sCleanValue.substring(0, iFirstDot + 1) +
+                    sCleanValue.substring(iFirstDot + 1).replace(/\./g, "");
+            }
+
+            let numValue = parseFloat(sCleanValue);
+            if (isNaN(numValue)) {
+                numValue = 0;
+            }
 
             const stock = parseFloat(oObject.Clabs || 0);
 
             if (numValue <= stock) {
-                oObject.state = "Success";
-                oObject.icon = "sap-icon://inbox";
-                oInput.setValue(numValue.toString());
+                oModel.setProperty(sContextPath + "/state", "Success");
+                oModel.setProperty(sContextPath + "/icon", "sap-icon://inbox");
+
+                if (oInput.getValue() !== sCleanValue) {
+                    oInput.setValue(sCleanValue);
+                }
             } else {
-                oObject.state = "Information";
-                oObject.icon = "sap-icon://outbox";
+                oModel.setProperty(sContextPath + "/state", "Information");
+                oModel.setProperty(sContextPath + "/icon", "sap-icon://outbox");
 
                 this.getMessageBox("error", this.getI18nText("errorSupPermitido"));
 
                 numValue = 0;
-                oInput.setValue("0");
+                sCleanValue = "0";
+                oInput.setValue(sCleanValue);
             }
 
             // Valor con 3 decimales para SAP.
             // Esta cantidad pertenece al diálogo de agregar material; no debe modificar líneas ya agregadas.
             const sValueSAP = Number(numValue).toFixed(3);
-            const oModel = oContext.getModel();
             const oCantidades = oModel.getProperty("/oCantidades") || {};
 
             if (oObject.Matnr) {
                 oCantidades[oObject.Matnr] = sValueSAP;
             }
 
-            if (oContext && oContext.getPath) {
-                oModel.setProperty(oContext.getPath() + "/cantidad", sValueSAP);
-            }
+            // Durante liveChange conservamos el texto digitado para no mover el cursor.
+            oModel.setProperty(sContextPath + "/cantidad", sCleanValue);
 
             oModel.setProperty("/oCantidades", oCantidades);
-
-            oModel.refresh(true);
 
             // 🔹 Seleccionar / des-seleccionar automáticamente la fila en la tabla manual
             try {
