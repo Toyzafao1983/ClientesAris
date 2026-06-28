@@ -570,7 +570,7 @@ sap.ui.define([
 
             oModel.refresh(true);
         },
-        // Para jalar las posiciones de con referencia 
+        // Para jalar las posiciones de con referencia
         _aplicarRecomendacionesDestinoYAgencia: function (oDocHeader) {
             const oModel = this.getView().getModel("oModelProyect");
             if (!oModel || !oDocHeader) return;
@@ -794,7 +794,7 @@ sap.ui.define([
             oModel.setProperty(sKeyPath, sKey);
             oModel.setProperty(sTextPath, sText);
         },
-        // visibilidad del boton de con referencia 
+        // visibilidad del boton de con referencia
         _updateBtnPedidoReferenciaVisibility: function () {
             const oView = this.getView();
             const oModelProyect = oView.getModel("oModelProyect");
@@ -909,16 +909,6 @@ sap.ui.define([
             );
         },
         // Logica para Materiales
-        onGrupoMaterialChange: function (oEvent) {
-            const oModel = this.getView().getModel("oModelProyect");
-            const oSelectedItem = oEvent.getParameter("selectedItem");
-            if (!oSelectedItem) return;
-            const sKey = oSelectedItem.getKey();
-            const sText = oSelectedItem.getText();
-            oModel.setProperty("/inputForm/grupoMaterial", sKey);
-            oModel.setProperty("/inputForm/grupoMaterialText", sText);
-            this._updateFormState();
-        },
         // Validacion de Selccion de pago
         onSelectCondPago: function (oEvent) {
             const oModelProyect = this.getView().getModel("oModelProyect");
@@ -1182,8 +1172,8 @@ sap.ui.define([
                 this._resetOCFileUploader();
             }.bind(this), 0);
         },
-        // Pedido Con referencia 
-        // Manejo de Dialog Para Referencia 
+        // Pedido Con referencia
+        // Manejo de Dialog Para Referencia
         _getClienteReferencia: function () {
             that = this;
             try {
@@ -1381,7 +1371,7 @@ sap.ui.define([
                 that.getMessageBox("error", that.getI18nText("sErrorTry"));
             }
         },
-        // BTN para inicializar el dialog 
+        // BTN para inicializar el dialog
         onOpenPedidoConReferencia: function () {
             const oModelProyect = this.getView().getModel("oModelProyect");
             const sTipDocument = oModelProyect.getProperty("/inputForm/tipDocument") || "";
@@ -1394,7 +1384,7 @@ sap.ui.define([
             oModelProyect.setProperty("/inputForm/posRefSeleccionadas", []);
             this._openDlgPedidoReferencia();
         },
-        // Para Documentos Pendientes 
+        // Para Documentos Pendientes
         _loadDocumentosPendientes: function () {
             const oModel = this.getView().getModel("oModelProyect");
             const oDatClient = oModel.getProperty("/oDatClient") || {};
@@ -1624,7 +1614,7 @@ sap.ui.define([
                 const oResp = await this._getOrderDetailsBultosRef(sSalesDocument);
 
                 if (oResp.sEstado !== "S" || !Array.isArray(oResp.oResults) || !oResp.oResults.length) {
-                    console.warn("OrderDetails no devolvió cálculo de cajas/pallets para el documento de referencia:", sSalesDocument);
+                    void 0;
                     return aRows;
                 }
 
@@ -1724,12 +1714,12 @@ sap.ui.define([
                     });
                 }.bind(this));
             } catch (oError) {
-                console.warn("No se pudo enriquecer posiciones de referencia con OrderDetails:", oError);
+                void 0;
                 return aRows;
             }
         },
 
-        // Para la tabla Final 
+        // Para la tabla Final
         _loadPosicionesDocumento: function (oDocHeader) {
             const oModel = this.getView().getModel("oModelProyect");
 
@@ -2072,16 +2062,7 @@ sap.ui.define([
                 if (fPedido > fPend) { return; }
 
                 if (fPedidoM2 <= 0) {
-                    console.warn("No se pudo calcular M2 para la posición seleccionada.", {
-                        Posicion: oRow.Posicion || oRow.Pos,
-                        Material: oRow.Material,
-                        CtdPedido: fPedido,
-                        CtdPendiente: fPend,
-                        CtdOriginalM2: oRow.CtdOriginalM2,
-                        CtdPendienteM2: oRow.CtdPendienteM2,
-                        OrderQuantity: oRow.OrderQuantity,
-                        factorM2Ref: oRow.factorM2Ref
-                    });
+                    void 0;
                     return;
                 }
 
@@ -2204,7 +2185,7 @@ sap.ui.define([
                 }
             });
         },
-        //Inicializa el pedido con referencia 
+        //Inicializa el pedido con referencia
         onTipoReferenciaCancelar: function () {
             if (this._oDlgTipoRef) {
                 this._oDlgTipoRef.close();

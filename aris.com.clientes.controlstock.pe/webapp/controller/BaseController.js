@@ -61,7 +61,7 @@ sap.ui.define([
 							var oDataTemp = model.getData();
 							resolve(oDataTemp);
 						}).catch(err => {
-							console.log("Error:" + err.message);
+							void 0;
 							reject(err);
 						});
 					}
@@ -91,9 +91,9 @@ sap.ui.define([
 			oModel.loadData("/services/userapi/attributes");
 			return new Promise(function (resolve, reject) {
 				oModel.attachRequestCompleted(function onCompleted(oEvent) {
-					console.log("--------------------------:---------------------------");
-					console.log(oEvent);
-					console.log(oModel);
+					void 0;
+					void 0;
+					void 0;
 					if (oEvent.getParameter("success")) {
 						resolve(oModel.getData());
 					} else {
@@ -235,24 +235,24 @@ sap.ui.define([
 			writeFile(fileToSave);
 
 			function writeFile() {
-				console.log("request file system");
+				void 0;
 				window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, onFileSystemRetrieved, onFileSystemFail);
 			}
 
 			function onFileSystemRetrieved(fileSystem) {
-				console.log("file system retrieved");
+				void 0;
 				fileSystem.root.getFile(fileName, {
 					create: true
 				}, onFileEntryRetrieved, onFileSystemFail);
 			}
 
 			function onFileEntryRetrieved(fileEntry) {
-				console.log("file entry retrieved");
+				void 0;
 				fileEntry.createWriter(gotFileWriter, onFileSystemFail);
 			}
 
 			function gotFileWriter(writer) {
-				console.log("write to file");
+				void 0;
 
 				writer.onwrite = function (evt) {
 					alert('done');
@@ -263,7 +263,7 @@ sap.ui.define([
 			}
 
 			function onFileSystemFail(error) {
-				console.log(error.code);
+				void 0;
 				alert(error.code)
 			}
 		},
@@ -1058,7 +1058,7 @@ sap.ui.define([
 			var root = roots[roots.length - 1];
 			var json = {};
 			parse(root, json);
-			console.log(json);
+			void 0;
 		},
 		onColorForState: function (value) {
 			var sReturn;
@@ -1922,7 +1922,7 @@ sap.ui.define([
 			} else if (langKey === "ing") {
 				bundleName = "aris.com.clientes.controlstock.pe.i18n.i18n_ing";
 			} else {
-				console.warn("Idioma no soportado:", langKey);
+				void 0;
 				return;
 			}
 
@@ -2476,7 +2476,7 @@ sap.ui.define([
 
 		// 1) Obtener Site ID
 		_getSiteId: function () {
-			console.log("🌐 [SP] Ejecutando _getSiteId...");
+			void 0;
 
 			return new Promise((resolve, reject) => {
 
@@ -2486,11 +2486,11 @@ sap.ui.define([
 					url: urlDirect,
 					method: "GET",
 					success: (data) => {
-						console.log("✅ [SP] Site directo:", data);
+						void 0;
 						resolve(data.id);
 					},
 					error: (err) => {
-						console.warn("⚠️ [SP] Falló directo → probando búsqueda", err);
+						void 0;
 
 						const urlSearch = "/SharePointAris/sites?search=UA_AF";
 
@@ -2499,14 +2499,14 @@ sap.ui.define([
 							method: "GET",
 							success: (data) => {
 								if (data.value && data.value.length > 0) {
-									console.log("✅ [SP] Site encontrado por búsqueda:", data.value[0].id);
+									void 0;
 									resolve(data.value[0].id);
 								} else {
 									reject("❌ No se encontró site UA_AF");
 								}
 							},
 							error: (err2) => {
-								console.error("❌ [SP] Falla búsqueda:", err2);
+								void 0;
 								reject(err2);
 							}
 						});
@@ -2517,7 +2517,7 @@ sap.ui.define([
 
 		// 2) Obtener Drive ID
 		_getDriveId: function (siteId) {
-			console.log("🌐 [SP] Ejecutando _getDriveId…");
+			void 0;
 
 			return new Promise((resolve, reject) => {
 				const url = `/SharePointAris/sites/${siteId}/drives`;
@@ -2527,7 +2527,7 @@ sap.ui.define([
 					method: "GET",
 					success: (data) => {
 						const drives = data.value || [];
-						console.table(drives, ["id", "name"]);
+						void 0;
 
 						const preferidos = ["Documentos", "Shared Documents", "Documents"];
 						const hit = drives.find(d => preferidos.includes(d.name)) || drives[0];
@@ -2537,11 +2537,11 @@ sap.ui.define([
 							return;
 						}
 
-						console.log("✅ [SP] Drive encontrado:", hit.id);
+						void 0;
 						resolve(hit.id);
 					},
 					error: (err) => {
-						console.error("❌ [SP] Error obteniendo drives:", err);
+						void 0;
 						reject(err);
 					}
 				});
@@ -2550,7 +2550,7 @@ sap.ui.define([
 
 		// 3) Listar archivos en carpeta 'materiales'
 		_listarArchivos: function (siteId, driveId) {
-			console.log("🌐 [SP] Ejecutando _listarArchivos…");
+			void 0;
 
 			return new Promise((resolve, reject) => {
 
@@ -2559,17 +2559,17 @@ sap.ui.define([
 
 				const url = `/SharePointAris/sites/${siteId}/drives/${driveId}/root:/${safePath}:/children`;
 
-				console.log("📌 [SP] URL final:", url);
+				void 0;
 
 				$.ajax({
 					url,
 					method: "GET",
 					success: (data) => {
-						console.table(data.value || [], ["name", "id"]);
+						void 0;
 						resolve(data.value || []);
 					},
 					error: (err) => {
-						console.error("❌ [SP] Error listando archivos:", err);
+						void 0;
 						reject(err);
 					}
 				});
@@ -2616,7 +2616,7 @@ sap.ui.define([
 		// 4) Flujo de prueba encadenado (para llamar con un botón)
 		_onProbarSharePoint: function () {
 			let siteId, driveId;
-			console.log("🚀 Iniciando prueba SharePoint...");
+			void 0;
 
 			this._getSiteId()
 				.then(id => {
@@ -2628,10 +2628,10 @@ sap.ui.define([
 					return this._listarArchivos(siteId, driveId);
 				})
 				.then(files => {
-					console.log(`✅ Total archivos obtenidos: ${files.length}`);
+					void 0;
 				})
 				.catch(err => {
-					console.error("💥 Error en la cadena de pruebas:", err);
+					void 0;
 				});
 		},
 		_setMultiInputValidators: function () {
@@ -2659,7 +2659,7 @@ sap.ui.define([
 						return null;
 					});
 				} else {
-					console.warn(`[Validator] Control ${id} no encontrado en la vista`);
+					void 0;
 				}
 			});
 		},
@@ -2862,7 +2862,7 @@ sap.ui.define([
 				});
 
 			} catch (e) {
-				console.error("Error exportando Excel:", e);
+				void 0;
 				sap.m.MessageBox.error("Ocurrió un error al exportar el Excel.");
 			}
 		},

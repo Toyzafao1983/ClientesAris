@@ -207,7 +207,6 @@ sap.ui.define([
 				},
 				error: self.HandlerErrorRed,
 				complete: function () {
-					console.log("--Se ejecutÃ³ llamada de red--");
 				}
 			});
 		},
@@ -266,7 +265,6 @@ sap.ui.define([
 			// El caso 04 se logra poniendo false, y luego manejando la funcion pasada en el control original
 			// var service = service.http.algo();
 			// service.success(function(x){
-			//    console.log("algo");
 			//});
 
 			var ajax = $.ajax({
@@ -302,7 +300,6 @@ sap.ui.define([
 				success: success,
 				error: self.HandlerErrorRed,
 				complete: function () {
-					console.log("--Se ejecutÃ³ llamada de red--");
 				}
 			});
 		},
@@ -328,7 +325,6 @@ sap.ui.define([
 				success: success,
 				error: self.HandlerErrorRed,
 				complete: function () {
-					console.log("--Se ejecutÃ³ llamada de red--");
 				}
 			});
 			// });
@@ -646,7 +642,6 @@ sap.ui.define([
 				success: success,
 				error: this.HandlerErrorRed,
 				complete: function () {
-					console.log("--Se ejecutÃ³ llamada de red--");
 				}
 			});
 		},
@@ -663,7 +658,6 @@ sap.ui.define([
 				success: success,
 				error: this.HandlerErrorRed,
 				complete: function () {
-					console.log("--Se ejecutÃ³ llamada de red--");
 				}
 			});
 		},

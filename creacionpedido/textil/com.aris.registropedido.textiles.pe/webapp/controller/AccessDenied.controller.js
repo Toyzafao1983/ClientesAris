@@ -6,7 +6,7 @@ sap.ui.define([
     return BaseController.extend("com.aris.registropedido.textiles.pe.controller.AccessDenied", {
 
         onInit: function () {
-            console.log("🚫 Vista AccessDenied iniciada");
+            void 0;
         },
 
         onLogoutPress: function () {

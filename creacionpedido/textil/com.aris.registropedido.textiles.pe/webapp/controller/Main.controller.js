@@ -30,7 +30,7 @@ sap.ui.define([
             this.frgIdFilterCodClient = "frgIdFilterCodClient";
             this.frgIdFilterRazonSocial = "frgIdFilterRazonSocial";
             this.frgIdFilterDocument = "frgIdFilterDocument";
-            
+
         },
         handleRouteMatched: function (bInit) {
 
@@ -38,7 +38,7 @@ sap.ui.define([
              Promise.all([that._getUsers(), that._getPrueba(),
             that._getTipDocument(that),that._getTipChangeData(),
             that._getCreditDispo(),that._getDatClient(),that._getClientPet(),that._getBPVendedor()
-            ]).then(async (values) => {   
+            ]).then(async (values) => {
                     try {
                         that._setLanguageModel("esp");
                         that._onClearDataFilter();
@@ -64,7 +64,7 @@ sap.ui.define([
                         that.oModelProyect.setProperty("/oSellerUnique", Array.from(m.values()));
                         that._onInitSellerDefault();
                         that.onClearFilters();
-                        
+
                         let oData = values[3].oResults;
                         let oTipoCambio = {
                             from: {
@@ -106,13 +106,6 @@ sap.ui.define([
                     sap.ui.core.BusyIndicator.hide(0);
                 });
             },
-        _onPressFilterInit: function () {
-                const tbReporte = this._byId("vbTableMain").getItems().length > 0 ? this._byId("vbTableMain").getItems()[0] : null;
-                if (!this.isEmpty(tbReporte)) { tbReporte.removeSelections(true); }
-                that.setFragment("_dialogFilterInit", this.frgIdFilterInit, "FilterInit", this);                
-                 that._onClearComponentFilter(that.getI18nText("sStateInit"), [], true);
-                that._onClearDataFilter();
-         },      
         _onClearComponentFilter: function (sState, oComponent, bOtherComponent) {
             if (sState === that.getI18nText("sStateInit")) {
                 let oContent = that["_dialogFilterInit"].getContent()[0];
@@ -150,7 +143,7 @@ sap.ui.define([
             const oTable = this.byId("TableClient");
             const oBinding = oTable.getBinding("items");
             if (oBinding) {
-                oBinding.filter([]); 
+                oBinding.filter([]);
             }
         },
          _validateAccessToPortal: async function (values) {
@@ -181,12 +174,12 @@ sap.ui.define([
                 let aAttr    = oAttrIAS?.attributes || [];
                 let oAttr1 = aAttr.find(a => a.name === "customAttribute1"); // Cliente
                 let oAttr2 = aAttr.find(a => a.name === "customAttribute2"); // Interno (Vendedor / Coordinador)
-                let oAttr3 = aAttr.find(a => a.name === "customAttribute3"); 
+                let oAttr3 = aAttr.find(a => a.name === "customAttribute3");
                 let sBPCliente  = oAttr1?.value || "";
                 let sBPInterno2 = oAttr2?.value || "";
                 let sBPInterno3 = oAttr3?.value || "";
                 let sBPInterno = sBPInterno2 || sBPInterno3;
-                let sBPVendedor = sBPInterno2; 
+                let sBPVendedor = sBPInterno2;
                 let sBPCoord    = sBPInterno3;
                 const oUserCache = {
                     fullName  : sFullName,
@@ -265,8 +258,8 @@ sap.ui.define([
                         oRouter.navTo("AccessDenied");
                         return;
                     }
-                    const sPerfilCode = (oMatch.perfil   || "").toUpperCase();   
-                    const sPerfilDesc = (oMatch.DscPerfil || "").toUpperCase();  
+                    const sPerfilCode = (oMatch.perfil   || "").toUpperCase();
+                    const sPerfilDesc = (oMatch.DscPerfil || "").toUpperCase();
                     const bIsVendedor = (sPerfilCode === "VD") || sPerfilDesc.includes("VENDEDOR");
                     const bIsCoord    = (sPerfilCode === "CD") || sPerfilDesc.includes("COORDINADOR");
                     if (bIsVendedor && !bIsCoord) {
@@ -277,7 +270,7 @@ sap.ui.define([
                     } else {
                         oModelUser.setProperty("/bBPVendedor", "");
                     }
-                    oModelUser.setProperty("/bPerfil", oMatch.DscPerfil); 
+                    oModelUser.setProperty("/bPerfil", oMatch.DscPerfil);
                     oModelUser.setProperty("/bUniNeg", tUniNeg);
                     oModelUser.setProperty("/bIsCliente", false);
                     oModelUser.setProperty("/bIsInterno", true);
@@ -368,7 +361,7 @@ sap.ui.define([
             const sCustomer = jData.Customer;
             const oModel = this.getOwnerComponent().getModel("oModelEntity");
             if (!oModel) {
-                console.error("El modelo oModelEntity no está definido en el componente.");
+                void 0;
                 return;
             }
             sap.ui.core.BusyIndicator.show(0);
@@ -378,14 +371,14 @@ sap.ui.define([
                     oDir.FullAddress = `${oDir.Street || ""} ${oDir.HouseNo || ""} ${oDir.StrSuppl1 || ""} ${oDir.StrSuppl2 || ""}, ${oDir.District || ""}, ${oDir.City || ""}, ${oDir.Country || ""}`;
                     this.oModelProyect.setProperty("/oDireccionCliente", oDir);
                     this.oModelProyect.refresh(true);
-                    console.log("Dirección concatenada:", oDir.FullAddress);
+                    void 0;
                     this._getCreditoCliente(sCustomer).then((oCredito) => {
                         if (oCredito) {
                             this.oModelProyect.setProperty("/oCreditoCliente", oCredito);
-                            console.log("Crédito cliente:", oCredito);
+                            void 0;
                         } else {
                             this.oModelProyect.setProperty("/oCreditoCliente", { Amount: 0 });
-                            console.log("No se encontró crédito para este cliente");
+                            void 0;
                         }
                     }).catch((err) => {
                         this.oModelProyect.setProperty("/oCreditoCliente", { Amount: 0 });
@@ -406,7 +399,7 @@ sap.ui.define([
             return new Promise((resolve, reject) => {
                 const oModel = this.getOwnerComponent().getModel("oModelEntity");
                 if (!oModel) {
-                    console.error("El modelo oModelEntity no está definido en el componente.");
+                    void 0;
                     reject("Modelo no definido");
                     return;
                 }
@@ -421,13 +414,13 @@ sap.ui.define([
                     filters: aFilters,
                     success: (oData) => {
                         if (oData.results && oData.results.length > 0) {
-                            resolve(oData.results[0]); 
+                            resolve(oData.results[0]);
                         } else {
-                            resolve(null); 
+                            resolve(null);
                         }
                     },
                     error: (oError) => {
-                        console.error("Error al leer crédito:", oError);
+                        void 0;
                         reject(oError);
                     }
                 });
@@ -679,7 +672,7 @@ sap.ui.define([
                 });
                 const keys = this._getTokenKeys(oMI);
                 this._setArray("/Main/filter/fSeller", keys);
-            }, 
+            },
 
             onTokenUpdateClient: function (oEvent) {
                 const oMI = this.byId("multiInputCodClient");
@@ -746,20 +739,13 @@ sap.ui.define([
         return a;
         },
         // para cambiar el idioma
-        onLanguageEsp: function () {
-            this._setLanguageModel("esp");
-        },
-
-        onLanguageEng: function () {
-            this._setLanguageModel("ing");
-        },
             FilterSelling: function () {
                 const that = this;
 
                 Promise.all([that._getClientPet(), that._getDatClient()])
                     .then((values) => {
-                        const oDataClientes = values[0]; 
-                        const oDataVendedores = values[1]; 
+                        const oDataClientes = values[0];
+                        const oDataVendedores = values[1];
                         let aClientes = oDataClientes.oResults || [];
                         let aVend = oDataVendedores.oResults || [];
                         let aVendedoresFiltrados = aVend.filter(oVend =>
@@ -907,15 +893,15 @@ sap.ui.define([
                         break;
                     case "FilterRazSocialDialog":
                         aFieldFilters = [
-                            "CustomerFullName", 
-                            "TaxNumber1", "TaxNumber2", "TaxNumber3", 
+                            "CustomerFullName",
+                            "TaxNumber1", "TaxNumber2", "TaxNumber3",
                             "TaxNumber4", "TaxNumber5", "TaxNumber6"
                         ];
                         break;
                     case "FilterDocumentDialog":
                         aFieldFilters = [
-                            "TaxNumber1", "TaxNumber2", "TaxNumber3", 
-                            "TaxNumber4", "TaxNumber5", "TaxNumber6", 
+                            "TaxNumber1", "TaxNumber2", "TaxNumber3",
+                            "TaxNumber4", "TaxNumber5", "TaxNumber6",
                             "CustomerFullName"
                         ];
                         break;
@@ -952,20 +938,20 @@ sap.ui.define([
             switch (sDialogId) {
                 case "FilterSellerDialog":
                     oMultiInput = this.byId("multiInputSeller");
-                    aKeyFields = ["Seller"];  
-                    aTextFields = ["kunn2"]; 
+                    aKeyFields = ["Seller"];
+                    aTextFields = ["kunn2"];
                     sFilterProp = "/Main/filter/fSeller";
                     break;
                 case "FilterCodClientDialog":
                     oMultiInput = this.byId("multiInputCodClient");
-                    aKeyFields = ["Customer"];  
-                    aTextFields = ["Customer"]; 
+                    aKeyFields = ["Customer"];
+                    aTextFields = ["Customer"];
                     sFilterProp = "/Main/filter/fCodClient";
                     break;
                 case "FilterRazSocialDialog":
                     oMultiInput = this.byId("multiInputRazonSocial");
-                    aKeyFields = ["CustomerFullName"];  
-                    aTextFields = ["CustomerFullName"]; 
+                    aKeyFields = ["CustomerFullName"];
+                    aTextFields = ["CustomerFullName"];
                     sFilterProp = "/Main/filter/fRazSocial";
                     break;
                 case "FilterDocumentDialog":
@@ -979,7 +965,7 @@ sap.ui.define([
             }
             if (aSelectedContexts && aSelectedContexts.length > 0 && oMultiInput) {
                 const aSelectedKeys = [];
-                oMultiInput.removeAllTokens(); 
+                oMultiInput.removeAllTokens();
 
                 aSelectedContexts.forEach(ctx => {
                     const oData = ctx.getObject();
@@ -1031,13 +1017,13 @@ sap.ui.define([
                     const oTable = this.byId("TableClient");
                     const oBinding = oTable.getBinding("items");
                     if (oBinding) {
-                        oBinding.filter([]); 
+                        oBinding.filter([]);
                     }
                 },
 
             formatTipoCambioLabel: function(oTipChangeData) {
 			if (!oTipChangeData || !oTipChangeData.from || !oTipChangeData.to) {
-				return "Tipo de cambio: N/A"; 
+				return "Tipo de cambio: N/A";
 			}
 			let fValorFrom = parseFloat(oTipChangeData.from.valor) || 0; // USD → PEN
 			let fValorTo   = parseFloat(oTipChangeData.to.valor)   || 0; // PEN → USD
@@ -1125,7 +1111,7 @@ sap.ui.define([
 
         return aFilters;
     }
-        
+
 
     });
 });

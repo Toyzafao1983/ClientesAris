@@ -144,7 +144,7 @@ sap.ui.define([
             const that = this;
             return new Promise((resolve, reject) => {
                 if (!sMaterial || !sSalesOrg) {
-                    console.error("❌ Falta Material o SalesOrg");
+                    void 0;
                     resolve([]);
                     return;
                 }
@@ -162,7 +162,7 @@ sap.ui.define([
                     sUrl = sPath;
                 }
 
-                console.log("➡️ Consultando StockVen:", sUrl);
+                void 0;
 
                 Services.getoDataERPSync(that, sUrl, function (result) {
                     util.response.validateAjaxGetERPNotMessage(result, {
@@ -194,14 +194,14 @@ sap.ui.define([
                                 }
 
                             } catch (err) {
-                                console.error("❌ Error procesando StockVen:", err);
+                                void 0;
                             }
                             aFlatten = that._sortByFieldAsc(aFlatten, "Charg", { mode: "hyphenNumeric" });
                             resolve(aFlatten);
 
                         },
                         error: function (err) {
-                            console.error("❌ Error en consulta StockVen:", err);
+                            void 0;
                             resolve([]);
                         }
                     });
@@ -212,7 +212,7 @@ sap.ui.define([
             const that = this;
             return new Promise((resolve, reject) => {
                 if (!sMaterial || !sSalesOrg) {
-                    console.error("❌ Falta Material o SalesOrg");
+                    void 0;
                     resolve([]);
                     return;
                 }
@@ -230,7 +230,7 @@ sap.ui.define([
                     sUrl = sPath;
                 }
 
-                console.log("➡️ Consultando StockVen:", sUrl);
+                void 0;
 
                 Services.getoDataERPSync(that, sUrl, function (result) {
                     util.response.validateAjaxGetERPNotMessage(result, {
@@ -262,14 +262,14 @@ sap.ui.define([
                                 }
 
                             } catch (err) {
-                                console.error("❌ Error procesando StockVen:", err);
+                                void 0;
                             }
 
                             aFlatten = that._sortByFieldAsc(aFlatten, "Charg", { mode: "hyphenNumeric" });
                             resolve(aFlatten);
                         },
                         error: function (err) {
-                            console.error("❌ Error en consulta StockVen:", err);
+                            void 0;
                             resolve([]);
                         }
                     });
@@ -280,7 +280,7 @@ sap.ui.define([
             const that = this;
             return new Promise((resolve, reject) => {
                 if (!sMaterial || !sSalesOrg) {
-                    console.error("❌ Falta Material o SalesOrg");
+                    void 0;
                     resolve([]);
                     return;
                 }
@@ -298,7 +298,7 @@ sap.ui.define([
                     sUrl = sPath;
                 }
 
-                console.log("➡️ Consultando StockVen:", sUrl);
+                void 0;
 
                 Services.getoDataERPSync(that, sUrl, function (result) {
                     util.response.validateAjaxGetERPNotMessage(result, {
@@ -327,14 +327,14 @@ sap.ui.define([
                                 }
 
                             } catch (err) {
-                                console.error("❌ Error procesando StockPedido:", err);
+                                void 0;
                             }
 
                             aFlatten = that._sortByFieldAsc(aFlatten, "Pedido", { mode: "string", numericLocale: true });
                             resolve(aFlatten);
                         },
                         error: function (err) {
-                            console.error("❌ Error en consulta StockPedido:", err);
+                            void 0;
                             resolve([]);
                         }
                     });
@@ -345,7 +345,7 @@ sap.ui.define([
             const that = this;
             return new Promise((resolve, reject) => {
                 if (!sMaterial || !sSalesOrg) {
-                    console.error("❌ Falta Material o SalesOrg");
+                    void 0;
                     resolve([]);
                     return;
                 }
@@ -363,7 +363,7 @@ sap.ui.define([
                     sUrl = sPath;
                 }
 
-                console.log("➡️ Consultando toTextilStocsepara:", sUrl);
+                void 0;
 
                 Services.getoDataERPSync(that, sUrl, function (result) {
                     util.response.validateAjaxGetERPNotMessage(result, {
@@ -392,14 +392,14 @@ sap.ui.define([
                                 }
 
                             } catch (err) {
-                                console.error("❌ Error procesando StockPedido:", err);
+                                void 0;
                             }
 
                             aFlatten = that._sortByFieldAsc(aFlatten, "Documento", { mode: "string", numericLocale: true });
                             resolve(aFlatten);
                         },
                         error: function (err) {
-                            console.error("❌ Error en consulta StockPedido:", err);
+                            void 0;
                             resolve([]);
                         }
                     });

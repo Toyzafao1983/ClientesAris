@@ -122,7 +122,7 @@ sap.ui.define([
 
                 if (tipoBP === "CLIENTE") {
                     // 🔹 Validar unidades organizacionales del cliente
-                    console.log("🔍 Validando unidades organizacionales del cliente…");
+                    void 0;
                     const vUOIAs = await this._getSalesOrgByBP(oBPUser);
 
                     const UOIAs = Array.isArray(vUOIAs)
@@ -131,14 +131,14 @@ sap.ui.define([
                         }).filter(Boolean)
                         : (vUOIAs ? [String(vUOIAs).trim()] : []);
 
-                    console.log("🏢 Unidades organizacionales normalizadas del cliente:", UOIAs, "| Portal actual:", that.sSalesOrg);
+                    void 0;
 
                     if (UOIAs.length > 0) {
                         const bAccessGranted = this._validateAccessToPortal(UOIAs, that.sSalesOrg);
                         if (bAccessGranted) {
                             tRol = "CLIENTES";
                             accesoPermitido = true; // ✅ IMPORTANTE
-                            console.log("🎯 Rol asignado (cliente con acceso autorizado):", tRol);
+                            void 0;
                         } else {
                             sap.ui.core.BusyIndicator.hide(0);
                             sap.m.MessageBox.error(
@@ -161,7 +161,7 @@ sap.ui.define([
                 // 🔸 Si aún no se concedió acceso y es vendedor/supervisor, validar por UsOrve
                 if (!accesoPermitido && (tipoBP === "VENDEDOR")) {
                     const oPerfilResp = await this._getPerfilByUsuario(oBPUser, that.sSalesOrg);
-                    console.log("autorizado:", oPerfilResp.autorizado, "perfil:", oPerfilResp.perfil);
+                    void 0;
 
                     if (!oPerfilResp.autorizado) {
                         sap.ui.core.BusyIndicator.hide(0);
@@ -194,7 +194,7 @@ sap.ui.define([
                             return;
                     }
 
-                    console.log("🎯 Rol asignado desde CDS UsOrve:", tRol);
+                    void 0;
                 }
 
                 // 🔒 Filtro final: si nunca se concedió acceso, bloquear
@@ -237,7 +237,7 @@ sap.ui.define([
                 try {
                     localStorage.setItem("oModelUser", JSON.stringify(that.oModelUser.getData()));
                 } catch (e) {
-                    console.warn("No se pudo guardar oModelUser en localStorage:", e);
+                    void 0;
                 }
 
 
@@ -266,11 +266,11 @@ sap.ui.define([
                     values[3]?.d?.results ||
                     [];
 
-                console.log("DEBUG aDatClientAll:", aDatClientAll.length, aDatClientAll);
-                console.log("DEBUG aClientesAll:", aClientesAll.length, aClientesAll);
+                void 0;
+                void 0;
 
-                console.log("🔥 CLIENTES RAW RESPONSE:", values[3]);
-                console.log("🔥 CLIENTES NORMALIZADOS:", aClientesAll.length, aClientesAll);
+                void 0;
+                void 0;
 
                 that.oModelProyect.setProperty("/oDatClientAll", aDatClientAll);
                 that.oModelProyect.setProperty("/oClienteFilterAll", aClientesAll);
@@ -351,59 +351,10 @@ sap.ui.define([
                 sap.ui.core.BusyIndicator.hide(0);
 
             } catch (oError) {
-                console.error("💥 Error en handleRouteMatched:", oError);
+                void 0;
                 that.getMessageBox("error", that.getI18nText("errorUserData"));
                 sap.ui.core.BusyIndicator.hide(0);
             }
-        },
-        _onClearFilter: function () {
-            const tbReporte = this._byId("vbTableMain").getItems().length > 0
-                ? this._byId("vbTableMain").getItems()[0]
-                : null;
-            if (!this.isEmpty(tbReporte)) {
-                tbReporte.removeSelections(true);
-            }
-            this._onClearComponent();
-            this._onPressExecute();
-        },
-
-        _onClearDataFilter: function () {
-            const oModel = that.getModel("oModelProyect");
-            if (!oModel) { return; }
-
-            // Rol desde modelo o variable global
-            let sRol = oModel.getProperty("/Main/tRol") || tRol || "";
-            sRol = String(sRol).toUpperCase();
-            const bIsCliente = (sRol === "CLIENTE" || sRol === "CLIENTES");
-            const bIsVendedor = (sRol === "VENDEDOR");
-            const bIsSupervisor = (sRol === "SUPERVISOR");
-
-            // Valores actuales (por si hay que preservarlos)
-            const aCliActual = oModel.getProperty("/Main/filter/cbCliente") || [];
-            const aVenActual = oModel.getProperty("/Main/filter/cbVendor") || [];
-
-            // Nuevo objeto Main “limpio”
-            const oMainNew = models.createModelProyect().Main;
-
-            // Preservar según rol
-            if (bIsCliente) {
-                oMainNew.filter.cbCliente = aCliActual;
-                oMainNew.filter.cbVendor = aVenActual;
-            } else if (bIsVendedor) {
-                const oUser = that.getModel("oModelUser");
-                const sUniNeg = String(
-                    (oUser && oUser.getProperty("/bUniNeg")) ||
-                    tUniNeg ||
-                    ""
-                ).toUpperCase();
-
-                if (sUniNeg !== "TEXTILES") {
-                    oMainNew.filter.cbVendor = aVenActual;
-                }
-            }
-            // Supervisor no preserva nada
-
-            oModel.setProperty("/Main", oMainNew);
         },
         _onPressNavigateDetail: function (oEvent) {
             let oSource = oEvent.getSource();
@@ -421,7 +372,7 @@ sap.ui.define([
 
             function extractTokens(oControl, sControlId) {
                 if (!oControl) {
-                    console.error(`[extractTokens] ❌ No existe control '${sControlId}'`);
+                    void 0;
                     return { keys: [], texts: [], rawValue: "" };
                 }
                 let aKeys = [], aTexts = [], rawVal = "";
@@ -639,7 +590,7 @@ sap.ui.define([
                         oModelData.setProperty(sTargetPath, aSuggest);
                     }.bind(this),
                     error: function (e) {
-                        console.error("Error OData documento:", e);
+                        void 0;
                         oModelData.setProperty(sTargetPath, []);
                     }.bind(this)
                 });
@@ -740,7 +691,7 @@ sap.ui.define([
             let aSelected = oEvent.getSource().getSelectedKeys() || [];
             aSelected = aSelected.map(v => (v || "").toString().trim()).filter(Boolean);
 
-            console.log("DEBUG onVendorSelectionChange aSelected:", aSelected);
+            void 0;
 
             this.getView().getModel("oModelProyect").setProperty("/Main/filter/cbVendor", aSelected);
 
@@ -754,10 +705,10 @@ sap.ui.define([
             const sFieldName = src.data("fieldName");
             const sBindingPath = src.data("bindingPath");
 
-            console.log("🔹 ChangeMultiImput ejecutado");
-            console.log("   → custom:", sFieldName, sBindingPath);
-            console.log("   → type:", p.type);
-            console.log("   → Tokens detectados:", p.addedTokens || []);
+            void 0;
+            void 0;
+            void 0;
+            void 0;
 
             const oView = this.getView();
             const oModelProyect = oView.getModel("oModelProyect");
@@ -1306,14 +1257,14 @@ sap.ui.define([
                         sUrl = sPath;
                     }
 
-                    console.log("➡️ Ejecutando _getData con URL:", sUrl);
+                    void 0;
 
                     Services.getoDataERPSync(that, sUrl, function (result) {
                         util.response.validateAjaxGetERPNotMessage(result, {
                             success: function (oData) {
                                 oResp.sEstado = "S";
                                 if (!oData.data || !Array.isArray(oData.data)) {
-                                    console.warn("⚠️ oData.data no es array");
+                                    void 0;
                                     oResp.oResults = [];
                                     resolve(oResp);
                                     return;
@@ -1366,11 +1317,11 @@ sap.ui.define([
                                     return oPedidoRow;
                                 });
 
-                                console.log("✅ aResults mapeados:", aResults.length);
+                                void 0;
 
                                 // === Recuperar filtros ===
                                 const jFilter = that.getModel("oModelProyect").getProperty("/Main/filter");
-                                console.log("📌 Filtros recibidos:", jFilter);
+                                void 0;
 
                                 // Sets de referencia
                                 const setOf = (arr, prop) => new Set(arr.map(x => x[prop]).filter(Boolean));
@@ -1393,9 +1344,9 @@ sap.ui.define([
                                 const vCli = splitValidInvalid(jFilter.cbCliente, sets.cliente);
                                 const vVen = splitValidInvalid(jFilter.cbVendor, sets.vendor);
 
-                                console.log("📊 Tokens documentos:", vDocs);
-                                console.log("📊 Tokens clientes:", vCli);
-                                console.log("📊 Tokens vendedores:", vVen);
+                                void 0;
+                                void 0;
+                                void 0;
 
                                 // Sets válidos
                                 const k = {
@@ -1408,7 +1359,7 @@ sap.ui.define([
                                 const to = jFilter.dEndDate ? that.toUTCDateMs(jFilter.dEndDate, true) : null;
 
 
-                                console.log("📅 Fechas filtro (UTC):", from, "→", to);
+                                void 0;
 
                                 // 🚨 Fechas obligatorias
                                 if (from === null || to === null) {
@@ -1464,8 +1415,8 @@ sap.ui.define([
                                     }
                                 }
 
-                                console.log("✅ Resultado filtrado (final):", filtered.length);
-                                if (filtered.length > 0) console.table(filtered.slice(0, 10));
+                                void 0;
+                                if (filtered.length > 0) void 0;
 
                                 // === Enriquecer con EstadoGeneral ===
                                 that._getEstadoGeneral().then(oEstado => {
@@ -1510,7 +1461,7 @@ sap.ui.define([
                                 });
                             },
                             error: function (err) {
-                                console.error("❌ Error backend:", err);
+                                void 0;
                                 oResp.oResults = [];
                                 resolve(oResp);
                             }
@@ -1518,7 +1469,7 @@ sap.ui.define([
                     });
                 });
             } catch (e) {
-                console.error("💥 EXCEPTION en _getData:", e);
+                void 0;
                 that.getMessageBox("error", that.getI18nText("sErrorTry"));
             }
         },
@@ -1725,7 +1676,7 @@ sap.ui.define([
 
             return new Promise((resolve) => {
                 if (!sBP) {
-                    console.warn("⚠️ No se recibió BP válido para _getSalesOrgByBP");
+                    void 0;
                     resolve([]);
                     return;
                 }
@@ -1742,7 +1693,7 @@ sap.ui.define([
                     sUrl = sPath;
                 }
 
-                console.log("📡 Consultando unidades organizacionales para BP:", sBP, "→", sUrl);
+                void 0;
 
                 Services.getoDataERPSync(that, sUrl, function (result) {
                     util.response.validateAjaxGetERPNotMessage(result, {
@@ -1751,7 +1702,7 @@ sap.ui.define([
                             const aResults = oData?.data || oData?.d?.results || [];
 
                             if (!Array.isArray(aResults) || aResults.length === 0) {
-                                console.warn("⚠️ iBpSalesOrganizationSet no devolvió resultados para BP:", sBP);
+                                void 0;
                                 resolve([]);
                                 return;
                             }
@@ -1786,12 +1737,12 @@ sap.ui.define([
 
                             const aUniqueSalesOrgs = [...new Set(aSalesOrgs)].filter(Boolean);
 
-                            console.log("🏢 Unidades organizacionales encontradas para BP:", sBP, aUniqueSalesOrgs);
+                            void 0;
 
                             resolve(aUniqueSalesOrgs);
                         },
                         error: function (err) {
-                            console.error("💥 Error consultando unidades organizacionales para BP:", sBP, err);
+                            void 0;
                             resolve([]);
                         }
                     });
@@ -1808,7 +1759,7 @@ sap.ui.define([
             };
 
             if (!Array.isArray(aSalesOrgs) || aSalesOrgs.length === 0) {
-                console.warn("⚠️ El usuario no tiene unidades organizacionales asignadas en IAS/CDS.");
+                void 0;
                 sap.m.MessageBox.error(
                     "No tiene unidades organizacionales asignadas. Comuníquese con el área de soporte para habilitar su acceso."
                 );
@@ -1816,17 +1767,17 @@ sap.ui.define([
             }
 
             if (!sCurrentSalesOrg) {
-                console.warn("⚠️ No se especificó SalesOrg actual del portal.");
+                void 0;
                 sap.m.MessageBox.error("No se pudo determinar la unidad organizacional actual del portal.");
                 return false;
             }
 
-            console.log("🔍 Validando acceso → BP SalesOrgs:", aSalesOrgs, "| Portal actual:", sCurrentSalesOrg);
+            void 0;
             const bHasAccess = aSalesOrgs.includes(sCurrentSalesOrg);
 
             if (!bHasAccess) {
                 const sPortalName = mPortalNames[sCurrentSalesOrg] || `Unidad ${sCurrentSalesOrg}`;
-                console.warn(`🚫 Acceso denegado: el usuario no pertenece a la unidad ${sPortalName} (${sCurrentSalesOrg})`);
+                void 0;
 
                 sap.m.MessageBox.error(
                     `No tiene permisos para acceder al portal de ${sPortalName}. Será redirigido a la página principal.`,
@@ -1843,7 +1794,7 @@ sap.ui.define([
                 return false;
             }
 
-            console.log("✅ Acceso permitido al portal:", mPortalNames[sCurrentSalesOrg] || sCurrentSalesOrg);
+            void 0;
             return true;
         },
         _getPerfilByUsuario: function (sUsuario, sSalesOrg) {
@@ -1851,7 +1802,7 @@ sap.ui.define([
 
             return new Promise((resolve) => {
                 if (!sUsuario || !sSalesOrg) {
-                    console.warn("⚠️ _getPerfilByUsuario llamado sin parámetros válidos:", sUsuario, sSalesOrg);
+                    void 0;
                     resolve({ perfil: "", autorizado: false });
                     return;
                 }
@@ -1886,68 +1837,13 @@ sap.ui.define([
                             }
                         },
                         error: function (err) {
-                            console.error("❌ Error en _getPerfilByUsuario:", err);
+                            void 0;
                             resolve({ perfil: "", autorizado: false });
                         }
                     });
                 });
             });
         },
-        _getCodigoPDF: function (sSalesDocument, sClassCondition) {
-            const that = this;
-
-            try {
-                var oResp = {
-                    sEstado: "E",
-                    oResults: null
-                };
-
-                return new Promise(function (resolve) {
-                    let sUrl = "";
-
-                    // 👉 Usamos el entityset CotNacSet como tú mostraste:
-                    // /S4HANA/sap/opu/odata/sap/ZSDWS_PORTAL_CLIENTES_SRV/CotNacSet(SalesDocument='4090000066',ClassCondition='Z001')?$format=json
-                    if (that.local) {
-                        const sPath =
-                            `/sap/opu/odata/sap/ZSDWS_PORTAL_CLIENTES_SRV/CotNacSet(` +
-                            `SalesDocument='${sSalesDocument}',ClassCondition='${sClassCondition}')` +
-                            `?$format=json&sap-language=ES`;
-                        sUrl = that.getOwnerComponent().getManifestObject().resolveUri(sPath);
-                    } else {
-                        const sPath =
-                            jQuery.sap.getModulePath(that.route) +
-                            `/S4HANA/sap/opu/odata/sap/ZSDWS_PORTAL_CLIENTES_SRV/CotNacSet(` +
-                            `SalesDocument='${sSalesDocument}',ClassCondition='${sClassCondition}')` +
-                            `?$format=json&sap-language=ES`;
-                        sUrl = sPath;
-                    }
-
-                    console.log("📡 Llamando a CotNacSet para PDF:", sUrl);
-
-                    Services.getoDataERPSync(that, sUrl, function (result) {
-                        util.response.validateAjaxGetERPNotMessage(result, {
-                            success: function (oData) {
-                                oResp.sEstado = "S";
-
-                                // util.response normalmente te deja todo en oData.data
-                                // para un entity único debería ser un objeto con campo Pdf
-                                const data = oData && oData.data ? oData.data : (oData.d || null);
-
-                                oResp.oResults = data;
-                                resolve(oResp);
-                            },
-                            error: function () {
-                                oResp.oResults = null;
-                                resolve(oResp);
-                            }
-                        });
-                    });
-                });
-            } catch (oError) {
-                that.getMessageBox("error", that.getI18nText("sErrorTry"));
-            }
-        },
-
         // 📌 Llama al servicio OData y descarga el PDF
         // 📌 Llama al servicio OData (vía Services) y descarga el PDF
         // 📌 Llama al servicio OData ZSDWS_PORTAL_CLIENTES_SRV y descarga el PDF
@@ -1965,7 +1861,7 @@ sap.ui.define([
                 sServiceUrl = sPath;
             }
 
-            console.log("📡 Service URL ZSDWS_PORTAL_CLIENTES_SRV:", sServiceUrl);
+            void 0;
 
             // 2. Crear un ODataModel puntual SOLO para este servicio
             const oODataModel = new ODataModel(sServiceUrl, {
@@ -1982,7 +1878,7 @@ sap.ui.define([
                 success: function (oData) {
                     sap.ui.core.BusyIndicator.hide();
 
-                    console.log("✅ Respuesta CotNacSet:", oData);
+                    void 0;
 
                     // En V2, oData ya es el entity: { ..., Pdf: "ABCDEF..." }
                     if (!oData || !oData.Pdf) {
@@ -2002,7 +1898,7 @@ sap.ui.define([
                 error: function (oError) {
                     sap.ui.core.BusyIndicator.hide();
                     sap.m.MessageBox.error("Error al obtener el PDF de la cotización.");
-                    console.error("💥 Error en _downloadCotizacionPdf (ODataModel):", oError);
+                    void 0;
                 }
             });
         },
@@ -2076,18 +1972,15 @@ sap.ui.define([
                         aBytes[i] = binaryStr.charCodeAt(i);
                     }
                 } catch (e) {
-                    console.error("❌ No se pudo decodificar ni como HEX ni como Base64", e);
+                    void 0;
                     throw e;
                 }
             }
 
             // Debug: ver los primeros bytes y la firma del PDF
             const header = Array.from(aBytes.slice(0, 8));
-            console.log("🔍 Primeros bytes del PDF:", header);
-            console.log(
-                "🔍 Firma como texto:",
-                String.fromCharCode.apply(null, aBytes.slice(0, 8))
-            ); // debería empezar con "%PDF"
+            void 0;
+            void 0; // debería empezar con "%PDF"
 
             return new Blob([aBytes], { type: "application/pdf" });
         },
@@ -2207,11 +2100,7 @@ sap.ui.define([
                 }
             }
 
-            console.log("✅ Filtros obligatorios restaurados por perfil:", {
-                rol: oLocked.sRol,
-                clienteLocked: oLocked.aClienteLocked,
-                vendedorLocked: oLocked.aVendedorLocked
-            });
+            void 0;
         },
         _onClearComponent: function () {
             const oView = this.getView();
@@ -2422,69 +2311,6 @@ sap.ui.define([
             const aFiltered = aAll.filter(r => aSelected.includes(r.EstadoGeneral));
             oModel.setProperty("/oReporteFiltrado", aFiltered);
         },
-        _loadVendedoresSoloVD: function () {
-            var that = this;
-
-            return that._getAllowedVendorCodesVD().then((allowedSet) => {
-                // Reutilizamos tu _loadVendedores pero filtrando antes de setear
-                return new Promise((resolve) => {
-                    let sUrl = "";
-                    const sSalesOrg = that.sSalesOrg;
-                    let sFilter = `$filter=SalesOrganization eq '${sSalesOrg}'`;
-
-                    if (that.local) {
-                        const sPath = `/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/Vendor?$top=8000&${sFilter}&$format=json&sap-language=ES`;
-                        sUrl = that.getOwnerComponent().getManifestObject().resolveUri(sPath);
-                    } else {
-                        const sPath = jQuery.sap.getModulePath(that.route) +
-                            `/S4HANA/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/Vendor?$top=8000&${sFilter}&$format=json&sap-language=ES`;
-                        sUrl = sPath;
-                    }
-
-                    Services.getoDataERPSync(that, sUrl, function (result) {
-                        util.response.validateAjaxGetERPNotMessage(result, {
-                            success: function (oData) {
-                                let aRaw = [];
-                                if (oData && oData.d && Array.isArray(oData.d.results)) aRaw = oData.d.results;
-                                else if (oData.data && Array.isArray(oData.data)) aRaw = oData.data;
-
-                                // 🔥 Filtra solo los vendor codes permitidos por UsOrve (perfil VD)
-                                aRaw = aRaw.filter(item => allowedSet.has((item.vendor || "").toString().trim()));
-
-                                const aVendors = aRaw.map(item => {
-                                    const code = (item.vendor || "").toString().trim();
-                                    const name = (item.VendorName || "").toString().trim();
-                                    return { VendorCode: code, VendorName: name, Display: `${code} - ${name}` };
-                                });
-
-                                const seen = new Set();
-                                const aUnique = aVendors.filter(v => v.VendorCode && !seen.has(v.VendorCode) && seen.add(v.VendorCode));
-
-                                that.getView().getModel("oModelData").setProperty("/oVendedores", aUnique);
-                                resolve();
-                            },
-                            error: function () {
-                                that.getView().getModel("oModelData").setProperty("/oVendedores", []);
-                                resolve();
-                            }
-                        });
-                    });
-                });
-            });
-        },
-        onDocumentoChangeFinal: function (oEvent) {
-            const oMI = oEvent.getSource();
-            let sValue = (oMI.getValue() || "").trim().replace(/[^\d]/g, "");
-
-            oMI.setValue(sValue);
-
-            if (!sValue) {
-                return;
-            }
-
-            this._GetFiltroDocumento(sValue, "/oFiltroDocumento", oMI, true);
-        },
-
         _cleanDocumentoValue: function (sValue) {
             return String(sValue ?? "")
                 .normalize("NFKC")
@@ -2522,11 +2348,7 @@ sap.ui.define([
                 oProj.setProperty("/oClienteFilter", aClientesAll);
                 oProj.setProperty("/oCliente", aClientesAll);
 
-                console.log("✅ QUIMICOS: se cargan todos los clientes al filtro, sin validar vendedor-cliente", {
-                    rol: sRol,
-                    uniNeg: sUniNeg,
-                    totalClientes: aClientesAll.length
-                });
+                void 0;
 
                 return;
             }
@@ -2653,13 +2475,7 @@ sap.ui.define([
             oProj.setProperty("/Main/ui/bEnableClientFilters", bEnableClientFilters);
             oProj.setProperty("/Main/ui/bEnableExecuteSearch", bEnableExecuteSearch);
 
-            console.log("DEBUG bloqueo filtros:", {
-                rol: sRol,
-                uniNeg: sUniNeg,
-                aVendorKeys,
-                bEnableClientFilters,
-                bEnableExecuteSearch
-            });
+            void 0;
         },
         onModificar: function (oEvent) {
             const oCtx = oEvent.getSource().getBindingContext("oModelProyect");
@@ -2711,7 +2527,7 @@ sap.ui.define([
                 sessionStorage.setItem("pedidoModificarCabecera", JSON.stringify(oPedido));
                 sessionStorage.setItem("pedidoModificarNumero", sPedido);
             } catch (e) {
-                console.warn("No se pudo guardar cabecera temporal para modificación:", e);
+                void 0;
             }
 
             sap.m.MessageBox.confirm("¿Desea modificar el pedido " + sPedido + "?", {
@@ -2732,7 +2548,7 @@ sap.ui.define([
                             });
                         } catch (e) {
                             sap.ui.core.BusyIndicator.hide(0);
-                            console.error("No se pudo navegar a la pantalla de modificación:", e);
+                            void 0;
                             sap.m.MessageBox.error("No se pudo abrir la pantalla de modificación del pedido.");
                         }
                     }.bind(this), 100);

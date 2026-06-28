@@ -163,18 +163,10 @@ sap.ui.define([
                 sap.ui.core.BusyIndicator.hide(0);
 
             } catch (oError) {
-                console.error("💥 Error en handleRouteMatched:", oError);
+                void 0;
                 this.getMessageBox("error", this.getI18nText("errorUserData"));
                 sap.ui.core.BusyIndicator.hide(0);
             }
-        },
-        _onPressFilterInit: function () {
-            const tbReporte = this._byId("vbTableMain").getItems().length > 0 ? this._byId("vbTableMain").getItems()[0] : null;
-            if (!this.isEmpty(tbReporte)) { tbReporte.removeSelections(true); }
-            that.setFragment("_dialogFilterInit", this.frgIdFilterInit, "FilterInit", this);
-
-            that._onClearComponentFilter(that.getI18nText("sStateInit"), [], true);
-            that._onClearDataFilter();
         },
         _onClearComponentFilter: function (sState, oComponent, bOtherComponent) {
             if (sState === that.getI18nText("sStateInit")) {
@@ -276,7 +268,7 @@ sap.ui.define([
             const oModel = this.getOwnerComponent().getModel("oModelEntity");
 
             if (!oModel) {
-                console.error("El modelo oModelEntity no está definido.");
+                void 0;
                 return Promise.reject("Modelo no definido");
             }
 
@@ -292,7 +284,7 @@ sap.ui.define([
                         }
                     },
                     error: (oError) => {
-                        console.error("Error al leer direcciones:", oError);
+                        void 0;
                         reject(oError);
                     }
                 });
@@ -302,7 +294,7 @@ sap.ui.define([
             const oModel = this.getOwnerComponent().getModel("oModelEntity"); // Usamos el mismo modelo OData
 
             if (!oModel) {
-                console.error("El modelo oModelEntity no está definido.");
+                void 0;
                 return Promise.reject("Modelo no definido");
             }
 
@@ -318,7 +310,7 @@ sap.ui.define([
                         resolve(oData.results || []); // Devuelve un array vacío si no hay resultados
                     },
                     error: (oError) => {
-                        console.error("Error al leer productos prestados:", oError);
+                        void 0;
                         reject(oError);
                     }
                 });
@@ -374,11 +366,7 @@ sap.ui.define([
 
                     const sCurrentSalesOrg = String(tSalesOrg || "").trim();
 
-                    console.log("🏢 Validación CLIENTE:", {
-                        BP: sBPCliente,
-                        SalesOrgPortal: sCurrentSalesOrg,
-                        SalesOrgBP: aSalesOrgs
-                    });
+                    void 0;
 
                     if (!aSalesOrgs.includes(sCurrentSalesOrg)) {
                         sap.ui.core.BusyIndicator.hide(0);
@@ -397,7 +385,7 @@ sap.ui.define([
                     // Si no vino en la carga inicial, consultar directamente el BP.
                     // Esto evita bloquear al cliente cuando Customer vino incompleto, vacío o limitado por $top.
                     if (!oCliente) {
-                        console.warn("⚠️ Cliente no encontrado en lista inicial. Consultando BP directo:", sBPCliente);
+                        void 0;
 
                         const oRespCliente = await that._getClient(tUniNeg, sBPCliente);
                         const aClienteDirecto = oRespCliente?.oResults || [];
@@ -410,7 +398,7 @@ sap.ui.define([
                     // Si la unidad organizacional existe, se permite continuar.
                     // Si no se encontró maestro Customer, se navega con cabecera mínima para no bloquear falsamente.
                     if (!oCliente) {
-                        console.warn("⚠️ No se encontró maestro Customer para BP, pero la unidad organizacional sí fue validada:", sBPCliente);
+                        void 0;
 
                         oCliente = {
                             Customer: sBPCliente,
@@ -529,7 +517,7 @@ sap.ui.define([
                 return false;
 
             } catch (oError) {
-                console.error("Error en _validateAccessToPortal:", oError);
+                void 0;
                 sap.ui.core.BusyIndicator.hide(0);
                 sap.m.MessageBox.error(
                     "Ocurrió un error al validar el acceso a la aplicación."
@@ -639,7 +627,7 @@ sap.ui.define([
                             this.oRouter.navTo("Detail", { app: jData.Customer });
                         })
                         .catch((err) => {
-                            console.error("Error al obtener dirección o productos prestados:", err);
+                            void 0;
                             this.oModelProyect.setProperty("/oDireccionCliente", { FullAddress: "" });
                             this.oModelProyect.setProperty("/oLoanedProducts", []);
                             this.oModelProyect.refresh(true);
@@ -651,7 +639,7 @@ sap.ui.define([
                 },
                 error: (oError) => {
                     sap.ui.core.BusyIndicator.hide();
-                    console.error("Error al leer estado de cuenta:", oError);
+                    void 0;
                     sap.m.MessageToast.show("Error al obtener estado de cuenta del cliente");
                     this.oModelProyect.setProperty("/oDireccionCliente", { FullAddress: "" });
                     this.oModelProyect.setProperty("/oLoanedProducts", []);
@@ -872,7 +860,7 @@ sap.ui.define([
                 that.getMessageBox("error", that.getI18nText("sErrorTry"));
             }
         },
-        //para cambiar idioma   
+        //para cambiar idioma
 
         onLanguageEsp: function () {
             this._setLanguageModel("esp");

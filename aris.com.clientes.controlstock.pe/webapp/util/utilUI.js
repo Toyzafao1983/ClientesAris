@@ -1374,7 +1374,6 @@ sap.ui.define([
 		
 		    var image = imagenes.shift();
 			var t = this;
-		    console.log('loading image ' + image);
 			var img = new Image();
 			img.src = image;
 		    img.onload = function() {
@@ -1446,8 +1445,6 @@ sap.ui.define([
 		onGenerarPDFReport: function (that,value) {
 			const { jsPDF } = window.jspdf;
 
-			console.log("-----------GENERATE PDF-----------")
-			console.log(value)
 			var self = this;
 			var doc = new jsPDF('p', 'mm', 'a4');
 			//kassiel
@@ -1659,8 +1656,6 @@ sap.ui.define([
 			var self = this;
 			try{
 				return new Promise(function (resolve, reject) {
-					console.log("-----------GENERATE PDF-----------")
-					console.log(value)
 					const { jsPDF } = window.jspdf;
 					var doc = new jsPDF('p', 'mm', 'a4');
 					//kassiel

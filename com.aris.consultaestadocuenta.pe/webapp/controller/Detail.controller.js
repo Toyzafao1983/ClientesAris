@@ -139,7 +139,7 @@ sap.ui.define([
 				link.click();
 				URL.revokeObjectURL(link.href);
 			} catch (e) {
-				console.error("Error al generar PDF", e);
+				void 0;
 				sap.m.MessageToast.show("Error al descargar el PDF");
 			}
 		},
@@ -263,17 +263,6 @@ sap.ui.define([
 			var month = (oDate.getMonth() + 1).toString().padStart(2, "0");
 			var year = oDate.getFullYear();
 			return `${day}/${month}/${year}`;
-		},
-		formatStatusColor: function (sVencido) {
-			if (!sVencido) {
-				return "None";
-			}
-			if (sVencido === "@0A@") {
-				return "Error";
-			} else if (sVencido === "@08@") {
-				return "Success";
-			}
-			return "None";
 		},
 		getDocumento: function (oContext) {
 			if (!oContext) return "";

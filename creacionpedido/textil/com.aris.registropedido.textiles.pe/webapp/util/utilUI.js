@@ -1373,7 +1373,6 @@ sap.ui.define([
 		
 		    var image = imagenes.shift();
 			var t = this;
-		    console.log('loading image ' + image);
 			var img = new Image();
 			img.src = image;
 		    img.onload = function() {

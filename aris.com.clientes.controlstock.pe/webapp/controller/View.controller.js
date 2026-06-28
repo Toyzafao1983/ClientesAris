@@ -145,9 +145,9 @@ sap.ui.define([
 
                 that.oModelUser && that.oModelUser.setProperty("/customAttribute", sCustomAttribute);
 
-                console.log("✅ BP detectado del IAS:", oBPUser || "(vacío)", "| tipo:", tipoBP, "| atributo:", sCustomAttribute);
+                void 0;
 
-                console.log(`✅ BP detectado del IAS: ${oBPUser || "(vacío)"} (${tipoBP})`);
+                void 0;
 
                 if (!oBPUser) {
                     sap.m.MessageBox.error(
@@ -162,7 +162,7 @@ sap.ui.define([
                 let accesoPermitido = false;
 
                 if (tipoBP === "CLIENTE") {
-                    console.log("🔍 Validando unidades organizacionales del cliente…");
+                    void 0;
                     const vUOIAs = await this._getSalesOrgByBP(oBPUser);
 
                     const UOIAs = Array.isArray(vUOIAs)
@@ -171,14 +171,14 @@ sap.ui.define([
                         }).filter(Boolean)
                         : (vUOIAs ? [String(vUOIAs).trim()] : []);
 
-                    console.log("🏢 Unidades organizacionales normalizadas del cliente:", UOIAs, "| Portal actual:", that.sSalesOrg);
+                    void 0;
 
                     if (UOIAs.length > 0) {
                         const bAccessGranted = this._validateAccessToPortal(UOIAs, that.sSalesOrg);
                         if (bAccessGranted) {
                             tRol = "CLIENTES";
                             accesoPermitido = true;
-                            console.log("🎯 Rol asignado (cliente con acceso autorizado):", tRol);
+                            void 0;
                         } else {
                             sap.ui.core.BusyIndicator.hide(0);
                             sap.m.MessageBox.error(
@@ -201,7 +201,7 @@ sap.ui.define([
 
                 if (!accesoPermitido && (tipoBP === "VENDEDOR")) {
                     const oPerfilResp = await this._getPerfilByUsuario(oBPUser, that.sSalesOrg);
-                    console.log("autorizado:", oPerfilResp.autorizado, "perfil:", oPerfilResp.perfil);
+                    void 0;
 
                     if (!oPerfilResp.autorizado) {
                         sap.ui.core.BusyIndicator.hide(0);
@@ -233,7 +233,7 @@ sap.ui.define([
                             return;
                     }
 
-                    console.log("🎯 Rol asignado desde CDS UsOrve:", tRol);
+                    void 0;
                 }
 
                 if (!accesoPermitido) {
@@ -348,10 +348,10 @@ sap.ui.define([
                         const oImgModel = sap.ui.getCore().getModel("oModelImages");
                         oImgModel && oImgModel.refresh(true);
                     } else {
-                        console.warn("No se obtuvieron imágenes desde SharePoint (sEstado != 'S').");
+                        void 0;
                     }
                 } catch (e) {
-                    console.error("Error cargando imágenes desde SharePoint:", e);
+                    void 0;
                 }
 
 
@@ -361,7 +361,7 @@ sap.ui.define([
 
 
             } catch (oError) {
-                console.error("💥 Error en handleRouteMatched:", oError);
+                void 0;
                 sap.m.MessageBox.error("Error al cargar datos del usuario o catálogos");
                 sap.ui.core.BusyIndicator.hide(0);
                 that.oModelUser && that.oModelUser.setProperty("/bUiReady", false);
@@ -592,14 +592,14 @@ sap.ui.define([
                     sUrl = jQuery.sap.getModulePath(that.route) + `/S4HANA${sPath}`;
                 }
 
-                console.log("➡️ Ejecutando JsonBrand → SalesOrg:", sSalesOrg, "URL:", sUrl);
+                void 0;
 
                 // 🔹 Consumir OData
                 Services.getoDataERPSync(that, sUrl, function (result) {
                     util.response.validateAjaxGetERPNotMessage(result, {
                         success: function (oData) {
                             if (!oData.data || !Array.isArray(oData.data)) {
-                                console.warn("⚠️ Sin datos de MarMat para:", sSalesOrg);
+                                void 0;
                                 resolve({ d: { results: [] } });
                                 return;
                             }
@@ -618,11 +618,11 @@ sap.ui.define([
                             });
 
                             const aBrands = Object.values(mUnique);
-                            console.log(`✅ JsonBrand → ${aBrands.length} marcas encontradas para ${sSalesOrg}`);
+                            void 0;
                             resolve({ d: { results: aBrands } });
                         },
                         error: function () {
-                            console.error("❌ Error al consultar MarMat");
+                            void 0;
                             resolve({ d: { results: [] } });
                         }
                     });
@@ -912,7 +912,7 @@ sap.ui.define([
                 return;
             }
 
-            console.log("🚀 Ejecutando _onPressExecute (sin paginación) en:", new Date().toISOString());
+            void 0;
 
             let oModel = this.getModel("oModelProyect");
 
@@ -974,7 +974,7 @@ sap.ui.define([
             oModel.setProperty("/Main/filter/iMinimumFootage", sMinFootage);
 
             const jFilter = oModel.getProperty("/Main/filter") || {};
-            console.log("📌 Filtros preparados antes de consulta:", jFilter);
+            void 0;
 
             // Helper local para parsear números formateados o crudos
             const _toNum = (v) => {
@@ -987,7 +987,7 @@ sap.ui.define([
                 const aMaterials = await this._GetFilteredMaterials(jFilter);
 
                 if (!Array.isArray(aMaterials) || aMaterials.length === 0) {
-                    console.warn("⚠️ No se encontraron materiales.");
+                    void 0;
                     that.getModel("oModelProyect").setProperty("/oStockDisponible", []);
 
                     if (tUniNeg === "TEXTILES") {
@@ -1004,7 +1004,7 @@ sap.ui.define([
                     return;
                 }
 
-                console.log("✅ Materiales filtrados totales:", aMaterials.length);
+                void 0;
 
                 // Consulta de stock para TODOS
                 const allResults = await that._fetchStockForMaterials(aMaterials);
@@ -1120,10 +1120,10 @@ sap.ui.define([
 
                 // Guardamos en modelo principal
                 that.getModel("oModelProyect").setProperty("/oStockDisponible", results);
-                console.log("📦 Resultados finales cargados:", results.length);
+                void 0;
 
             } catch (err) {
-                console.error("💥 Error en _onPressExecute:", err);
+                void 0;
                 sap.m.MessageBox.error("Ocurrió un error durante la búsqueda.");
             } finally {
                 this.getView().setBusy(false);
@@ -1219,17 +1219,14 @@ sap.ui.define([
                         sUrl = sPath;
                     }
 
-                    console.log("➡️ Ejecutando _GetFilteredMaterials:", sUrl);
+                    void 0;
 
                     Services.getoDataERPSync(that, sUrl, function (result) {
                         util.response.validateAjaxGetERPNotMessage(result, {
                             success: function (oData) {
                                 if (oData.data && Array.isArray(oData.data)) {
                                     if (oData.data.length > 0) {
-                                        console.table(
-                                            oData.data,
-                                            ["Material", "Description", "Brand", "TextileArticleQuality", "Orillo", "Formatt", "TextileArticleQuality", "OrilloStyle", "Tipo"]
-                                        );
+                                        void 0;
                                     }
 
                                     // ✅ Se asegura que no haya duplicados
@@ -1243,7 +1240,7 @@ sap.ui.define([
                                             return true;
                                         });
 
-                                    console.log(`✅ _GetFilteredMaterials: ${aMaterials.length} materiales encontrados`);
+                                    void 0;
                                     resolve(aMaterials);
 
                                 } else {
@@ -1251,14 +1248,14 @@ sap.ui.define([
                                 }
                             },
                             error: function () {
-                                console.error("❌ Error en _GetFilteredMaterials");
+                                void 0;
                                 resolve([]);
                             }
                         });
                     });
 
                 } catch (err) {
-                    console.error("💥 Exception en _GetFilteredMaterials:", err);
+                    void 0;
                     resolve([]);
                 }
             });
@@ -1271,7 +1268,7 @@ sap.ui.define([
             const PAGE_SIZE = this.getModel("oModelProyect").getProperty("/oStockPageSize") || 1000;
 
             if (!queue.length) {
-                console.log("✅ No hay más materiales en cola.");
+                void 0;
                 return;
             }
 
@@ -1280,19 +1277,19 @@ sap.ui.define([
             const nextChunk = queue.slice(0, PAGE_SIZE);
             const remaining = queue.slice(PAGE_SIZE);
 
-            console.log(`🔎 Cargando siguientes ${nextChunk.length} materiales… (restan ${remaining.length})`);
+            void 0;
 
             this._fetchStockForMaterials(nextChunk).then((chunkResults) => {
                 const current = that.getModel("oModelProyect").getProperty("/oStockDisponible") || [];
                 const merged = current.concat(chunkResults);
-                console.log("📦 Resultados recibidos (siguiente bloque):", chunkResults.length);
-                console.log("📊 Total acumulado:", merged.length);
+                void 0;
+                void 0;
 
                 that.getModel("oModelProyect").setProperty("/oStockDisponible", merged);
                 that.getModel("oModelProyect").setProperty("/oStockQueue", remaining);
                 sap.ui.core.BusyIndicator.hide();
             }).catch((err) => {
-                console.error("💥 Error en _onLoadMoreStock:", err);
+                void 0;
                 sap.ui.core.BusyIndicator.hide();
             });
         },
@@ -1313,7 +1310,7 @@ sap.ui.define([
                 aMatList = Array.from(new Set(aMatList));
 
                 if (!aMatList.length) {
-                    console.warn("⚠️ _fetchStockForMaterials llamado sin materiales.");
+                    void 0;
                     return [];
                 }
 
@@ -1338,7 +1335,7 @@ sap.ui.define([
                 const aChunks = chunkArray(aMatList, CHUNK_SIZE);
                 let aResults = [];
 
-                console.log(`📦 _fetchStockForMaterials → ${aMatList.length} materiales en ${aChunks.length} bloque(s). Chunk=${CHUNK_SIZE}`);
+                void 0;
 
                 const escapeOData = (v) => String(v || "").replace(/'/g, "''");
 
@@ -1378,8 +1375,8 @@ sap.ui.define([
                             `/S4HANA/sap/opu/odata/sap/ZSDWS_PORTAL_CLIENTES_SRV/I_StockDisponibleSet?${sQuery}`;
                     }
 
-                    console.log(`➡️ Chunk ${i + 1}/${aChunks.length} | materiales=${aChunk.length}`);
-                    console.log("🔎 Materiales enviados:", aChunk);
+                    void 0;
+                    void 0;
 
                     // eslint-disable-next-line no-await-in-loop
                     const aChunkData = await new Promise((resolve) => {
@@ -1393,11 +1390,11 @@ sap.ui.define([
                                         data = [oData.data];
                                     }
 
-                                    console.log(`✅ Chunk ${i + 1}: ${data.length} registros recibidos.`);
+                                    void 0;
                                     resolve(data);
                                 },
                                 error: function (err) {
-                                    console.error(`❌ Error en chunk ${i + 1}/${aChunks.length}:`, err);
+                                    void 0;
                                     resolve([]); // continúa con el siguiente chunk
                                 }
                             });
@@ -1408,7 +1405,7 @@ sap.ui.define([
 
                     that.getModel("oModelProyect").setProperty("/Main/stockProgress/currentChunk", i + 1);
                     that.getModel("oModelProyect").setProperty("/Main/stockProgress/processedMaterials", Math.min((i + 1) * CHUNK_SIZE, aMatList.length));
-                    console.log(`📊 Acumulado después del chunk ${i + 1}: ${aResults.length}`);
+                    void 0;
                 }
 
                 // 🔹 Deduplicar por Materialnumber + Salesorganization + Plant
@@ -1427,7 +1424,7 @@ sap.ui.define([
 
                 const aFinal = Array.from(mUnique.values());
 
-                console.log("📦 _fetchStockForMaterials finalizado. Total acumulado:", aFinal.length);
+                void 0;
                 return aFinal;
             };
 
@@ -1458,7 +1455,7 @@ sap.ui.define([
                         }
                     } catch (e) {
                         // no romper flujo
-                        console.warn(`No se pudo limpiar ${cfg.id}`, e);
+                        void 0;
                     }
                 }
             });
@@ -1471,7 +1468,7 @@ sap.ui.define([
 
         _extractTokens: function (oControl, sControlId) {
             if (!oControl) {
-                console.error(`[extractTokens] ❌ No existe control '${sControlId}'`);
+                void 0;
                 return { keys: [], texts: [], rawValue: "" };
             }
             let aKeys = [], aTexts = [], rawVal = "";
@@ -1586,21 +1583,7 @@ sap.ui.define([
                         ocultar = true;
                     }
 
-                    console.log("[TEXTIL]", {
-                        rol: tRol,
-                        materialPadre: parent?.Materialnumber,
-                        matnr: child?.Matnr,
-                        lineaRaw: JSON.stringify(lineaRaw),
-                        lineaNormalizada: JSON.stringify(linea),
-                        isLineaVacia,
-                        isLineaAster,
-                        isLineaSlash,
-                        stockDispoRaw: child?.StockDispo,
-                        stockDispo,
-                        stockPendRaw: child?.StockPedido,
-                        stockPend,
-                        ocultar
-                    });
+                    void 0;
 
                     if (ocultar) return;
 
@@ -2598,18 +2581,6 @@ sap.ui.define([
             const oBinding = oEvent.getSource().getBinding("items");
             if (oBinding) oBinding.filter([]);
         },
-        oonChangeMinimumFootage: function (oEvent) {
-            const raw = oEvent.getParameter("value");
-            const norm = String(raw || "")
-                .replace(/[^\d,.\-]/g, "")
-                .replace(",", ".");
-
-            const num = Number(norm);
-            const val = isNaN(num) ? "" : Math.max(0, num); // no negativos
-
-            this.getModel("oModelProyect").setProperty("/Main/filter/iMinimumFootage", val);
-        },
-
         getMaterialsByMetrajeMinimo: async function () {
             const that = this;
             sap.ui.core.BusyIndicator.show(0);
@@ -2626,7 +2597,7 @@ sap.ui.define([
                     return [];
                 }
 
-                console.log(`🔹 Iniciando búsqueda de materiales con UMV='MTS' para ${sSalesOrg}`);
+                void 0;
                 let sUrl = "";
                 const sFilter = `$filter=UMV eq 'MTS' and SalesOrganization eq '${sSalesOrg}'&$format=json&sap-language=ES`;
 
@@ -2639,7 +2610,7 @@ sap.ui.define([
                     sUrl = sPath;
                 }
 
-                console.log("➡️ URL MaterialsConsultation:", sUrl);
+                void 0;
 
                 const aMaterials = await new Promise((resolve) => {
                     Services.getoDataERPSync(that, sUrl, function (result) {
@@ -2655,11 +2626,11 @@ sap.ui.define([
                                     desc: m.Description,
                                     UMV: m.UMV
                                 }));
-                                console.log(`✅ ${aClean.length} materiales con UMV=MTS`);
+                                void 0;
                                 resolve(aClean);
                             },
                             error: function (err) {
-                                console.error("❌ Error MaterialsConsultation:", err);
+                                void 0;
                                 resolve([]);
                             }
                         });
@@ -2684,7 +2655,7 @@ sap.ui.define([
                     return qty >= fMetrajeMinimo;
                 });
 
-                console.log(`📊 Filtrados ${aFiltered.length} materiales con cantidad ≥ ${fMetrajeMinimo}`);
+                void 0;
 
                 let aFinal = [];
                 switch (tUniNeg) {
@@ -2716,14 +2687,14 @@ sap.ui.define([
                         aFinal = aFiltered;
                 }
 
-                console.table(aFinal.slice(0, 10));
+                void 0;
                 sap.m.MessageToast.show(`✅ ${aFinal.length} materiales cumplen con el metraje mínimo (${fMetrajeMinimo}).`);
 
                 sap.ui.core.BusyIndicator.hide();
                 return aFinal;
 
             } catch (err) {
-                console.error("💥 Error en getMaterialsByMetrajeMinimo:", err);
+                void 0;
                 sap.ui.core.BusyIndicator.hide();
                 return [];
             }
@@ -2734,7 +2705,7 @@ sap.ui.define([
 
             return new Promise((resolve) => {
                 if (!sBP) {
-                    console.warn("⚠️ No se recibió BP válido para _getSalesOrgByBP");
+                    void 0;
                     resolve([]);
                     return;
                 }
@@ -2751,7 +2722,7 @@ sap.ui.define([
                     sUrl = sPath;
                 }
 
-                console.log("📡 Consultando iBpSalesOrganizationSet para BP:", sBP, "→", sUrl);
+                void 0;
 
                 Services.getoDataERPSync(that, sUrl, function (result) {
                     util.response.validateAjaxGetERPNotMessage(result, {
@@ -2760,7 +2731,7 @@ sap.ui.define([
                             const aResults = oData?.data || oData?.d?.results || [];
 
                             if (!Array.isArray(aResults) || aResults.length === 0) {
-                                console.warn("⚠️ iBpSalesOrganizationSet no devolvió resultados para BP:", sBP);
+                                void 0;
                                 resolve([]);
                                 return;
                             }
@@ -2793,12 +2764,12 @@ sap.ui.define([
 
                             const aUniqueSalesOrgs = [...new Set(aSalesOrgs)].filter(Boolean);
 
-                            console.log("🏢 Unidades organizacionales encontradas para BP:", sBP, aUniqueSalesOrgs);
+                            void 0;
 
                             resolve(aUniqueSalesOrgs);
                         },
                         error: function (err) {
-                            console.error("💥 Error consultando unidades organizacionales para BP:", sBP, err);
+                            void 0;
                             resolve([]);
                         }
                     });
@@ -2813,7 +2784,7 @@ sap.ui.define([
             };
 
             if (!Array.isArray(aSalesOrgs) || aSalesOrgs.length === 0) {
-                console.warn("⚠️ El usuario no tiene unidades organizacionales asignadas en IAS/CDS.");
+                void 0;
                 sap.m.MessageBox.error(
                     "No tiene unidades organizacionales asignadas. Comuníquese con el área de soporte para habilitar su acceso."
                 );
@@ -2821,17 +2792,17 @@ sap.ui.define([
             }
 
             if (!sCurrentSalesOrg) {
-                console.warn("⚠️ No se especificó SalesOrg actual del portal.");
+                void 0;
                 sap.m.MessageBox.error("No se pudo determinar la unidad organizacional actual del portal.");
                 return false;
             }
 
-            console.log("🔍 Validando acceso → BP SalesOrgs:", aSalesOrgs, "| Portal actual:", sCurrentSalesOrg);
+            void 0;
             const bHasAccess = aSalesOrgs.includes(sCurrentSalesOrg);
 
             if (!bHasAccess) {
                 const sPortalName = mPortalNames[sCurrentSalesOrg] || `Unidad ${sCurrentSalesOrg}`;
-                console.warn(`🚫 Acceso denegado: el usuario no pertenece a la unidad ${sPortalName} (${sCurrentSalesOrg})`);
+                void 0;
 
                 sap.m.MessageBox.error(
                     `No tiene permisos para acceder al portal de ${sPortalName}. Será redirigido a la página principal.`,
@@ -2844,7 +2815,7 @@ sap.ui.define([
                 return false;
             }
 
-            console.log("✅ Acceso permitido al portal:", mPortalNames[sCurrentSalesOrg] || sCurrentSalesOrg);
+            void 0;
             return true;
         },
         _getPerfilByUsuario: function (sUsuario, sSalesOrg) {
@@ -2852,7 +2823,7 @@ sap.ui.define([
 
             return new Promise((resolve) => {
                 if (!sUsuario || !sSalesOrg) {
-                    console.warn("⚠️ _getPerfilByUsuario llamado sin parámetros válidos:", sUsuario, sSalesOrg);
+                    void 0;
                     resolve({ perfil: "", autorizado: false });
                     return;
                 }
@@ -2887,37 +2858,24 @@ sap.ui.define([
                             }
                         },
                         error: function (err) {
-                            console.error("❌ Error en _getPerfilByUsuario:", err);
+                            void 0;
                             resolve({ perfil: "", autorizado: false });
                         }
                     });
                 });
             });
         },
-        _filterImages: function (aFiles) {
-            return aFiles.filter(f =>
-                f.file &&
-                f.file.mimeType &&
-                f.file.mimeType.startsWith("image/")
-            ).map(f => ({
-                id: f.id,
-                name: f.name,
-                driveId: f.parentReference.driveId,
-                url: `/SharePointAris/drives/${f.parentReference.driveId}/items/${f.id}/content`
-            }));
-        },
-
         async onLoadImages() {
 
-            console.log("🖼️ [IMG] Ejecutando onLoadImages...");
+            void 0;
 
             try {
                 const oResp = await this._getSharepoint();
 
-                console.log("📦 [IMG] Resultado SharePoint:", oResp);
+                void 0;
 
                 if (oResp.sEstado !== "S") {
-                    console.warn("⚠️ [IMG] No se encontraron imágenes en SharePoint.");
+                    void 0;
                     return;
                 }
 
@@ -2930,7 +2888,7 @@ sap.ui.define([
                         url: f["@microsoft.graph.downloadUrl"]
                     }));
 
-                console.log("✅ [IMG] Imágenes filtradas:", aImages);
+                void 0;
 
                 const oModelImages = new sap.ui.model.json.JSONModel({
                     Images: aImages
@@ -2938,36 +2896,12 @@ sap.ui.define([
 
                 sap.ui.getCore().setModel(oModelImages, "oModelImages");
 
-                console.log("✅ [IMG] Modelo global oModelImages creado:", oModelImages.getData());
+                void 0;
 
             } catch (err) {
-                console.error("💥 [IMG] Error en onLoadImages:", err);
+                void 0;
             }
         },
-        onTextileArticleSearch: function (oEvent) {
-            const sValue = (oEvent.getParameter("value") || "").trim();
-            const oDialog = oEvent.getSource();
-
-            if (!sValue) {
-                this._GetFiltroTextileArticleInitial(50, "/oFiltroTextileArticle").then(() => {
-                    const oBinding = oDialog.getBinding("items");
-                    if (oBinding) {
-                        oBinding.filter([]);
-                        if (oBinding.refresh) oBinding.refresh(true);
-                    }
-                });
-                return;
-            }
-
-            this._GetFiltroTextileArticle(sValue, "/oFiltroTextileArticle").then(() => {
-                const oBinding = oDialog.getBinding("items");
-                if (oBinding) {
-                    oBinding.filter([]);
-                    if (oBinding.refresh) oBinding.refresh(true);
-                }
-            });
-        },
-
         onTextileArticleLiveChange: function (oEvent) {
             const sValue = (oEvent.getParameter("value") || "").trim();
             const oDialog = oEvent.getSource();
@@ -3076,7 +3010,7 @@ sap.ui.define([
 
                 const sSalesOrg = "1130";
 
-                console.log(`🔹 Iniciando búsqueda de materiales con UMV='M2' para SalesOrg='${sSalesOrg}'`);
+                void 0;
 
                 let sUrl = "";
                 const sFilter = `$filter=UMV eq 'M2' and SalesOrganization eq '${sSalesOrg}'&$format=json&sap-language=ES`;
@@ -3090,7 +3024,7 @@ sap.ui.define([
                     sUrl = sPath;
                 }
 
-                console.log("➡️ URL MaterialsConsultation (M2 CERÁMICOS):", sUrl);
+                void 0;
 
                 const aMaterials = await new Promise((resolve) => {
                     Services.getoDataERPSync(that, sUrl, function (result) {
@@ -3105,11 +3039,11 @@ sap.ui.define([
                                     UMV: m.UMV
                                 }));
 
-                                console.log(`✅ ${aClean.length} materiales con UMV='M2' (SalesOrg='${sSalesOrg}')`);
+                                void 0;
                                 resolve(aClean);
                             },
                             error: function (err) {
-                                console.error("❌ Error MaterialsConsultation (M2 CERÁMICOS):", err);
+                                void 0;
                                 resolve([]);
                             }
                         });
@@ -3124,7 +3058,7 @@ sap.ui.define([
                 return aMaterials;
 
             } catch (err) {
-                console.error("💥 Error en getMaterialsByMetrajeM2:", err);
+                void 0;
                 sap.ui.core.BusyIndicator.hide();
                 return [];
             }

@@ -61,7 +61,7 @@ sap.ui.define([
 							var oDataTemp = model.getData();
 							resolve(oDataTemp);
 						}).catch(err => {
-							console.log("Error:" + err.message);
+							void 0;
 							reject(err);
 						});
 					}
@@ -91,9 +91,9 @@ sap.ui.define([
 			oModel.loadData("/services/userapi/attributes");
 			return new Promise(function (resolve, reject) {
 				oModel.attachRequestCompleted(function onCompleted(oEvent) {
-					console.log("--------------------------:---------------------------");
-					console.log(oEvent);
-					console.log(oModel);
+					void 0;
+					void 0;
+					void 0;
 					if (oEvent.getParameter("success")) {
 						resolve(oModel.getData());
 					} else {
@@ -230,24 +230,24 @@ sap.ui.define([
 			writeFile(fileToSave);
 
 			function writeFile() {
-				console.log("request file system");
+				void 0;
 				window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, onFileSystemRetrieved, onFileSystemFail);
 			}
 
 			function onFileSystemRetrieved(fileSystem) {
-				console.log("file system retrieved");
+				void 0;
 				fileSystem.root.getFile(fileName, {
 					create: true
 				}, onFileEntryRetrieved, onFileSystemFail);
 			}
 
 			function onFileEntryRetrieved(fileEntry) {
-				console.log("file entry retrieved");
+				void 0;
 				fileEntry.createWriter(gotFileWriter, onFileSystemFail);
 			}
 
 			function gotFileWriter(writer) {
-				console.log("write to file");
+				void 0;
 
 				writer.onwrite = function (evt) {
 					alert('done');
@@ -258,7 +258,7 @@ sap.ui.define([
 			}
 
 			function onFileSystemFail(error) {
-				console.log(error.code);
+				void 0;
 				alert(error.code)
 			}
 		},
@@ -1053,7 +1053,7 @@ sap.ui.define([
 			var root = roots[roots.length - 1];
 			var json = {};
 			parse(root, json);
-			console.log(json);
+			void 0;
 		},
 		onColorForState: function (value) {
 			var sReturn;
@@ -1808,7 +1808,7 @@ sap.ui.define([
 
 			return new Promise((resolve) => {
 				if (!sBP) {
-					console.warn("⚠️ No se recibió BP válido para _getSalesOrgByBP");
+					void 0;
 					resolve([]);
 					return;
 				}
@@ -1825,7 +1825,7 @@ sap.ui.define([
 					sUrl = sPath;
 				}
 
-				console.log("📡 Consultando unidades organizacionales para BP:", sBP, "→", sUrl);
+				void 0;
 
 				Services.getoDataERPSync(that, sUrl, function (result) {
 					util.response.validateAjaxGetERPNotMessage(result, {
@@ -1861,12 +1861,12 @@ sap.ui.define([
 
 							const aUniqueSalesOrgs = [...new Set(aSalesOrgs)].filter(Boolean);
 
-							console.log("🏢 Unidades organizacionales encontradas para BP:", sBP, aUniqueSalesOrgs);
+							void 0;
 
 							resolve(aUniqueSalesOrgs);
 						},
 						error: function (err) {
-							console.error("💥 Error consultando unidades organizacionales para BP:", sBP, err);
+							void 0;
 							resolve([]);
 						}
 					});
@@ -1921,7 +1921,7 @@ sap.ui.define([
 			} else if (langKey === "ing") {
 				bundleName = "com.aris.consultaestadocuenta.pe.i18n.i18n_ing";
 			} else {
-				console.warn("Idioma no soportado:", langKey);
+				void 0;
 				return;
 			}
 

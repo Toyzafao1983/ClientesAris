@@ -9,8 +9,8 @@ sap.ui.define([
 ], (BaseController, Controller,models,Formatter,JSONModel, util, utilUI) => {
     "use strict";
 
-         var that;  
-        formatter: Formatter; 
+         var that;
+        formatter: Formatter;
     return BaseController.extend("com.aris.registropedido.ceramicos.pe.controller.AddManualProduct", {
         onInit() {
             that = this;
@@ -32,7 +32,7 @@ sap.ui.define([
                 }
             });
         },
-         handleRouteMatched: function(bInit){    
+         handleRouteMatched: function(bInit){
             sap.ui.core.BusyIndicator.show(0)
             let sCustomer = this.oRouter.getHashChanger().hash.split("/")[1];
              Promise.all([that._getUsers(),that._getPrueba(),that._getMaterialStock(),that._getClientPet(sCustomer),
@@ -59,7 +59,7 @@ sap.ui.define([
             if (oBrandResp && oBrandResp.sEstado === "S") {
                 const aBrandsFull = oBrandResp.oResults || [];
                 that.oModelData.setProperty("/ListBrand", aBrandsFull);
-                that.oModelData.setProperty("/ListBrandSug", aBrandsFull); 
+                that.oModelData.setProperty("/ListBrandSug", aBrandsFull);
             }
             const oMatGroupResp = values[5];
             that.oModelData.setProperty("/oMaterialGroup", oMatGroupResp.oResults || []);
@@ -81,7 +81,7 @@ sap.ui.define([
                     Formato: "",
                     Calidad: "",
                     Estilo: "",
-                    MetrosMin: "" 
+                    MetrosMin: ""
 
                 });
             }
@@ -127,34 +127,6 @@ sap.ui.define([
             // Limpieza fuerte de selección del Tree
             this._clearTreeSelectionDeferred();
             oProj.refresh(true);
-        },
-        _applyMetrajeFilterTree: function (aTree, fMetrosMin) {
-            const toNum = (v) => {
-                if (v == null || v === "") return 0;
-                if (typeof v === "string") v = v.replace(",", ".");
-                const n = parseFloat(v);
-                return isNaN(n) ? 0 : n;
-            };
-
-            const nMin = toNum(fMetrosMin);
-            if (nMin <= 0) return aTree || [];
-
-            const filterNode = (node) => {
-                if (!node) return null;
-
-                // Padre: usa TotalStockFisico (si no existe, intenta StockFisico)
-                if (node.isGroup) {
-                    const nTotal = toNum(node.TotalStockFisico ?? node.StockFisico);
-                    if (nTotal < nMin) return null; 
-                    const children = Array.isArray(node.children) ? node.children : [];
-                    return { ...node, children };
-                }
-                return node;
-            };
-
-            return (aTree || [])
-                .map(filterNode)
-                .filter(Boolean);
         },
         _clearTreeSelection: function () {
             const oTree = this.byId("ttCer");
@@ -295,7 +267,7 @@ sap.ui.define([
                 Calidad       : "",
                 Estilo        : "",
                 MetrosMin     : ""
-                
+
             });
             oProj.setProperty("/oTreeCer",        []);
             oProj.setProperty("/oMaterialSelect", []);
@@ -488,7 +460,7 @@ sap.ui.define([
                 const aFilters = [
                     new sap.ui.model.Filter("Material", sap.ui.model.FilterOperator.EQ, sMatnr),
                     new sap.ui.model.Filter("Meins",    sap.ui.model.FilterOperator.EQ, "M2"),
-                    new sap.ui.model.Filter("Umv",      sap.ui.model.FilterOperator.EQ, sUmv), 
+                    new sap.ui.model.Filter("Umv",      sap.ui.model.FilterOperator.EQ, sUmv),
                     new sap.ui.model.Filter("Quantity", sap.ui.model.FilterOperator.EQ, fQty.toFixed(3))
                 ];
 
@@ -504,8 +476,8 @@ sap.ui.define([
                         resolve(fCantM2);
                     },
                     error: function (oError) {
-                  
-                        resolve(0); 
+
+                        resolve(0);
                     }
                 });
             });
@@ -552,12 +524,12 @@ sap.ui.define([
                     ? `No puede ingresar Pallets mayor al stock disponible (${nStock}).`
                     : `No puede ingresar Cajas mayor al stock disponible (${nStock}).`;
 
-           
+
                 const nFixed = nStock;
 
                 oInput.setValueState("Error");
                 oInput.setValueStateText(sMsg);
-                oInput.setValue(nFixed); 
+                oInput.setValue(nFixed);
                 oModel.setProperty(sRowPath + "/" + sField, nFixed);
                 oRow[sField] = nFixed;
 
@@ -578,7 +550,7 @@ sap.ui.define([
                 }
 
                 oModel.refresh(true);
-                return; 
+                return;
             }
 
             const sValueUI  = n.toFixed(3);
@@ -664,7 +636,7 @@ sap.ui.define([
             const aTokens = oMulti.getTokens() || [];
             const bExistsToken = aTokens.some(t => t.getKey() === sMat);
             if (!bExistsToken) {
-                const sText = oItem.getText(); 
+                const sText = oItem.getText();
                 const oToken = new sap.m.Token({
                     key : sMat,
                     text: sText
@@ -680,7 +652,7 @@ sap.ui.define([
             }
 
             oSelectDetail.aMaterials = aMaterials;
-            oSelectDetail.material   = sMat; 
+            oSelectDetail.material   = sMat;
 
             oModelProyect.setProperty("/oSelectDetail", oSelectDetail);
         },
@@ -789,7 +761,7 @@ sap.ui.define([
             }
 
             return aStock.filter(item => {
-                const nM2 = parseFloat(item.StockFisico) || 0;  
+                const nM2 = parseFloat(item.StockFisico) || 0;
                 return nM2 >= fMetrosMin;
             });
         },
@@ -1176,12 +1148,12 @@ sap.ui.define([
                 grouped[key] = {
                     isGroup: true,
                     Matnr: item.Matnr,
-                    Descripcion: item.Descripcion,         
+                    Descripcion: item.Descripcion,
                     Um: item.Um,
                     TotalStockFisico: 0,
                     TotalPallets: 0,
                     TotalSaldos: 0,
-                    expanded: false, 
+                    expanded: false,
                     children: []
                 };
                 }
@@ -1191,7 +1163,7 @@ sap.ui.define([
                 grouped[key].children.push({
                 isGroup: false,
                 Matnr: item.Matnr,
-                Descripcion: grouped[key].Descripcion,    
+                Descripcion: grouped[key].Descripcion,
                 Calibre: item.Calibre || "",
                 Tono: item.Tono || "",
                 Um: item.Um,

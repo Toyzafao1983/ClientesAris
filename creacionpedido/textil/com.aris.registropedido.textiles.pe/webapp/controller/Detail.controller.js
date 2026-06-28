@@ -184,12 +184,7 @@ sap.ui.define([
                     };
                 }
 
-                console.log("DETAIL Seller principal resuelto FINAL:", {
-                    oClientDataCurrent: oClientDataCurrent,
-                    oPrincipalSeller: oPrincipalSeller,
-                    oCacheFormClient: oCacheFormClient,
-                    oSellerPrincipal: oSellerPrincipal
-                });
+                void 0;
 
                 if (oSellerPrincipal.kunn2 || oSellerPrincipal.Seller) {
                     that.oModelProyect.setProperty("/oSellerPrincipalSelected", {
@@ -509,48 +504,6 @@ sap.ui.define([
                 this.onSimulateOrder();
             }
         },
-        _filterStockByRole: function (aStock) {
-            if (!Array.isArray(aStock)) {
-                return [];
-            }
-
-            const oUser = this.getView().getModel("oModelUser");
-            const bIsCliente = !!oUser.getProperty("/bIsCliente");
-            const bIsVendedor = !!oUser.getProperty("/bIsVendedor");
-            const bIsCoord = !!oUser.getProperty("/bIsCoord");
-
-            return aStock.filter(function (item) {
-                const sLineaRaw = (item.Linea || "").trim();
-                const bHasStar = sLineaRaw.includes("*");
-                if (bIsCliente) {
-                    return bHasStar;
-                }
-                if (bIsCoord) {
-                    return true;
-                }
-                if (bIsVendedor) {
-                    return true;
-                }
-                return bHasStar;
-            });
-        },
-        _mergeMaterialStockNoSum: function (aStock) {
-            if (!Array.isArray(aStock)) {
-                return [];
-            }
-            const mSeen = new Map();
-            aStock.forEach(function (item) {
-                const sMatnr = item.Matnr || "";
-                const sLinea = (item.Linea || "").trim();
-                const bHasStar = sLinea.includes("*");
-                const sKey = bHasStar ? `${sMatnr}|${sLinea}` : sMatnr;
-
-                if (!mSeen.has(sKey)) {
-                    mSeen.set(sKey, item);
-                }
-            });
-            return Array.from(mSeen.values());
-        },
         _afterOpenAddPedido: function () {
             const oData = this._oContextMaterialEdit?.getObject();
 
@@ -613,7 +566,7 @@ sap.ui.define([
                 sap.ui.core.BusyIndicator.hide();
             }).catch((oError) => {
                 this.getMessageBox("error", this.getI18nText("errorData"));
-                console.error(oError);
+                void 0;
                 sap.ui.core.BusyIndicator.hide();
             });
         },
@@ -673,7 +626,7 @@ sap.ui.define([
 
             oMI.setValue("");
 
-            console.log("Materiales seleccionados:", aKeys);
+            void 0;
         },
 
         // MARCA
@@ -775,7 +728,7 @@ sap.ui.define([
             oModelProyect.setProperty("/oSelectDetail/aMaterials", aKeys);
             oModelProyect.setProperty("/oSelectDetail/material", aKeys.length ? aKeys[aKeys.length - 1] : "");
 
-            console.log("Materiales actualizados por tokenUpdate:", aKeys);
+            void 0;
         },
         onArtTextilTokenUpdate: function (oEvent) {
             const oMI = oEvent.getSource();
@@ -785,24 +738,6 @@ sap.ui.define([
             oModelProyect.setProperty("/oSelectDetail/aArtTextil", aKeys);
             oModelProyect.setProperty("/oSelectDetail/ArtTextil", aKeys.length ? aKeys[aKeys.length - 1] : "");
         },
-        onDescriptionTokenUpdate: function (oEvent) {
-            const oMI = oEvent.getSource();
-            const oModelProyect = this.getView().getModel("oModelProyect");
-
-            const aKeys = (oMI.getTokens() || []).map(t => t.getKey());
-            oModelProyect.setProperty("/oSelectDetail/aDescriptions", aKeys);
-            oModelProyect.setProperty("/oSelectDetail/Description", aKeys.length ? aKeys[aKeys.length - 1] : "");
-        },
-
-        onBrandTokenUpdate: function (oEvent) {
-            const oMI = oEvent.getSource();
-            const oModelProyect = this.getView().getModel("oModelProyect");
-
-            const aKeys = (oMI.getTokens() || []).map(t => t.getKey());
-            oModelProyect.setProperty("/oSelectDetail/aBrands", aKeys);
-            oModelProyect.setProperty("/oSelectDetail/Brand", aKeys.length ? aKeys[aKeys.length - 1] : "");
-        },
-
         _getTokenKeysFromMultiInput: function (oControl) {
             if (!oControl || !oControl.getTokens) {
                 return [];
@@ -1326,7 +1261,7 @@ sap.ui.define([
                     iMinimumFootage: ""
                 };
 
-                console.log("📌 Filtros TEXTILES registro:", jFilter);
+                void 0;
 
                 const aMaterials = await this._GetFilteredMaterialsRegistro(jFilter);
 
@@ -1343,7 +1278,7 @@ sap.ui.define([
                     new Set(aMaterials.map(r => r.Material).filter(Boolean))
                 );
 
-                console.log("📦 Materiales únicos para stock:", aMaterialCodes);
+                void 0;
 
                 oModel.setProperty("/oMaterialSelect", []);
 
@@ -1360,130 +1295,10 @@ sap.ui.define([
                 oModel.setProperty("/oMaterialSelect", aPreparedFinal);
 
             } catch (e) {
-                console.error("❌ Error en onBuscarPress:", e);
+                void 0;
                 this.getMessageBox("error", "Ocurrió un error al buscar materiales.");
             } finally {
                 sap.ui.core.BusyIndicator.hide(0);
-            }
-        },
-        _loadMateriales: function (aFilters) {
-            const that = this;
-
-            try {
-                let sUrl;
-                if (that.local) {
-                    const sPath = "/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/";
-                    sUrl = that.getOwnerComponent().getManifestObject().resolveUri(sPath);
-                } else {
-                    sUrl = jQuery.sap.getModulePath(that.route) +
-                        "/S4HANA_Materials/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/";
-                }
-
-                const oModel = new sap.ui.model.odata.v2.ODataModel(sUrl, {
-                    useBatch: false,
-                    defaultBindingMode: "TwoWay"
-                });
-
-                const oProjModel = that.getView().getModel("oModelProyect");
-                sap.ui.core.BusyIndicator.show(0);
-
-                const aAllResults = [];
-
-                const _readNextPage = function (sNextUrl) {
-                    return new Promise((resolve, reject) => {
-                        const mParams = {
-                            success: function (oData) {
-                                const aPageResults = oData.results || [];
-                                aAllResults.push(...aPageResults);
-
-                                console.log("Página MaterialsConsultation:", aPageResults.length);
-                                console.log("Acumulado MaterialsConsultation:", aAllResults.length);
-                                console.log("oData.__next:", oData.__next);
-
-                                if (oData.__next) {
-                                    let sRelativeNext = oData.__next;
-
-                                    // convertir a relativa si viene absoluta
-                                    if (sRelativeNext.startsWith("http")) {
-                                        const iIdx = sRelativeNext.indexOf("/MaterialsConsultation");
-                                        if (iIdx >= 0) {
-                                            sRelativeNext = sRelativeNext.substring(iIdx);
-                                        } else {
-                                            const iServiceIdx = sRelativeNext.indexOf("/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/");
-                                            if (iServiceIdx >= 0) {
-                                                sRelativeNext = sRelativeNext.substring(
-                                                    iServiceIdx + "/sap/opu/odata/sap/ZSDB_PORTALCLIENTES".length
-                                                );
-                                            }
-                                        }
-                                    }
-
-                                    _readNextPage(sRelativeNext).then(resolve).catch(reject);
-                                } else {
-                                    resolve(aAllResults);
-                                }
-                            },
-                            error: function (oError) {
-                                reject(oError);
-                            }
-                        };
-
-                        if (sNextUrl) {
-                            oModel.read(sNextUrl, mParams);
-                        } else {
-                            oModel.read("/MaterialsConsultation", {
-                                filters: aFilters,
-                                success: mParams.success,
-                                error: mParams.error
-                            });
-                        }
-                    });
-                };
-
-                _readNextPage().then(async function (aResults) {
-                    oProjModel.setProperty("/oMaterialBase", aResults);
-
-                    if (!aResults.length) {
-                        sap.ui.core.BusyIndicator.hide(0);
-                        that.getMessageBox("warning", "No se encontraron materiales con los filtros aplicados.");
-                        return;
-                    }
-
-                    try {
-                        const aMaterials = Array.from(
-                            new Set(aResults.map(r => r.Material).filter(Boolean))
-                        );
-
-                        console.log("Total MaterialsConsultation:", aResults.length);
-                        console.log("Total materiales únicos:", aMaterials.length);
-
-                        oProjModel.setProperty("/oMaterialSelect", []);
-
-                        const aTotalStock = await that._loadProductoBulk({
-                            aMaterials: aMaterials,
-                            SalesOrg: "1110",
-                            Plant: "1000",
-                            Pedven: true,
-                            ChunkSize: 30,
-                            PaintPartial: true
-                        });
-
-                        const aPreparedFinal = that._prepareDataForTextilesPedido(aTotalStock);
-                        oProjModel.setProperty("/oMaterialSelect", aPreparedFinal);
-
-                    } catch (err) {
-                        that.getMessageBox("error", "Error al consultar stock (BULK).");
-                    } finally {
-                        sap.ui.core.BusyIndicator.hide(0);
-                    }
-                }).catch(function (oError) {
-                    sap.ui.core.BusyIndicator.hide(0);
-                    that.getMessageBox("error", "Error al cargar materiales desde el servicio (filtros internos).");
-                });
-
-            } catch (e) {
-                sap.ui.core.BusyIndicator.hide(0);
-                that.getMessageBox("error", "Error interno al cargar materiales.");
             }
         },
         _loadProductoBulk: function (oParams) {
@@ -1622,41 +1437,6 @@ sap.ui.define([
                 Pedven: true,
                 ChunkSize: 30,
                 PaintPartial: false
-            });
-        },
-        _mergeMaterialStock: function (aStock) {
-            if (!Array.isArray(aStock)) {
-                return [];
-            }
-            const mAgg = new Map();
-            aStock.forEach(function (item) {
-                const sMatnr = item.Matnr || "";
-                const sLinea = item.Linea || "";
-                const bLineaEspecial = sLinea.includes("*");
-                const sKey = bLineaEspecial
-                    ? `${sMatnr}|${sLinea}`
-                    : sMatnr;
-
-                let oAgg = mAgg.get(sKey);
-                if (!oAgg) {
-                    oAgg = Object.assign({}, item);
-                    oAgg.StockDispo = parseFloat(oAgg.StockDispo || "0") || 0;
-                    oAgg.pieza = parseInt(oAgg.pieza || "0", 10) || 0;
-                    oAgg.piezasDetalle = (oAgg.piezasDetalle || []).slice();
-
-                    mAgg.set(sKey, oAgg);
-                } else {
-                    oAgg.StockDispo += parseFloat(item.StockDispo || "0") || 0;
-                    oAgg.pieza += parseInt(item.pieza || "0", 10) || 0;
-                    if (Array.isArray(item.piezasDetalle) && item.piezasDetalle.length) {
-                        oAgg.piezasDetalle = oAgg.piezasDetalle.concat(item.piezasDetalle);
-                    }
-                }
-            });
-            return Array.from(mAgg.values()).map(function (oItem) {
-                oItem.StockDispo = oItem.StockDispo.toString();
-                oItem.pieza = oItem.pieza.toString();
-                return oItem;
             });
         },
         _onPressAddManual: function () {
@@ -1938,7 +1718,7 @@ sap.ui.define([
                 }
             });
         },
-        //  Helper para el marcado en la tabla 
+        //  Helper para el marcado en la tabla
         _getManualTable: function () {
             return (
                 this._byId(this.frgIdAddManualProduct + "--tbMaterialesManual") ||
@@ -2537,10 +2317,7 @@ sap.ui.define([
             if (!Object.keys(mPriceConditionTypes).length) {
                 sap.ui.core.BusyIndicator.hide();
 
-                console.error("PriceConditions respondió, pero no se identificaron condiciones de descuento:", {
-                    SalesOrg: sSalesOrgSim,
-                    PriceConditions: oPriceCondResp.oResults
-                });
+                void 0;
 
                 sap.m.MessageBox.error(
                     "El servicio PriceConditions respondió, pero no se identificaron condiciones de descuento para la organización " +
@@ -2551,8 +2328,8 @@ sap.ui.define([
                 return;
             }
 
-            console.log("PriceConditions usadas para descuentos:", oPriceCondResp.oResults);
-            console.log("CondTypes activos para descuento:", mPriceConditionTypes);
+            void 0;
+            void 0;
 
             oModelEntity.create("/iHeaderSet", oPayload, {
                 success: function (oResponse) {
@@ -2902,26 +2679,18 @@ sap.ui.define([
                 const oResp = await this._uploadSharepoint(
                     oFile,
                     function (percent) {
-                        console.log("Upload OC " + sUploadName + ": " + percent + "%");
+                        void 0;
                     },
                     sUploadName
                 );
 
                 if (oResp.sEstado === "S" && oResp.oResults && oResp.oResults.id) {
                     oResult.success++;
-                    console.log("📎 Archivo OC subido:", {
-                        originalName: oFile.name,
-                        uploadName: sUploadName,
-                        webUrl: oResp.oResults.webUrl
-                    });
+                    void 0;
                 } else {
                     oResult.error++;
                     oResult.errors.push(oFile.name + ": error al subir a SharePoint.");
-                    console.error("❌ Error subiendo OC:", {
-                        originalName: oFile.name,
-                        uploadName: sUploadName,
-                        response: oResp
-                    });
+                    void 0;
                 }
             }
 
@@ -3817,10 +3586,7 @@ sap.ui.define([
             }
 
             if (!Number.isFinite(nCantidadOriginal) || !Number.isFinite(nStockOriginal)) {
-                console.warn("No se pudo recalcular stock. Faltan valores base:", {
-                    CantidadOriginalNum: oDetalle.CantidadOriginalNum,
-                    StockDispoOriginalNum: oDetalle.StockDispoOriginalNum
-                });
+                void 0;
                 return;
             }
 
@@ -3840,14 +3606,7 @@ sap.ui.define([
 
             oModel.checkUpdate(true);
 
-            console.log("📌 Stock recalculado Registro Textil:", {
-                cantidadOriginal: nCantidadOriginal,
-                cantidadNueva: nCantidadNueva,
-                stockOriginal: nStockOriginal,
-                diferencia: nDiferencia,
-                stockCalculado: nStockCalculado,
-                stockMostrado: sStockCalculado
-            });
+            void 0;
         },
 
         _onAcceptEditCantidad: function (oEvent) {
@@ -4005,7 +3764,7 @@ sap.ui.define([
                     );
                 }
             } catch (e) {
-                console.warn("No se pudo refrescar stock de la posición textil:", e);
+                void 0;
             }
 
             const sStockView = this._formatSapStock(nStockOriginal, 3);
@@ -4136,18 +3895,6 @@ sap.ui.define([
             }
             this.setFragment("_dialogAddManualProduct", this.frgIdAddManualProduct, "AddManualProduct", this);
         },
-        _resetOrderState: function () {
-            const oModelProyect = this.getView().getModel("oModelProyect");
-
-            if (oModelProyect) {
-                if (models && typeof models.createModelProyect === "function") {
-                    oModelProyect.setData(models.createModelProyect());
-                } else {
-                    oModelProyect.setData({});
-                }
-                oModelProyect.refresh(true);
-            }
-        },
         onConfirmCreateOrder: function () {
             const that = this;
 
@@ -4185,39 +3932,6 @@ sap.ui.define([
 
                             var oRouter = sap.ui.core.UIComponent.getRouterFor(that);
                             oRouter.navTo("Main");
-                        }
-                    }
-                }
-            );
-        },
-        _actualizarSubtotalGeneral: function () {
-            const oModel = this.getView().getModel("oModelProyect");
-            const aMateriales = oModel.getProperty("/oMaterial") || [];
-
-            const subtotalGeneral = aMateriales.reduce((acumulado, item) => {
-                const total = parseFloat(item.total) || 0;
-                return acumulado + total;
-            }, 0);
-
-            oModel.setProperty("/oDatCalculo/subtotalGeneral", subtotalGeneral.toFixed(2));
-        },
-        onSelectEnableFormFields: function (oEvent) {
-            const oCheckbox = oEvent.getSource();
-            const bSelected = oCheckbox.getSelected();
-            if (!bSelected) {
-                this.oModelProyect.setProperty("/isFormEnabled", false);
-                return;
-            }
-            sap.m.MessageBox.confirm(
-                "¿Desea habilitar los campos para modificarlos?",
-                {
-                    title: "Confirmación",
-                    onClose: (sAction) => {
-                        if (sAction === sap.m.MessageBox.Action.OK) {
-                            this.oModelProyect.setProperty("/isFormEnabled", true);
-                        } else {
-                            this.oModelProyect.setProperty("/isFormEnabled", false);
-                            oCheckbox.setSelected(false);
                         }
                     }
                 }
@@ -4572,10 +4286,7 @@ sap.ui.define([
             oModel.setProperty("/inputForm/puertoEmbarque", sKey);
             oModel.setProperty("/inputForm/puertoEmbarqueText", sText);
 
-            console.log("Puerto destino seleccionado Detail:", {
-                puertoEmbarque: sKey,
-                puertoEmbarqueText: sText
-            });
+            void 0;
 
             oModel.refresh(true);
         },
@@ -4690,7 +4401,7 @@ sap.ui.define([
                 return null;
 
             } catch (e) {
-                console.error("❌ Error convirtiendo fecha:", sDate, e);
+                void 0;
                 return null;
             }
         },
@@ -5129,7 +4840,7 @@ sap.ui.define([
                             `/S4HANA/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/MaterialsConsultation?${sFilter}&$top=900000000&$format=json&sap-language=ES`;
                     }
 
-                    console.log("➡️ Ejecutando _GetFilteredMaterialsRegistro:", sUrl);
+                    void 0;
 
                     Services.getoDataERPSync(that, sUrl, function (result) {
                         util.response.validateAjaxGetERPNotMessage(result, {
@@ -5156,21 +4867,21 @@ sap.ui.define([
                                             return true;
                                         });
 
-                                    console.log(`✅ _GetFilteredMaterialsRegistro: ${aMaterials.length} materiales encontrados`);
+                                    void 0;
                                     resolve(aMaterials);
                                 } else {
                                     resolve([]);
                                 }
                             },
                             error: function () {
-                                console.error("❌ Error en _GetFilteredMaterialsRegistro");
+                                void 0;
                                 resolve([]);
                             }
                         });
                     });
 
                 } catch (err) {
-                    console.error("💥 Exception en _GetFilteredMaterialsRegistro:", err);
+                    void 0;
                     resolve([]);
                 }
             });
@@ -5240,140 +4951,6 @@ sap.ui.define([
             }
 
             return allResults;
-        },
-        _prepareDataForTextilesRegistro: function (aStock) {
-            let aFlatten = [];
-            let seen = new Set();
-            const that = this;
-
-            const oUser = this.getView().getModel("oModelUser");
-            const isSupervisor = !!oUser.getProperty("/bIsCoord");
-            const isVendedor = !!oUser.getProperty("/bIsVendedor");
-            const isCliente = !!oUser.getProperty("/bIsCliente");
-
-            const normalizeLinea = (v) => {
-                return String(v ?? "")
-                    .replace(/[\s\u00A0\u200B\u200C\u200D\uFEFF]/g, "")
-                    .trim();
-            };
-
-            const toNumber = (v) => {
-                let s = String(v ?? "").trim().replace(/\s/g, "");
-                if (!s) return 0;
-
-                let isNegative = false;
-
-                if (s.endsWith("-")) {
-                    isNegative = true;
-                    s = s.slice(0, -1);
-                }
-
-                if (s.startsWith("-")) {
-                    isNegative = true;
-                    s = s.slice(1);
-                }
-
-                if (s.includes(",") && s.includes(".")) {
-                    if (s.lastIndexOf(".") > s.lastIndexOf(",")) {
-                        s = s.replace(/,/g, "");
-                    } else {
-                        s = s.replace(/\./g, "").replace(",", ".");
-                    }
-                } else if (s.includes(",")) {
-                    s = s.replace(",", ".");
-                }
-
-                const n = parseFloat(s);
-                if (!Number.isFinite(n)) return 0;
-
-                return isNegative ? -n : n;
-            };
-
-            aStock.forEach(parent => {
-                const aDet = parent?.toEtextil?.results || [];
-
-                aDet.forEach(child => {
-                    const lineaRaw = String(child?.Linea ?? "");
-                    const linea = normalizeLinea(lineaRaw);
-
-                    const isLineaVacia = linea === "";
-                    const isLineaSlash = linea === "/";
-                    const isLineaAster = linea === "*";
-
-                    const stockDispo = toNumber(child?.StockDispo);
-                    const stockPend = toNumber(child?.StockPedido);
-
-                    let ocultar = false;
-
-                    if (isCliente) {
-                        if (isLineaAster) {
-                            ocultar = false;
-                        } else if (isLineaVacia) {
-                            ocultar = !(stockDispo > 0);
-                        } else if (isLineaSlash) {
-                            ocultar = true;
-                        } else {
-                            ocultar = true;
-                        }
-                    } else if (isSupervisor) {
-                        if (isLineaSlash) {
-                            ocultar = false;
-                        } else if (isLineaAster || isLineaVacia) {
-                            ocultar = !((stockDispo !== 0) || (stockPend > 0));
-                        } else {
-                            ocultar = true;
-                        }
-                    } else if (isVendedor) {
-                        if (isLineaSlash) {
-                            ocultar = true;
-                        } else if (isLineaAster || isLineaVacia) {
-                            ocultar = !((stockDispo !== 0) || (stockPend > 0));
-                        } else {
-                            ocultar = true;
-                        }
-                    } else {
-                        ocultar = true;
-                    }
-
-                    if (ocultar) return;
-
-                    const key = `${parent.Materialnumber}|${child.Matnr}|${linea}|${child.Bezei}|${child.Um}|${child.StockDispo}|${child.StockContrato}|${child.StockFisico}|${child.StockPedido}|${child.StockSepara}`;
-
-                    if (!seen.has(key)) {
-                        seen.add(key);
-                        aFlatten.push({
-                            Material: parent.Materialnumber,
-                            SalesOrg: parent.Salesorganization,
-                            Plant: parent.Plant,
-                            Matnr: child.Matnr,
-                            Linea: linea,
-                            Bezei: child.Bezei,
-                            Um: child.Um,
-                            StockDispo: that.formatNumber ? that.formatNumber(child.StockDispo) : child.StockDispo,
-                            StockContrato: that.formatNumber ? that.formatNumber(child.StockContrato) : child.StockContrato,
-                            StockFisico: that.formatNumber ? that.formatNumber(child.StockFisico) : child.StockFisico,
-                            StockPedido: that.formatNumber ? that.formatNumber(child.StockPedido) : child.StockPedido,
-                            StockSepara: that.formatNumber ? that.formatNumber(child.StockSepara) : child.StockSepara,
-                            state: toNumber(child.StockDispo) < 0 ? "Error" : "None",
-                            pieza: (parent?.toEtextilStockVen?.results || []).length.toString(),
-                            piezasDetalle: parent?.toEtextilStockVen?.results || []
-                        });
-                    }
-                });
-            });
-
-            aFlatten.sort(function (a, b) {
-                return String(a.Material || "").localeCompare(
-                    String(b.Material || ""),
-                    undefined,
-                    { numeric: true }
-                );
-            });
-            return aFlatten;
-        },
-        onChangeOrillo: function (oEvent) {
-            const sValue = (oEvent.getParameter("suggestValue") || "").trim();
-            this._GetFiltroOrilloPrefixSuggest(sValue, "/oFiltroOrilloSuggest");
         },
         onEditarBolsa: function (oEvent) {
             const oCtx = oEvent.getSource().getBindingContext("oModelProyect");
@@ -5531,7 +5108,7 @@ sap.ui.define([
 
                 return oCache;
             } catch (e) {
-                console.warn("No se pudo leer REGPED_TEXTILES_FORMCLIENT_TO_DETAIL:", e);
+                void 0;
                 return null;
             }
         },

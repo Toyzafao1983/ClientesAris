@@ -335,7 +335,7 @@ sap.ui.define([
             }
         },
 
-        // Llamada de anticipos y nota de credito 
+        // Llamada de anticipos y nota de credito
         _ensureCondicionPagoClienteEnLista: function () {
             const oModelProyect = this.getView().getModel("oModelProyect");
             const oModelData = this.getView().getModel("oModelData");
@@ -378,23 +378,7 @@ sap.ui.define([
                 oModelProyect.setProperty("/inputForm", oInputForm);
             }
         },
-        // Ejecutar pedido con referencia 
-        _getRefFieldsFromPos: function (pos) {
-            const pad6 = (n) => String(n || "").padStart(6, "0");
-
-            const sRefDoc = (pos.SalesDocument || pos.Vbeln || pos.RefDoc || pos.Document || "").toString().trim();
-            const sRefItmRaw = (pos.SalesDocumentItem || pos.Posnr || pos.RefItm || pos.Item || pos.ItmNumberRef || pos.ItmNumber || "").toString().trim();
-            const nItm = parseInt(sRefItmRaw, 10);
-            const sRefItm = isNaN(nItm) ? sRefItmRaw : pad6(nItm);
-
-            return {
-                RefDoc: sRefDoc,
-                RefItm: sRefItm
-                // Si tu backend requiere más (RefDocCat, RefType, etc.), agrégalos aquí
-                // RefDocCat: pos.RefDocCat || "",
-                // RefType  : pos.RefType || ""
-            };
-        },
+        // Ejecutar pedido con referencia
         _initMaterialFromReferencia: async function () {
             const oModel = this.getView().getModel("oModelProyect");
             const oModelUser = this.getView().getModel("oModelUser");
@@ -513,13 +497,7 @@ sap.ui.define([
                     : fQtyM2Calc;
 
                 if (fQtyM2 <= 0) {
-                    console.warn("No se pudo determinar la cantidad M2 real desde DorepeItem ni desde datos base.", {
-                        Material: sMat,
-                        UMVBulto: sUMVBulto,
-                        CtdPedido: fQtyBulto,
-                        OrderQuantity: pos.OrderQuantity,
-                        Posicion: pos
-                    });
+                    void 0;
                     continue;
                 }
 
@@ -685,26 +663,7 @@ sap.ui.define([
                 }
             }
         },
-        // confirmacion de orden 
-        onConfirmCreateOrder: function () {
-            const that = this;
-
-            if (this._validateRequiredFields && !this._validateRequiredFields()) {
-                return;
-            }
-            sap.m.MessageBox.confirm(
-                "¿Desea crear la orden?",
-                {
-                    title: "Confirmación",
-                    actions: [sap.m.MessageBox.Action.YES, sap.m.MessageBox.Action.NO],
-                    onClose: function (sAction) {
-                        if (sAction === sap.m.MessageBox.Action.YES) {
-                            that._createOrderCeramicos();
-                        }
-                    }
-                }
-            );
-        },
+        // confirmacion de orden
         onCancelOrder: function () {
             var that = this;
             sap.m.MessageBox.confirm(
@@ -1264,39 +1223,6 @@ sap.ui.define([
 
             return m;
         },
-        _applyReservedToFlatStock: function (aRows) {
-            const toNum = v => isNaN(parseFloat(v)) ? 0 : parseFloat(v);
-            const mRes = this._getReservedMapFromPedido();
-
-            return (aRows || []).map(r => {
-                const k = this._buildStockKeyForRow(r);
-                const oRes = mRes[k] || { pal: 0, caj: 0, m2: 0 };
-
-                const nPal = Math.max(0, toNum(r.Pallets) - oRes.pal);
-                const nCaj = Math.max(0, toNum(r.Saldos) - oRes.caj);
-
-                // StockFisico a veces es M2, si no quieres restarlo, comenta esta línea
-                const nFis = Math.max(0, toNum(r.StockFisico) - oRes.m2);
-
-                return {
-                    ...r,
-
-                    // guarda originales por si quieres mostrar tooltip luego
-                    PalletsOrig: r.Pallets,
-                    SaldosOrig: r.Saldos,
-                    StockFisicoOrig: r.StockFisico,
-
-                    // los que ve el usuario (disponible)
-                    Pallets: Number(nPal.toFixed(3)),
-                    Saldos: Number(nCaj.toFixed(3)),
-                    StockFisico: Number(nFis.toFixed(3)),
-
-                    __reservedPal: Number(oRes.pal.toFixed(3)),
-                    __reservedCaj: Number(oRes.caj.toFixed(3))
-                };
-            });
-        },
-
         _prepareDataForCeramicos: function (aStock) {
             const map = new Map();
 
@@ -1518,21 +1444,7 @@ sap.ui.define([
 
             this.getOwnerComponent().getRouter().navTo("AddManualProduct", { app: sCustomer });
         },
-        _getQtyFromCantidades: function (sMatKey, sField) {
-            const oModelProyect = this.getView().getModel("oModelProyect");
-            const oCant = oModelProyect.getProperty("/oCantidades") || {};
-            const oMatCant = oCant[sMatKey] || {};
-
-            const v = oMatCant[sField];
-
-            if (v === undefined || v === null || v === "") {
-                return 0;
-            }
-
-            const n = parseFloat(v);
-            return isNaN(n) ? 0 : n;
-        },
-        // Calcular El Peso Por fila 
+        // Calcular El Peso Por fila
         // Calcular el peso por fila usando siempre los M2 reales de la posición
         _calcPesoRow: function (row) {
             const toNum = (v) => {
@@ -2068,10 +1980,7 @@ sap.ui.define([
 
             if (!Object.keys(mPriceConditionTypes).length) {
                 sap.ui.core.BusyIndicator.hide();
-                console.error("PriceConditions respondió, pero no se identificaron condiciones de descuento:", {
-                    SalesOrg: sSalesOrgSim,
-                    PriceConditions: oPriceCondResp.oResults
-                });
+                void 0;
                 sap.m.MessageBox.error(
                     "El servicio PriceConditions respondió, pero no se identificaron condiciones de descuento para la organización " +
                     sSalesOrgSim +
@@ -2080,8 +1989,8 @@ sap.ui.define([
                 return;
             }
 
-            console.log("PriceConditions usadas para descuentos:", oPriceCondResp.oResults);
-            console.log("CondTypes activos para descuento:", mPriceConditionTypes);
+            void 0;
+            void 0;
 
             oModelEntity.create("/iHeaderSet", oPayload, {
                 success: async (oResponse) => {
@@ -2273,7 +2182,7 @@ sap.ui.define([
                     sap.ui.core.BusyIndicator.hide();
                     const sMsg = this._getODataErrorMessage(oError, "Error en la simulación para cliente.");
                     sap.m.MessageBox.error(sMsg, { title: "Error en simulación SAP" });
-                    console.error("Error en simulación para cliente:", oError);
+                    void 0;
                 }
             });
         },
@@ -2395,10 +2304,7 @@ sap.ui.define([
 
             if (!Object.keys(mPriceConditionTypes).length) {
                 sap.ui.core.BusyIndicator.hide();
-                console.error("PriceConditions respondió, pero no se identificaron condiciones de descuento:", {
-                    SalesOrg: sSalesOrgSim,
-                    PriceConditions: oPriceCondResp.oResults
-                });
+                void 0;
                 sap.m.MessageBox.error(
                     "El servicio PriceConditions respondió, pero no se identificaron condiciones de descuento para la organización " +
                     sSalesOrgSim +
@@ -2407,8 +2313,8 @@ sap.ui.define([
                 return;
             }
 
-            console.log("PriceConditions usadas para descuentos:", oPriceCondResp.oResults);
-            console.log("CondTypes activos para descuento:", mPriceConditionTypes);
+            void 0;
+            void 0;
 
             oModelEntity.create("/iHeaderSet", oPayload, {
                 success: async (oResponse) => {
@@ -2605,7 +2511,7 @@ sap.ui.define([
                     sap.ui.core.BusyIndicator.hide();
                     const sMsg = this._getODataErrorMessage(oError, "Error en la simulación.");
                     sap.m.MessageBox.error(sMsg, { title: "Error en simulación SAP" });
-                    console.error("Error en simulación:", oError);
+                    void 0;
                 }
             });
         },
@@ -2841,35 +2747,23 @@ sap.ui.define([
                     const oResp = await this._uploadSharepoint(
                         oFile,
                         function (percent) {
-                            console.log("Upload OC " + sUploadName + ": " + percent + "%");
+                            void 0;
                         },
                         sUploadName
                     );
 
                     if (oResp.sEstado === "S" && oResp.oResults && oResp.oResults.id) {
                         oResult.success++;
-                        console.log("📎 Archivo OC subido:", {
-                            originalName: oFile.name,
-                            uploadName: sUploadName,
-                            webUrl: oResp.oResults.webUrl
-                        });
+                        void 0;
                     } else {
                         oResult.error++;
                         oResult.errors.push(oFile.name + ": error al subir a SharePoint.");
-                        console.error("❌ Error subiendo OC:", {
-                            originalName: oFile.name,
-                            uploadName: sUploadName,
-                            response: oResp
-                        });
+                        void 0;
                     }
                 } catch (e) {
                     oResult.error++;
                     oResult.errors.push(oFile.name + ": excepción al subir a SharePoint.");
-                    console.error("❌ Excepción subiendo OC:", {
-                        originalName: oFile.name,
-                        uploadName: sUploadName,
-                        error: e
-                    });
+                    void 0;
                 }
             }
 
@@ -3237,7 +3131,7 @@ sap.ui.define([
                     sap.ui.core.BusyIndicator.hide();
                     const sMsg = this._getODataErrorMessage(oError, "Error en la creación del pedido.");
                     sap.m.MessageBox.error(sMsg, { title: "Error al crear pedido en SAP" });
-                    console.error("Error en creación de pedido:", oError);
+                    void 0;
                 }
             });
         },
@@ -3289,12 +3183,8 @@ sap.ui.define([
             } catch (e) {
                 sap.ui.core.BusyIndicator.hide(0);
                 sap.m.MessageBox.error("Error al recalcular la simulación.");
-                console.error(e);
+                void 0;
             }
-        },
-        _onPressAddManual: function () {
-            this["_dialogAddProduct"].close();
-            this.setFragment("_dialogAddManualProduct", this.frgIdAddManualProduct, "AddManualProduct", this);
         },
         _onAcceptProductManual: function (oEvent) {
             const oModelProyect = this.getView().getModel("oModelProyect");
@@ -3508,7 +3398,7 @@ sap.ui.define([
                     oTable.setSelectedItem(oItem, bSelect);
                 }
             } catch (e) {
-                console.warn("Auto-select row failed:", e);
+                void 0;
             }
             const sValueSAP = toNum(n).toFixed(3);
             const oCant = oModel.getProperty("/oCantidades") || {};
@@ -3583,7 +3473,7 @@ sap.ui.define([
             oModel.setProperty(oContext.getPath() + "/cantidad", fTotalM2.toFixed(3));
             oModel.setProperty(oContext.getPath() + "/cantidadM2", fTotalM2.toFixed(3));
         },
-        // oData para cambiar las cantidades en M2 para las tablas 
+        // oData para cambiar las cantidades en M2 para las tablas
         _getValorFromMaterialService: function (sMatnr, sMeins, sUmv, fQty) {
             const that = this;
             return new Promise(function (resolve) {
@@ -3711,7 +3601,7 @@ sap.ui.define([
 
             this.setFragment("_dialogEditDetail", this.frgIdEditClient, "EditDetail", this);
         },
-        // Ayuda para pintar stock padre 
+        // Ayuda para pintar stock padre
         _buildStockKey: function (oItem) {
             const sMat = (oItem?.Material || oItem?.codigo || oItem?.Matnr || "").trim();
 
@@ -3824,7 +3714,7 @@ sap.ui.define([
         },
 
 
-        // Step input de midificar cantidad en stock 
+        // Step input de midificar cantidad en stock
         onEditDetalleCantidadChange: function (oEvent) {
             const oStep = oEvent.getSource();
             const oModel = this.getView().getModel("oModelProyect");
@@ -4082,20 +3972,6 @@ sap.ui.define([
                 this.onSimulateOrder();
             }
         },
-        _getAcumuladoPedidoPorMaterial: function (sMatnr) {
-            const oModel = this.getView().getModel("oModelProyect");
-            const aUI = oModel.getProperty("/oMaterialUI") || [];
-            const toNum = v => isNaN(parseFloat(v)) ? 0 : parseFloat(v);
-
-            let pal = 0, caj = 0;
-            aUI.forEach(r => {
-                const m = (r.Material || r.codigo || "").trim();
-                if (m !== sMatnr) return;
-                pal += toNum(r.cantidadPallets);
-                caj += toNum(r.cantidadCajas);
-            });
-            return { pal, caj };
-        },
         _onCloseEditDetail: function () {
             if (this._dialogEditDetail) this._dialogEditDetail.close();
         },
@@ -4155,7 +4031,7 @@ sap.ui.define([
                 oTable.removeSelections(true);
             }
         },
-        // Modificación de Detail 
+        // Modificación de Detail
         onDetailEdit: function () {
             const oModel = this.getView().getModel("oModelProyect");
             const oInputForm = oModel.getProperty("/inputForm") || {};
@@ -4732,11 +4608,6 @@ sap.ui.define([
                 maximumFractionDigits: 2
             }).format(fValorTo);
             return `${oTipChangeData.to.moneda}: ${sValorFrom} ${oTipChangeData.from.moneda}`;
-        },
-        formatCantidad: function (value) {
-            if (value === null || value === undefined || value === "") return "";
-            const n = parseFloat(value);
-            return Number.isInteger(n) ? n.toString() : n.toString();
         },
         formatCondPagoDisplay: function (sCodigo, sTexto) {
             if (!sCodigo && !sTexto) return "";

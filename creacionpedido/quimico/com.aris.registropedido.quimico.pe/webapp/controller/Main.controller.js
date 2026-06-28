@@ -37,7 +37,7 @@ sap.ui.define([
             this.frgIdFilterCodClient = "frgIdFilterCodClient";
             this.frgIdFilterRazonSocial = "frgIdFilterRazonSocial";
             this.frgIdFilterDocument = "frgIdFilterDocument";
-            
+
         },
          handleRouteMatched: function (bInit) {
 
@@ -50,16 +50,16 @@ sap.ui.define([
                 that.oModelProyect = that.getModel("oModelProyect");
                 that.oModelData = that.getModel("oModelData");
                 that.oModelUser = that.getModel("oModelUser");
-                that.oModelDevice = that.getModel("oModelDevice");  
+                that.oModelDevice = that.getModel("oModelDevice");
                 that._onClearDataFilter();
                 that.onClearFilters();
                 let sIdioma = that.getModel("oModelProyect").getProperty("/sIdioma");
                 that.oModelProyect.setSizeLimit(99999999);
-                that.oModelData.setSizeLimit(99999999); 
+                that.oModelData.setSizeLimit(99999999);
                 that._validateAccessToPortal(values);
                 that.oModelProyect.setProperty("/oSeller", values[4].oResults);
                 that.oModelProyect.setProperty("/oClienteFilter", values[5].oResults);
-                let oData = values[3].oResults;  
+                let oData = values[3].oResults;
                 let oTipoCambio = {
                     from: {
                         moneda: oData.FromCurr || "PEN",
@@ -94,11 +94,11 @@ sap.ui.define([
         const oRouter    = sap.ui.core.UIComponent.getRouterFor(this);
         const oModelUser = this.getModel("oModelUser");
 
-        
+
         // 👤 Usuario IAS (SCIM)
         let oUser = values[0]?.Resources?.[0];
         if (!oUser) {
-            console.warn("⚠️ No se encontró el objeto de usuario IAS en values[0]");
+            void 0;
             sap.ui.core.BusyIndicator.hide(0);
             oRouter.navTo("AccessDenied");
             return;
@@ -153,7 +153,7 @@ sap.ui.define([
 
             const aSalesOrgs = await this._getSalesOrgByBP(sBPCliente);
             if (!Array.isArray(aSalesOrgs) || !aSalesOrgs.includes(tSalesOrg)) {
-                console.warn("🚫 Cliente sin acceso a la organización:", tSalesOrg);-
+                void 0;-
                 sap.ui.core.BusyIndicator.hide(0);
                 oRouter.navTo("AccessDenied");
                 return;
@@ -198,7 +198,7 @@ sap.ui.define([
 
             let oMatch = aVendedores.find(item => item.usuario === sUsuarioIAS);
             if (!oMatch) {
-                console.warn("🚫 Usuario IAS no encontrado entre vendedores/coordinadores:", sUsuarioIAS);
+                void 0;
                 sap.ui.core.BusyIndicator.hide(0);
                 oRouter.navTo("AccessDenied");
                 return;
@@ -224,7 +224,7 @@ sap.ui.define([
             }
 
             if (!Array.isArray(aSalesOrgs) || !aSalesOrgs.includes(oMatch.orgventas)) {
-                console.warn("🚫 Vendedor/Coordinador sin acceso a la organización:", oMatch.orgventas);
+                void 0;
                 sap.ui.core.BusyIndicator.hide(0);
                 oRouter.navTo("AccessDenied");
                 return;
@@ -256,12 +256,12 @@ sap.ui.define([
         // ========================================================
         // 3️⃣ SIN ATRIBUTOS VÁLIDOS
         // ========================================================
-        console.warn("🚫 Usuario sin atributos válidos IAS (ni cliente ni interno)");
+        void 0;
         sap.ui.core.BusyIndicator.hide(0);
         oRouter.navTo("AccessDenied");
 
     } catch (oError) {
-        console.error("❌ Error en _validateAccessToPortal:", oError);
+        void 0;
         sap.ui.core.BusyIndicator.hide(0);
         const oRouter = sap.ui.core.UIComponent.getRouterFor(this);
         oRouter.navTo("AccessDenied");
@@ -271,10 +271,10 @@ sap.ui.define([
         _onPressFilterInit: function () {
                 const tbReporte = this._byId("vbTableMain").getItems().length > 0 ? this._byId("vbTableMain").getItems()[0] : null;
                 if (!this.isEmpty(tbReporte)) { tbReporte.removeSelections(true); }
-                that.setFragment("_dialogFilterInit", this.frgIdFilterInit, "FilterInit", this);                
+                that.setFragment("_dialogFilterInit", this.frgIdFilterInit, "FilterInit", this);
                  that._onClearComponentFilter(that.getI18nText("sStateInit"), [], true);
                 that._onClearDataFilter();
-         },      
+         },
         _onClearComponentFilter: function (sState, oComponent, bOtherComponent) {
             if (sState === that.getI18nText("sStateInit")) {
                 let oContent = that["_dialogFilterInit"].getContent()[0];
@@ -329,7 +329,7 @@ sap.ui.define([
             const sCustomer = jData.Customer;
             const oModel = this.getOwnerComponent().getModel("oModelEntity");
             if (!oModel) {
-                console.error("El modelo oModelEntity no está definido en el componente.");
+                void 0;
                 return;
             }
             sap.ui.core.BusyIndicator.show(0);
@@ -364,7 +364,7 @@ sap.ui.define([
             return new Promise((resolve, reject) => {
                 const oModel = this.getOwnerComponent().getModel("oModelEntity");
                 if (!oModel) {
-                    console.error("El modelo oModelEntity no está definido en el componente.");
+                    void 0;
                     reject("Modelo no definido");
                     return;
                 }
@@ -385,7 +385,7 @@ sap.ui.define([
                         }
                     },
                     error: (oError) => {
-                        console.error("Error al leer crédito:", oError);
+                        void 0;
                         reject(oError);
                     }
                 });
@@ -415,7 +415,7 @@ sap.ui.define([
                         let oVend = aVend.find(oExt => oExt.Customer === oCliente.Customer);
                         return {
                             ...oCliente,
-                            Seller: oVend ? oVend.Seller : "" 
+                            Seller: oVend ? oVend.Seller : ""
                         };
                     });
                     this.oModelProyect.setProperty("/oReporte", aReporte);
@@ -465,7 +465,7 @@ sap.ui.define([
                         aFilters.push(new sap.ui.model.Filter({ filters: aDocFilters, and: false }));
                     }
                     if (oBinding) {
-                        oBinding.filter(aFilters); 
+                        oBinding.filter(aFilters);
                     }
                     sap.ui.core.BusyIndicator.hide();
                 })
@@ -583,20 +583,13 @@ sap.ui.define([
             }
         },
         // para cambiar el idioma
-        onLanguageEsp: function () {
-            this._setLanguageModel("esp");
-        },
-
-        onLanguageEng: function () {
-            this._setLanguageModel("ing");
-        },
             FilterSelling: function () {
                 const that = this;
 
                 Promise.all([that._getClientPet(), that._getDatClient()])
                     .then((values) => {
-                        const oDataClientes = values[0]; 
-                        const oDataVendedores = values[1]; 
+                        const oDataClientes = values[0];
+                        const oDataVendedores = values[1];
                         let aClientes = oDataClientes.oResults || [];
                         let aVend = oDataVendedores.oResults || [];
                         let aVendedoresFiltrados = aVend.filter(oVend =>
@@ -744,15 +737,15 @@ sap.ui.define([
                         break;
                     case "FilterRazSocialDialog":
                         aFieldFilters = [
-                            "CustomerFullName", 
-                            "TaxNumber1", "TaxNumber2", "TaxNumber3", 
+                            "CustomerFullName",
+                            "TaxNumber1", "TaxNumber2", "TaxNumber3",
                             "TaxNumber4", "TaxNumber5", "TaxNumber6"
                         ];
                         break;
                     case "FilterDocumentDialog":
                         aFieldFilters = [
-                            "TaxNumber1", "TaxNumber2", "TaxNumber3", 
-                            "TaxNumber4", "TaxNumber5", "TaxNumber6", 
+                            "TaxNumber1", "TaxNumber2", "TaxNumber3",
+                            "TaxNumber4", "TaxNumber5", "TaxNumber6",
                             "CustomerFullName"
                         ];
                         break;
@@ -789,20 +782,20 @@ sap.ui.define([
             switch (sDialogId) {
                 case "FilterSellerDialog":
                     oMultiInput = this.byId("multiInputSeller");
-                    aKeyFields = ["Seller"];  
-                    aTextFields = ["kunn2"]; 
+                    aKeyFields = ["Seller"];
+                    aTextFields = ["kunn2"];
                     sFilterProp = "/Main/filter/fSeller";
                     break;
                 case "FilterCodClientDialog":
                     oMultiInput = this.byId("multiInputCodClient");
-                    aKeyFields = ["Customer"];  
-                    aTextFields = ["Customer"]; 
+                    aKeyFields = ["Customer"];
+                    aTextFields = ["Customer"];
                     sFilterProp = "/Main/filter/fCodClient";
                     break;
                 case "FilterRazSocialDialog":
                     oMultiInput = this.byId("multiInputRazonSocial");
-                    aKeyFields = ["CustomerFullName"];  
-                    aTextFields = ["CustomerFullName"]; 
+                    aKeyFields = ["CustomerFullName"];
+                    aTextFields = ["CustomerFullName"];
                     sFilterProp = "/Main/filter/fRazSocial";
                     break;
                 case "FilterDocumentDialog":
@@ -816,7 +809,7 @@ sap.ui.define([
             }
             if (aSelectedContexts && aSelectedContexts.length > 0 && oMultiInput) {
                 const aSelectedKeys = [];
-                oMultiInput.removeAllTokens(); 
+                oMultiInput.removeAllTokens();
 
                 aSelectedContexts.forEach(ctx => {
                     const oData = ctx.getObject();
@@ -868,7 +861,7 @@ sap.ui.define([
                     const oTable = this.byId("TableClient");
                     const oBinding = oTable.getBinding("items");
                     if (oBinding) {
-                        oBinding.filter([]); 
+                        oBinding.filter([]);
                     }
                 },
                     onSuggestSeller: function (e) {
@@ -941,7 +934,7 @@ sap.ui.define([
                 });
                 const keys = this._getTokenKeys(oMI);
                 this._setArray("/Main/filter/fSeller", keys);
-            }, 
+            },
 
             onTokenUpdateClient: function (oEvent) {
                 const oMI = this.byId("multiInputCodClient");
@@ -1009,7 +1002,7 @@ sap.ui.define([
         },
             formatTipoCambioLabel: function(oTipChangeData) {
 			if (!oTipChangeData || !oTipChangeData.from || !oTipChangeData.to) {
-				return "Tipo de cambio: N/A"; 
+				return "Tipo de cambio: N/A";
 			}
 			let fValorFrom = parseFloat(oTipChangeData.from.valor) || 0; // USD → PEN
 			let fValorTo   = parseFloat(oTipChangeData.to.valor)   || 0; // PEN → USD
@@ -1023,7 +1016,7 @@ sap.ui.define([
 			}).format(fValorTo);
 			return `TIPO CAMBIO:${oTipChangeData.to.moneda}: ${sValorFrom} ${oTipChangeData.from.moneda}`;
 		}
-        
+
 
     });
 });

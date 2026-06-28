@@ -143,7 +143,7 @@ sap.ui.define([
                 that.oModelProyect.refresh(true);
                 sap.ui.core.BusyIndicator.hide();
             }).catch(function (oError) {
-                console.error("Error inicializando AddManualProduct en modificación:", oError);
+                void 0;
                 that.getMessageBox("error", that.getI18nText("errorUserData") || "Error cargando datos de materiales.");
                 sap.ui.core.BusyIndicator.hide();
             });
@@ -184,34 +184,6 @@ sap.ui.define([
             // Limpieza fuerte de selección del Tree
             this._clearTreeSelectionDeferred();
             oProj.refresh(true);
-        },
-        _applyMetrajeFilterTree: function (aTree, fMetrosMin) {
-            const toNum = (v) => {
-                if (v == null || v === "") return 0;
-                if (typeof v === "string") v = v.replace(",", ".");
-                const n = parseFloat(v);
-                return isNaN(n) ? 0 : n;
-            };
-
-            const nMin = toNum(fMetrosMin);
-            if (nMin <= 0) return aTree || [];
-
-            const filterNode = (node) => {
-                if (!node) return null;
-
-                // Padre: usa TotalStockFisico (si no existe, intenta StockFisico)
-                if (node.isGroup) {
-                    const nTotal = toNum(node.TotalStockFisico ?? node.StockFisico);
-                    if (nTotal < nMin) return null;
-                    const children = Array.isArray(node.children) ? node.children : [];
-                    return { ...node, children };
-                }
-                return node;
-            };
-
-            return (aTree || [])
-                .map(filterNode)
-                .filter(Boolean);
         },
         _clearTreeSelection: function () {
             const oTree = this.byId("ttCer");
@@ -656,14 +628,7 @@ sap.ui.define([
 
             if (nStock < 0) nStock = 0;
 
-            console.log("🧪 VALIDAR CANTIDAD PALLET/CAJA", {
-                campo: sField,
-                valorDigitado: n,
-                stockDisponible: nStock,
-                esGrupo: bIsGroup,
-                rowPath: sRowPath,
-                row: JSON.parse(JSON.stringify(oRow))
-            });
+            void 0;
 
             const nBultoEntero = Math.max(0, Math.round(n));
 

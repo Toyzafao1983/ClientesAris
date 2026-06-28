@@ -115,8 +115,8 @@ sap.ui.define([
                 const aCab = oCabResp && Array.isArray(oCabResp.oResults) ? oCabResp.oResults : [];
                 const aItems = oItemResp && Array.isArray(oItemResp.oResults) ? oItemResp.oResults : [];
 
-                console.log("📌 CERÁMICOS DoRePe cabecera:", aCab.length, aCab);
-                console.log("📌 CERÁMICOS DoRePeItem posiciones:", aItems.length, aItems);
+                void 0;
+                void 0;
 
                 let oCab = aCab.length ? aCab[0] : null;
                 let oCabStorage = {};
@@ -129,7 +129,7 @@ sap.ui.define([
                         oCabStorage = JSON.parse(sCabStorage) || {};
                     }
                 } catch (e) {
-                    console.warn("No se pudo leer cabecera temporal:", e);
+                    void 0;
                 }
 
                 // Si DoRePe trae cabecera, manda DoRePe.
@@ -138,7 +138,7 @@ sap.ui.define([
                     oCab = Object.assign({}, oCabStorage, oCab);
                 } else if (Object.keys(oCabStorage).length) {
                     oCab = oCabStorage;
-                    console.warn("⚠️ DoRePe no trajo cabecera. Se usa cabecera temporal:", oCab);
+                    void 0;
                 }
 
                 if (oCab) {
@@ -147,7 +147,7 @@ sap.ui.define([
 
                 if (!oCab && Object.keys(oCabStorage).length) {
                     oCab = oCabStorage;
-                    console.warn("⚠️ DoRePe no trajo cabecera. Se usa cabecera temporal:", oCab);
+                    void 0;
                 }
 
                 if (!oCab) {
@@ -210,9 +210,9 @@ sap.ui.define([
                     "Moneda"
                 ) || "PEN";
 
-                console.log("✅ Cliente usado para cargar data adicional:", sCustomer);
-                console.log("✅ Cabecera DoRePe normalizada:", JSON.parse(JSON.stringify(oCab)));
-                console.log("✅ inputForm después del mapper:", oProj.getProperty("/inputForm") || {});
+                void 0;
+                void 0;
+                void 0;
 
                 return Promise.all([
                     this._getDatClientView(sCustomer, "1130"),
@@ -404,19 +404,16 @@ sap.ui.define([
 
                 const aMaterialesSim = oProj.getProperty("/oMaterial") || [];
 
-                console.log("🔁 Validando simulación automática Cerámicos:", {
-                    cantidadMateriales: aMaterialesSim.length,
-                    existeOnSimulateOrder: typeof this.onSimulateOrder === "function"
-                });
+                void 0;
 
                 if (aMaterialesSim.length && typeof this.onSimulateOrder === "function") {
                     setTimeout(function () {
-                        console.log("🚀 Ejecutando simulación automática Cerámicos...");
+                        void 0;
                         this.onSimulateOrder();
                     }.bind(this), 0);
                 }
             }.bind(this)).catch(function (oError) {
-                console.error("❌ Error cargando modificación de pedido CERÁMICOS:", oError);
+                void 0;
                 this.getMessageBox("error", "No se pudo cargar el pedido de Cerámicos para modificación.");
             }.bind(this)).finally(function () {
                 sap.ui.core.BusyIndicator.hide(0);
@@ -550,7 +547,7 @@ sap.ui.define([
             }
         },
 
-        // Llamada de anticipos y nota de credito 
+        // Llamada de anticipos y nota de credito
         _ensureCondicionPagoClienteEnLista: function () {
             const oModelProyect = this.getView().getModel("oModelProyect");
             const oModelData = this.getView().getModel("oModelData");
@@ -662,31 +659,6 @@ sap.ui.define([
                 oModelProyect.setProperty("/inputForm/txtCondPago", sVtext || sZterm);
             }
         },
-        _setDefaultCondicionPago: function () {
-            const oModelProyect = this.getView().getModel("oModelProyect");
-            const oModelData = this.getView().getModel("oModelData");
-            if (!oModelProyect || !oModelData) return;
-
-            const oClientData = oModelProyect.getProperty("/oClientData") || {};
-            const oInputForm = oModelProyect.getProperty("/inputForm") || {};
-            const aCondiciones = oModelData.getProperty("/oConditionPay") || [];
-            if (!oInputForm.cbCondPago && oClientData.zterm) {
-                const sCodigoCliente = oClientData.zterm;
-                const sDescripcionCliente = oClientData.vtext;
-                const oCondExistente = aCondiciones.find(c => c.Conditionn === sCodigoCliente);
-                if (!oCondExistente && sCodigoCliente && sDescripcionCliente) {
-                    aCondiciones.unshift({
-                        Conditionn: sCodigoCliente,
-                        DesCondition: sDescripcionCliente
-                    });
-                    oModelData.setProperty("/oConditionPay", aCondiciones);
-                }
-                oInputForm.cbCondPago = sCodigoCliente;
-                oInputForm.txtCondPago = sDescripcionCliente;
-                oModelProyect.setProperty("/inputForm", oInputForm);
-            }
-        },
-
         _applyObsFromPedidoReferenciaMod: function (oObsResp) {
             const oModel = this.getView().getModel("oModelProyect");
 
@@ -724,185 +696,12 @@ sap.ui.define([
                 oModel.setProperty("/inputForm/obsDelivery", sObsEntrega);
             }
 
-            console.log("📝 Observaciones aplicadas desde servicio:", {
-                obsPedido: sObsPedido,
-                obsDelivery: sObsEntrega,
-                raw: aObs
-            });
+            void 0;
         },
 
 
-        // Ejecutar pedido con referencia 
-        _getRefFieldsFromPos: function (pos) {
-            const pad6 = (n) => String(n || "").padStart(6, "0");
-
-            const sRefDoc = (pos.SalesDocument || pos.Vbeln || pos.RefDoc || pos.Document || "").toString().trim();
-            const sRefItmRaw = (pos.SalesDocumentItem || pos.Posnr || pos.RefItm || pos.Item || pos.ItmNumberRef || pos.ItmNumber || "").toString().trim();
-            const nItm = parseInt(sRefItmRaw, 10);
-            const sRefItm = isNaN(nItm) ? sRefItmRaw : pad6(nItm);
-
-            return {
-                RefDoc: sRefDoc,
-                RefItm: sRefItm
-                // Si tu backend requiere más (RefDocCat, RefType, etc.), agrégalos aquí
-                // RefDocCat: pos.RefDocCat || "",
-                // RefType  : pos.RefType || ""
-            };
-        },
-        _initMaterialFromReferencia: function () {
-            const oModel = this.getView().getModel("oModelProyect");
-            const oModelUser = this.getView().getModel("oModelUser");
-            if (!oModel) { return; }
-
-            const aPos = oModel.getProperty("/inputForm/posRefSeleccionadas") || [];
-            if (!aPos.length) { return; }
-
-            let aMaterialTech = oModel.getProperty("/oMaterial") || [];
-            let aMaterialUI = oModel.getProperty("/oMaterialUI") || [];
-            const oCantidades = oModel.getProperty("/oCantidades") || {};
-            const oCantidadesByItm = oModel.getProperty("/oCantidadesByItm") || {};
-            const oRefByItm = oModel.getProperty("/oRefByItm") || {};
-
-            const pad6 = (n) => String(n).padStart(6, "0");
-            const toNum = (v) => {
-                const n = parseFloat(v);
-                return isNaN(n) ? 0 : n;
-            };
-
-            let iMax = 0;
-            aMaterialTech.forEach(it => {
-                const n = parseInt(it.ItmNumber, 10);
-                if (!isNaN(n) && n > iMax) {
-                    iMax = n;
-                }
-            });
-
-            const nextItm = () => {
-                iMax += 10;
-                return pad6(iMax);
-            };
-
-            const sPlantDefault = oModel.getProperty("/oDatClient/Plant") || "1001";
-
-            const getRefFieldsFromPos = (pos) => {
-                return {
-                    RefDoc: pos.RefDoc || pos.Vbeln || pos.SalesDocument || "",
-                    RefDocIt: pos.RefDocIt || pos.RefItm || pos.Posnr || pos.ItmNumber || "",
-                    RefDocCa: pos.RefDocCa || pos.RefDocCat || pos.Vbtyp || ""
-                };
-            };
-
-            aPos.forEach(pos => {
-                const sMat = String(pos.Material || "").trim();
-                if (!sMat) { return; }
-
-                const sUMV = String(pos.UM || pos.TargetQu || "").trim() || "PAL";
-                const fQty = toNum(pos.CtdPedido || pos.CtdPendiente || pos.ReqQty || 0);
-                if (fQty <= 0) { return; }
-
-                const itm = nextItm();
-                const oRef = getRefFieldsFromPos(pos);
-
-                const oTech = {
-                    ItmNumber: itm,
-                    Material: sMat,
-                    Plant: sPlantDefault,
-                    TargetQu: sUMV,
-                    Zzcalibre: pos.Calibre || pos.Zzcalibre || "",
-                    Zztono: pos.Tono || pos.Zztono || "",
-                    Zzcalidad: pos.Calidad || pos.Zzcalidad || "",
-                    RefDoc: oRef.RefDoc || "",
-                    RefDocIt: oRef.RefDocIt || "",
-                    RefDocCa: oRef.RefDocCa || ""
-                };
-
-                const oUI = {
-                    ItmNumber: itm,
-                    Material: sMat,
-                    codigo: sMat,
-                    Descripcion: pos.Descripcion || pos.Description || pos.Descriptions || "",
-                    Descriptions: pos.Descripcion || pos.Description || pos.Descriptions || "",
-
-                    Pos: pos.Pos || "",
-                    Posicion: pos.Posicion || pos.Pos || pos.RefDocIt || "",
-
-                    Calibre: pos.Calibre || pos.Zzcalibre || "",
-                    Tono: pos.Tono || pos.Zztono || "",
-                    calidad: pos.Calidad || pos.Zzcalidad || "",
-                    UMV: sUMV,
-                    TargetQu: sUMV,
-
-                    cantidadPallets: (sUMV === "PAL") ? fQty : 0,
-                    cantidadCajas: (sUMV === "CJ") ? fQty : 0,
-                    cantidad: (sUMV !== "PAL" && sUMV !== "CJ") ? fQty : 0,
-
-                    StockDispo: pos.CtdPendiente || fQty,
-
-                    Pallets: toNum(pos.Pallets || pos.stockPallets || 0),
-                    Cajas: toNum(pos.Cajas || pos.Saldos || pos.stockCajas || 0),
-                    stockPallets: toNum(pos.Pallets || pos.stockPallets || 0),
-                    stockCajas: toNum(pos.Cajas || pos.Saldos || pos.stockCajas || 0),
-
-                    Kbetr: 0,
-                    subtotal: 0,
-                    descuentos: 0,
-                    impuesto: 0,
-                    total: 0,
-                    descuentoManualPctDisplay: 0,
-                    descuentoManualImporte: 0,
-                    esBolsa: false,
-
-                    RefDoc: oRef.RefDoc || "",
-                    RefDocIt: oRef.RefDocIt || "",
-                    RefDocCa: oRef.RefDocCa || ""
-                };
-
-                aMaterialTech.push(oTech);
-                aMaterialUI.push(oUI);
-
-                oCantidades[sMat] = {
-                    cantidad: fQty,
-                    cantidadPallets: (sUMV === "PAL") ? fQty : 0,
-                    cantidadCajas: (sUMV === "CJ") ? fQty : 0
-                };
-
-                oCantidadesByItm[itm] = {
-                    cantidad: fQty,
-                    cantidadPallets: (sUMV === "PAL") ? fQty : 0,
-                    cantidadCajas: (sUMV === "CJ") ? fQty : 0
-                };
-
-                oRefByItm[itm] = {
-                    RefDoc: oRef.RefDoc || "",
-                    RefDocIt: oRef.RefDocIt || "",
-                    RefDocCa: oRef.RefDocCa || ""
-                };
-            });
-
-            oModel.setProperty("/oMaterial", this._applyBloqueoEdicionCalidadSMod(aMaterialTech));
-            oModel.setProperty("/oMaterialUI", this._applyBloqueoEdicionCalidadSMod(aMaterialUI));
-            oModel.setProperty("/oCantidades", oCantidades);
-            oModel.setProperty("/oCantidadesByItm", oCantidadesByItm);
-            oModel.setProperty("/oRefByItm", oRefByItm);
-
-            oModel.setProperty("/inputForm/posRefSeleccionadas", []);
-            oModel.setProperty("/inputForm/needsInitFromRef", false);
-            oModel.refresh(true);
-
-            const bIsCliente =
-                !!oModelUser?.getProperty("/bIsCliente") ||
-                oModelUser?.getProperty("/customAttribute") === "customAttribute1" ||
-                oModelUser?.getProperty("/bRol") === "CLIENTES";
-
-            if (aMaterialTech.length) {
-                if (bIsCliente && typeof this.onSimulateOrderCliente === "function") {
-                    this.onSimulateOrderCliente();
-                } else if (typeof this.onSimulateOrder === "function") {
-                    this.onSimulateOrder();
-                }
-            }
-        },
-        // confirmacion de orden 
+        // Ejecutar pedido con referencia
+        // confirmacion de orden
         onConfirmCreateOrder: function () {
             const that = this;
 
@@ -1069,7 +868,7 @@ sap.ui.define([
                 sessionStorage.setItem("modPedCeramicosDraftPedido", sPedido);
                 sessionStorage.setItem("modPedCeramicosDraft", JSON.stringify(oDraft));
             } catch (e) {
-                console.warn("No se pudo guardar snapshot temporal de modificación Cerámicos:", e);
+                void 0;
             }
         },
 
@@ -1100,11 +899,7 @@ sap.ui.define([
                 oModel.setProperty("/modoModificacion", true);
                 oModel.refresh(true);
 
-                console.log("↩️ Retorno desde búsqueda de stock. Se conserva estado local del pedido:", {
-                    pedido: sPedidoActual,
-                    materiales: (oModel.getProperty("/oMaterialUI") || []).length,
-                    eliminados: (oModel.getProperty("/oMaterialDeletedMod") || []).length
-                });
+                void 0;
 
                 return true;
             }
@@ -1125,15 +920,11 @@ sap.ui.define([
                 oModel.setProperty("/modoModificacion", true);
                 oModel.refresh(true);
 
-                console.log("↩️ Retorno desde búsqueda de stock. Snapshot temporal restaurado:", {
-                    pedido: sPedidoActual,
-                    materiales: (oModel.getProperty("/oMaterialUI") || []).length,
-                    eliminados: (oModel.getProperty("/oMaterialDeletedMod") || []).length
-                });
+                void 0;
 
                 return true;
             } catch (e) {
-                console.warn("No se pudo restaurar snapshot temporal de modificación Cerámicos:", e);
+                void 0;
                 return false;
             }
         },
@@ -1159,7 +950,7 @@ sap.ui.define([
                         that._clearModPedCeramicosRuntimeState();
                     }
                 } catch (e) {
-                    console.error("Error limpiando estado de modificación Cerámicos:", e);
+                    void 0;
                 }
             }, 0);
         },
@@ -1173,7 +964,7 @@ sap.ui.define([
             try {
                 oRouter.navTo("View", {}, true);
             } catch (e) {
-                console.error("No se pudo navegar a View con navTo:", e);
+                void 0;
             }
             setTimeout(function () {
                 const sHashAfter = oHashChanger.getHash();
@@ -1184,15 +975,12 @@ sap.ui.define([
                 const bNoCambioHash = sHashAfter === sHashBefore;
 
                 if (bSigueEnModPed || bNoCambioHash) {
-                    console.warn("Fallback navegación: se fuerza retorno a la ruta inicial.", {
-                        hashBefore: sHashBefore,
-                        hashAfter: sHashAfter
-                    });
+                    void 0;
 
                     try {
                         oHashChanger.replaceHash("");
                     } catch (e) {
-                        console.error("No se pudo forzar replaceHash(''):", e);
+                        void 0;
                     }
                 }
             }, 100);
@@ -1802,39 +1590,6 @@ sap.ui.define([
 
             return m;
         },
-        _applyReservedToFlatStock: function (aRows) {
-            const toNum = v => isNaN(parseFloat(v)) ? 0 : parseFloat(v);
-            const mRes = this._getReservedMapFromPedido();
-
-            return (aRows || []).map(r => {
-                const k = this._buildStockKeyForRow(r);
-                const oRes = mRes[k] || { pal: 0, caj: 0, m2: 0 };
-
-                const nPal = Math.max(0, toNum(r.Pallets) - oRes.pal);
-                const nCaj = Math.max(0, toNum(r.Saldos) - oRes.caj);
-
-                // StockFisico a veces es M2, si no quieres restarlo, comenta esta línea
-                const nFis = Math.max(0, toNum(r.StockFisico) - oRes.m2);
-
-                return {
-                    ...r,
-
-                    // guarda originales por si quieres mostrar tooltip luego
-                    PalletsOrig: r.Pallets,
-                    SaldosOrig: r.Saldos,
-                    StockFisicoOrig: r.StockFisico,
-
-                    // los que ve el usuario (disponible)
-                    Pallets: Number(nPal.toFixed(3)),
-                    Saldos: Number(nCaj.toFixed(3)),
-                    StockFisico: Number(nFis.toFixed(3)),
-
-                    __reservedPal: Number(oRes.pal.toFixed(3)),
-                    __reservedCaj: Number(oRes.caj.toFixed(3))
-                };
-            });
-        },
-
         _prepareDataForCeramicos: function (aStock) {
             const map = new Map();
 
@@ -2010,18 +1765,7 @@ sap.ui.define([
                     if (nFactor > 0) {
                         const nM2 = nFactor * nQty;
 
-                        console.warn("⚠️ M2 calculado con factor existente del pedido:", {
-                            material: sMaterial,
-                            unidadBulto: sUnidad,
-                            cantidadBulto: nQty,
-                            factorM2: nFactor,
-                            m2Calculado: nM2,
-                            base: {
-                                ItmNumber: oBase.ItmNumber,
-                                cantidadM2: getM2(oBase),
-                                bultos: getBultos(oBase)
-                            }
-                        });
+                        void 0;
 
                         return nM2;
                     }
@@ -2054,14 +1798,7 @@ sap.ui.define([
             if (sUnidad === "CJ" && nM2Caja > 0) {
                 const nM2 = nM2Caja * nQty;
 
-                console.warn("⚠️ M2 calculado por factor caja desde descripción:", {
-                    material: sMaterial,
-                    unidadBulto: sUnidad,
-                    cantidadBulto: nQty,
-                    factorCajaM2: nM2Caja,
-                    m2Calculado: nM2,
-                    descripcion: r.Descripcion || r.Description || r.descripcion
-                });
+                void 0;
 
                 return nM2;
             }
@@ -2109,18 +1846,7 @@ sap.ui.define([
                         const nFactorPal = nCajasPorPallet * nM2Caja;
                         const nM2 = nFactorPal * nQty;
 
-                        console.warn("⚠️ M2 calculado por factor pallet desde stock/descripción:", {
-                            material: sMaterial,
-                            unidadBulto: sUnidad,
-                            cantidadBulto: nQty,
-                            factorCajaM2: nM2Caja,
-                            cajasPorPallet: nCajasPorPallet,
-                            factorPalletM2: nFactorPal,
-                            m2Calculado: nM2,
-                            stockFisico: nStockFisico,
-                            palletsStock: nPalletsStock,
-                            cajasStock: nCajasStock
-                        });
+                        void 0;
 
                         return nM2;
                     }
@@ -2158,16 +1884,7 @@ sap.ui.define([
                 return (nStockFisicoFinal / nCajasFinal) * nQty;
             }
 
-            console.warn("⚠️ No se pudo calcular M2 para material nuevo:", {
-                material: sMaterial,
-                unidadBulto: sUnidad,
-                cantidadBulto: nQty,
-                descripcion: r.Descripcion || r.Description || r.descripcion,
-                stockFisico: nStockFisicoFinal,
-                pallets: nPalletsFinal,
-                cajas: nCajasFinal,
-                row: JSON.parse(JSON.stringify(r || {}))
-            });
+            void 0;
 
             return 0;
         },
@@ -2231,14 +1948,9 @@ sap.ui.define([
                 oModel.setProperty("/modoModificacion", true);
                 oModel.refresh(true);
 
-                console.log("♻️ Snapshot de modificación Cerámicos restaurado antes de agregar material:", {
-                    pedido: sPedidoActual,
-                    materiales: (oModel.getProperty("/oMaterial") || []).length,
-                    cliente: oModel.getProperty("/oDatClient/Customer"),
-                    tipoDocumento: oModel.getProperty("/inputForm/tipDocument")
-                });
+                void 0;
             } catch (e) {
-                console.warn("No se pudo restaurar snapshot antes de agregar material Cerámicos:", e);
+                void 0;
             }
         },
 
@@ -2373,28 +2085,11 @@ sap.ui.define([
                     nM2 = that._calcM2FromStockRowFallbackMod(r, sUmv, fQtyBulto);
                     nM2 = toNum(nM2);
 
-                    console.warn("⚠️ M2 calculado por fallback desde stock:", {
-                        material: sMaterial,
-                        unidadBulto: sUmv,
-                        cantidadBulto: fQtyBulto,
-                        m2Fallback: nM2,
-                        stockFisico: r.StockFisico,
-                        totalStockFisico: r.TotalStockFisico,
-                        pallets: r.Pallets,
-                        totalPallets: r.TotalPallets,
-                        saldos: r.Saldos,
-                        totalSaldos: r.TotalSaldos,
-                        row: JSON.parse(JSON.stringify(r))
-                    });
+                    void 0;
                 }
 
                 if (nM2 <= 0) {
-                    console.warn("No se pudo calcular M2 para la posición nueva:", {
-                        material: sMaterial,
-                        unidadBulto: sUmv,
-                        cantidadBulto: fQtyBulto,
-                        row: JSON.parse(JSON.stringify(r))
-                    });
+                    void 0;
 
                     sap.m.MessageToast.show(
                         "No se pudo calcular los M2 para el material " + sMaterial + "."
@@ -2682,48 +2377,7 @@ sap.ui.define([
                 app: sCustomer
             });
         },
-        _getQtyFromCantidades: function (sMatKey, sField) {
-            const oModelProyect = this.getView().getModel("oModelProyect");
-            const oCant = oModelProyect.getProperty("/oCantidades") || {};
-            const oMatCant = oCant[sMatKey] || {};
-
-            const v = oMatCant[sField];
-
-            if (v === undefined || v === null || v === "") {
-                return 0;
-            }
-
-            const n = parseFloat(v);
-            return isNaN(n) ? 0 : n;
-        },
-        // Calcular El Peso Por fila 
-        _calcPesoRow: function (row) {
-            const toNum = v => {
-                const n = parseFloat(String(v || "0").replace(",", "."));
-                return isNaN(n) ? 0 : n;
-            };
-
-            const sMatnr = String(row.Material || row.codigo || "").trim();
-
-            if (!sMatnr) {
-                return Promise.resolve("0.000");
-            }
-            const nM2 = toNum(
-                row.cantidadM2 !== undefined && row.cantidadM2 !== null && row.cantidadM2 !== ""
-                    ? row.cantidadM2
-                    : row.cantidad !== undefined && row.cantidad !== null && row.cantidad !== ""
-                        ? row.cantidad
-                        : row.Cantidad
-            );
-
-            if (nM2 <= 0) {
-                return Promise.resolve("0.000");
-            }
-
-            return this._getPesoFromService(sMatnr, "M2", nM2)
-                .then(v => toNum(v).toFixed(3))
-                .catch(() => "0.000");
-        },
+        // Calcular El Peso Por fila
         onSimulateOrderCliente: async function () {
 
             const oModelProyect = this.getView().getModel("oModelProyect");
@@ -2890,36 +2544,36 @@ sap.ui.define([
 
             const oModelEntity = this._getOrCreateOModelEntity();
 
-            console.log("📤 Payload simulación Cerámicos:", JSON.parse(JSON.stringify(oPayload)));
-            console.table(oPayload.HeaderToItem || []);
-            console.table(oPayload.HeaderToSchedule || []);
-            console.table(oPayload.HeaderToPartners || []);
+            void 0;
+            void 0;
+            void 0;
+            void 0;
             // VALIDACIÓN ANTES DE SIMULAR
             if (!oPayload.ClientId || !oPayload.DocType || !oPayload.SalesOrg || !oPayload.Division) {
                 sap.ui.core.BusyIndicator.hide();
                 sap.m.MessageBox.error("Faltan datos de cabecera para simular: cliente, tipo documento, organización o división.");
-                console.error("❌ Payload incompleto:", oPayload);
+                void 0;
                 return;
             }
 
             if (!oPayload.HeaderToItem || !oPayload.HeaderToItem.length) {
                 sap.ui.core.BusyIndicator.hide();
                 sap.m.MessageBox.error("No hay posiciones válidas para simular.");
-                console.error("❌ HeaderToItem vacío:", oPayload);
+                void 0;
                 return;
             }
 
             if (!oPayload.HeaderToSchedule || !oPayload.HeaderToSchedule.length) {
                 sap.ui.core.BusyIndicator.hide();
                 sap.m.MessageBox.error("No hay cantidades válidas para simular.");
-                console.error("❌ HeaderToSchedule vacío:", oPayload);
+                void 0;
                 return;
             }
 
             if (!oPayload.HeaderToPartners || !oPayload.HeaderToPartners.length) {
                 sap.ui.core.BusyIndicator.hide();
                 sap.m.MessageBox.error("No hay interlocutores válidos para simular.");
-                console.error("❌ HeaderToPartners vacío:", oPayload);
+                void 0;
                 return;
             }
 
@@ -2937,10 +2591,7 @@ sap.ui.define([
             if (!Object.keys(mPriceConditionTypes).length) {
                 sap.ui.core.BusyIndicator.hide();
 
-                console.error("❌ PriceConditions respondió, pero no se identificaron descuentos:", {
-                    SalesOrg: sSalesOrgSim,
-                    PriceConditions: oPriceCondResp.oResults
-                });
+                void 0;
 
                 sap.m.MessageBox.error(
                     "El servicio PriceConditions respondió, pero no se identificaron condiciones de descuento para la organización " +
@@ -2950,8 +2601,8 @@ sap.ui.define([
                 return;
             }
 
-            console.log("📌 PriceConditions usadas para descuentos:", oPriceCondResp.oResults);
-            console.log("📌 CondTypes activos para descuento:", mPriceConditionTypes);
+            void 0;
+            void 0;
 
             oModelEntity.create("/iHeaderSet", oPayload, {
                 success: async (oResponse) => {
@@ -3070,7 +2721,7 @@ sap.ui.define([
                     aReporte = await this._enrichBultosFromOrderDetailsMod(aReporte);
                     aReporte = this._restoreManualBultosInReporteMod(aReporte);
 
-                    console.log("🧪 REPORTE FINAL DESPUÉS DE RESTAURAR MANUALES", JSON.parse(JSON.stringify(aReporte)));
+                    void 0;
 
                     const subtotalGeneral = aReporte.reduce((acc, item) => acc + toNumber(item.total), 0);
                     const embalajeTotal = aConditions.filter(c => c.CondType === "ZRFN").reduce((acc, c) => acc + toNumber(c.Condvalue), 0);
@@ -3127,7 +2778,7 @@ sap.ui.define([
         },
         onSimulateOrder: async function () {
             if (this._bSimulacionCeramicosEnProceso) {
-                console.warn("⏳ Simulación Cerámicos omitida porque ya hay una simulación en proceso.");
+                void 0;
                 return;
             }
 
@@ -3340,18 +2991,18 @@ sap.ui.define([
 
             const oModelEntity = this._getOrCreateOModelEntity();
 
-            console.log("📤 Payload simulación Cerámicos:", JSON.parse(JSON.stringify(oPayload)));
-            console.table(oPayload.HeaderToItem || []);
-            console.table(oPayload.HeaderToSchedule || []);
-            console.log("🔎 oMaterial usado para simular:", JSON.parse(JSON.stringify(aItemsTech)));
-            console.log("🔎 oMaterialUI usado para simular:", JSON.parse(JSON.stringify(aMaterialUI)));
-            console.table(oPayload.HeaderToPartners || []);
+            void 0;
+            void 0;
+            void 0;
+            void 0;
+            void 0;
+            void 0;
             // VALIDACIÓN ANTES DE SIMULAR
             if (!oPayload.ClientId || !oPayload.DocType || !oPayload.SalesOrg || !oPayload.Division) {
                 this._bSimulacionCeramicosEnProceso = false;
                 sap.ui.core.BusyIndicator.hide();
                 sap.m.MessageBox.error("Faltan datos de cabecera para simular: cliente, tipo documento, organización o división.");
-                console.error("❌ Payload incompleto:", oPayload);
+                void 0;
                 return;
             }
 
@@ -3359,7 +3010,7 @@ sap.ui.define([
                 this._bSimulacionCeramicosEnProceso = false;
                 sap.ui.core.BusyIndicator.hide();
                 sap.m.MessageBox.error("No hay posiciones válidas para simular.");
-                console.error("❌ HeaderToItem vacío:", oPayload);
+                void 0;
                 return;
             }
 
@@ -3367,7 +3018,7 @@ sap.ui.define([
                 this._bSimulacionCeramicosEnProceso = false;
                 sap.ui.core.BusyIndicator.hide();
                 sap.m.MessageBox.error("No hay cantidades válidas para simular.");
-                console.error("❌ HeaderToSchedule vacío:", oPayload);
+                void 0;
                 return;
             }
 
@@ -3375,7 +3026,7 @@ sap.ui.define([
                 this._bSimulacionCeramicosEnProceso = false;
                 sap.ui.core.BusyIndicator.hide();
                 sap.m.MessageBox.error("No hay interlocutores válidos para simular.");
-                console.error("❌ HeaderToPartners vacío:", oPayload);
+                void 0;
                 return;
             }
 
@@ -3394,10 +3045,7 @@ sap.ui.define([
             if (!Object.keys(mPriceConditionTypes).length) {
                 sap.ui.core.BusyIndicator.hide();
 
-                console.error("❌ PriceConditions respondió, pero no se identificaron descuentos:", {
-                    SalesOrg: sSalesOrgSim,
-                    PriceConditions: oPriceCondResp.oResults
-                });
+                void 0;
 
                 sap.m.MessageBox.error(
                     "El servicio PriceConditions respondió, pero no se identificaron condiciones de descuento para la organización " +
@@ -3407,8 +3055,8 @@ sap.ui.define([
                 return;
             }
 
-            console.log("📌 PriceConditions usadas para descuentos:", oPriceCondResp.oResults);
-            console.log("📌 CondTypes activos para descuento:", mPriceConditionTypes);
+            void 0;
+            void 0;
 
             oModelEntity.create("/iHeaderSet", oPayload, {
                 success: async (oResponse) => {
@@ -3435,10 +3083,7 @@ sap.ui.define([
                             sMsg || "SAP devolvió un error de simulación. No se actualizarán precios ni descuentos."
                         );
 
-                        console.error("❌ Error de simulación SAP:", {
-                            HeaderToReturn: aReturnErrors,
-                            Payload: oPayload
-                        });
+                        void 0;
 
                         return;
                     }
@@ -3452,11 +3097,7 @@ sap.ui.define([
 
                     if (!aConditions.length) {
                         sap.m.MessageBox.error("No se recibió información válida de simulación desde SAP.");
-                        console.error("❌ Simulación sin condiciones válidas por posición:", {
-                            toConditionEx: aConditionsRaw,
-                            HeaderToReturn: aReturns,
-                            Payload: oPayload
-                        });
+                        void 0;
                         return;
                     }
 
@@ -3476,7 +3117,7 @@ sap.ui.define([
                         }
                     });
 
-                    console.log("📦 M2 devuelto por HeaderToReturn:", mM2ByItm);
+                    void 0;
                     const normItm = function (v) {
                         const s = String(v || "").trim();
                         const n = parseInt(s, 10);
@@ -3495,7 +3136,7 @@ sap.ui.define([
                         mCond[key].push(c);
                     });
 
-                    console.log("📦 Condiciones agrupadas por posición:", mCond);
+                    void 0;
 
                     const oCantByItmReporte = oModelProyect.getProperty("/oCantidadesByItm") || {};
                     const oManualBultosByItmReporte = oModelProyect.getProperty("/oManualBultosByItm") || {};
@@ -3514,15 +3155,7 @@ sap.ui.define([
                         const aCond = mCond[sItm] || [];
 
                         if (!aCond.length) {
-                            console.warn("⚠️ Sin condiciones de simulación para posición:", {
-                                ItmNumber: sItm,
-                                Material: mat.Material || mat.codigo,
-                                cantidad: mat.cantidad,
-                                Cantidad: mat.Cantidad,
-                                cantidadM2: mat.cantidadM2,
-                                cantidadPallets: mat.cantidadPallets,
-                                cantidadCajas: mat.cantidadCajas
-                            });
+                            void 0;
                         }
 
                         const precioBruto = aCond
@@ -3771,12 +3404,12 @@ sap.ui.define([
 
                     aReporte = this._restoreManualBultosInReporteMod(aReporte);
 
-                    console.log("🧪 ANTES ENRICH BULTOS", JSON.parse(JSON.stringify(aReporte)));
+                    void 0;
 
                     aReporte = await this._enrichBultosFromOrderDetailsMod(aReporte);
                     aReporte = this._restoreManualBultosInReporteMod(aReporte);
 
-                    console.log("🧪 DESPUÉS ENRICH BULTOS", JSON.parse(JSON.stringify(aReporte)));
+                    void 0;
 
                     const subtotalGeneral = aReporte.reduce((acc, item) => acc + toNumber(item.total), 0);
                     const embalajeTotal = aConditions.filter(c => c.CondType === "ZRFN").reduce((acc, c) => acc + toNumber(c.Condvalue), 0);
@@ -3948,7 +3581,7 @@ sap.ui.define([
                     this._bSimulacionCeramicosEnProceso = false;
                     sap.ui.core.BusyIndicator.hide();
                     sap.m.MessageBox.error("Error en la simulación");
-                    console.error("Error:", oError);
+                    void 0;
                 }
             });
         },
@@ -4409,10 +4042,7 @@ sap.ui.define([
                 const oOrig = mSapOriginalByItm[sItm];
 
                 if (!oOrig) {
-                    console.warn("Se ignora D porque la posición no existe como original SAP:", {
-                        ItmNumber: sItm,
-                        item: it
-                    });
+                    void 0;
                     return;
                 }
 
@@ -4658,7 +4288,7 @@ sap.ui.define([
                 return true;
             });
 
-            console.log("🧪 DEBUG D finales para payload:", JSON.parse(JSON.stringify(aDeletedItems)));
+            void 0;
 
             const mCurrentInsertedByItm = {};
 
@@ -4769,11 +4399,7 @@ sap.ui.define([
                 if (bEsInsert && mDeletedFinalByItm[sOld]) {
                     const sNew = fnNextFreeItm();
 
-                    console.warn("Se renumera posición nueva para evitar conflicto I/D:", {
-                        oldItm: sOld,
-                        newItm: sNew,
-                        item: it
-                    });
+                    void 0;
 
                     it.ItmNumber = sNew;
                     it.OriginalItmNumber = sNew;
@@ -5085,14 +4711,14 @@ sap.ui.define([
             if (!oPayload.ClientId || !oPayload.DocType || !oPayload.SalesOrg || !oPayload.Division) {
                 sap.ui.core.BusyIndicator.hide();
                 sap.m.MessageBox.error("Faltan datos de cabecera para simular: cliente, tipo documento, organización o división.");
-                console.error("❌ Payload incompleto:", oPayload);
+                void 0;
                 return;
             }
 
             if (!oPayload.HeaderToItem || !oPayload.HeaderToItem.length) {
                 sap.ui.core.BusyIndicator.hide();
                 sap.m.MessageBox.error("No hay posiciones válidas para simular.");
-                console.error("❌ HeaderToItem vacío:", oPayload);
+                void 0;
                 return;
             }
 
@@ -5104,14 +4730,14 @@ sap.ui.define([
             if (bRequiereSchedule && (!oPayload.HeaderToSchedule || !oPayload.HeaderToSchedule.length)) {
                 sap.ui.core.BusyIndicator.hide();
                 sap.m.MessageBox.error("No hay cantidades válidas para guardar.");
-                console.error("❌ HeaderToSchedule vacío para posiciones I/U:", oPayload);
+                void 0;
                 return;
             }
 
             if (!oPayload.HeaderToPartners || !oPayload.HeaderToPartners.length) {
                 sap.ui.core.BusyIndicator.hide();
                 sap.m.MessageBox.error("No hay interlocutores válidos para simular.");
-                console.error("❌ HeaderToPartners vacío:", oPayload);
+                void 0;
                 return;
             }
 
@@ -5211,7 +4837,7 @@ sap.ui.define([
                             oDialog.destroy();
                         }
                     } catch (e) {
-                        console.warn("No se pudo destruir diálogo:", sDialogName, e);
+                        void 0;
                     }
 
                     this[sDialogName] = null;
@@ -5246,7 +4872,7 @@ sap.ui.define([
             try {
                 oRouter.navTo("View", {}, true);
             } catch (e) {
-                console.error("No se pudo navegar a la vista principal de Seguimiento:", e);
+                void 0;
 
                 if (oHashChanger) {
                     oHashChanger.replaceHash("");
@@ -5254,7 +4880,7 @@ sap.ui.define([
             }
         },
         _onPressRecalculateSimulation: function () {
-            console.log("🟡 Click en Recalcular simulación Cerámicos");
+            void 0;
 
             const oView = this.getView();
             const oModelUser = oView.getModel("oModelUser");
@@ -5267,12 +4893,7 @@ sap.ui.define([
             const oModelProyect = oView.getModel("oModelProyect");
             const aItems = oModelProyect?.getProperty("/oMaterial") || [];
 
-            console.log("🟡 Datos para recalcular:", {
-                bIsCliente: bIsCliente,
-                cantidadItems: aItems.length,
-                existeOnSimulateOrder: typeof this.onSimulateOrder === "function",
-                existeOnSimulateOrderCliente: typeof this.onSimulateOrderCliente === "function"
-            });
+            void 0;
 
             if (!aItems.length) {
                 sap.m.MessageToast.show("No hay ítems para recalcular.");
@@ -5300,12 +4921,8 @@ sap.ui.define([
             } catch (e) {
                 sap.ui.core.BusyIndicator.hide(0);
                 sap.m.MessageBox.error("Error al recalcular la simulación.");
-                console.error(e);
+                void 0;
             }
-        },
-        _onPressAddManual: function () {
-            this["_dialogAddProduct"].close();
-            this.setFragment("_dialogAddManualProduct", this.frgIdAddManualProduct, "AddManualProduct", this);
         },
         _onAcceptProductManual: function () {
             const oTree = this.byId("ttCer");
@@ -5424,61 +5041,13 @@ sap.ui.define([
                     }
                 }
             } catch (e) {
-                console.warn("No se pudo seleccionar automáticamente la fila:", e);
+                void 0;
             }
             this._updateCantidadM2TreeRow(oContext);
 
             oModel.refresh(true);
         },
-        _updateCantidadM2Fila: function (oContext) {
-            const oModel = oContext.getModel();
-            const oRow = oContext.getObject();
-
-            const toNum = (v) => {
-                const n = parseFloat(v);
-                return isNaN(n) ? 0 : n;
-            };
-
-            if (!toNum(oRow.cantidadM2BaseEdit)) {
-                oModel.setProperty(
-                    oContext.getPath() + "/cantidadM2BaseEdit",
-                    toNum(oRow.cantidadM2 || oRow.cantidad || oRow.Cantidad).toFixed(3)
-                );
-            }
-
-            if (!toNum(oRow.cantidadPalletsBaseEdit)) {
-                oModel.setProperty(
-                    oContext.getPath() + "/cantidadPalletsBaseEdit",
-                    toNum(oRow.cantidadPallets || oRow.Pallets).toFixed(3)
-                );
-            }
-
-            if (!toNum(oRow.cantidadCajasBaseEdit)) {
-                oModel.setProperty(
-                    oContext.getPath() + "/cantidadCajasBaseEdit",
-                    toNum(oRow.cantidadCajas || oRow.Cajas).toFixed(3)
-                );
-            }
-
-            const oRowUpdated = oModel.getProperty(oContext.getPath()) || {};
-            const nPal = toNum(oRowUpdated.cantidadPallets);
-            const nCaj = toNum(oRowUpdated.cantidadCajas);
-
-            let fTotalM2 = 0;
-
-            if (nPal > 0) {
-                fTotalM2 += this._getCantidadM2EditCeramico(oRowUpdated, "PAL", nPal);
-            }
-
-            if (nCaj > 0) {
-                fTotalM2 += this._getCantidadM2EditCeramico(oRowUpdated, "CJ", nCaj);
-            }
-
-            oModel.setProperty(oContext.getPath() + "/Cantidad", fTotalM2.toFixed(3));
-            oModel.setProperty(oContext.getPath() + "/cantidad", fTotalM2.toFixed(3));
-            oModel.setProperty(oContext.getPath() + "/cantidadM2", fTotalM2.toFixed(3));
-        },
-        // oData para cambiar las cantidades en M2 para las tablas 
+        // oData para cambiar las cantidades en M2 para las tablas
         _getValorFromMaterialService: function (sMatnr, sMeins, sUmv, fQty) {
             const that = this;
             return new Promise(function (resolve) {
@@ -5852,7 +5421,7 @@ sap.ui.define([
             this._syncStockRestanteEditDialog();
             this.setFragment("_dialogEditDetail", this.frgIdEditClient, "EditDetail", this);
         },
-        // Ayuda para pintar stock padre 
+        // Ayuda para pintar stock padre
         _buildStockKey: function (oItem) {
             const sMat = (oItem?.Material || oItem?.codigo || oItem?.Matnr || "").trim();
 
@@ -5953,7 +5522,7 @@ sap.ui.define([
             try {
                 aStock = await this._loadProductoSingle(aFiltersStock);
             } catch (e) {
-                console.error("Error consultando stock para edición:", e);
+                void 0;
                 return {
                     pal: 0,
                     caj: 0,
@@ -6084,7 +5653,7 @@ sap.ui.define([
         },
 
 
-        // Step input de midificar cantidad en stock 
+        // Step input de midificar cantidad en stock
         onEditDetalleCantidadChange: function (oEvent) {
             const oStep = oEvent.getSource();
             const oModel = this.getView().getModel("oModelProyect");
@@ -6535,20 +6104,6 @@ sap.ui.define([
                 this.onSimulateOrder();
             }
         },
-        _getAcumuladoPedidoPorMaterial: function (sMatnr) {
-            const oModel = this.getView().getModel("oModelProyect");
-            const aUI = oModel.getProperty("/oMaterialUI") || [];
-            const toNum = v => isNaN(parseFloat(v)) ? 0 : parseFloat(v);
-
-            let pal = 0, caj = 0;
-            aUI.forEach(r => {
-                const m = (r.Material || r.codigo || "").trim();
-                if (m !== sMatnr) return;
-                pal += toNum(r.cantidadPallets);
-                caj += toNum(r.cantidadCajas);
-            });
-            return { pal, caj };
-        },
         _onCloseEditDetail: function () {
             if (this._dialogEditDetail) this._dialogEditDetail.close();
         },
@@ -6822,7 +6377,7 @@ sap.ui.define([
             oModel.setProperty("/inputForm", oData);
             return true;
         },
-        // Modificación de Detail 
+        // Modificación de Detail
         onDetailEdit: function () {
             const oModel = this.getView().getModel("oModelProyect");
             const oInputForm = oModel.getProperty("/inputForm") || {};
@@ -6944,9 +6499,7 @@ sap.ui.define([
             oModel.setProperty("/isFormEnabled", false);
             oModel.refresh(true);
 
-            console.log("✅ Cabecera editada sincronizada:", JSON.parse(JSON.stringify(
-                oModel.getProperty("/inputForm") || {}
-            )));
+            void 0;
 
             sap.m.MessageToast.show("Condiciones comerciales actualizadas.");
         },
@@ -7159,40 +6712,6 @@ sap.ui.define([
             oModel.setProperty("/inputForm/destinoCeramicoText", [sName, sAddr].filter(Boolean).join(" - "));
 
             this._updateResumenEntrega();
-        },
-        _updateFormState: function () {
-            let oModelProyect = this.getView().getModel("oModelProyect");
-            const sTipoDoc = oModelProyect.getProperty("/inputForm/tipDocument") || "";
-            const bShowSeparationDates =
-                sTipoDoc === "ZPSE" ||
-                sTipoDoc === "ZCNA" ||
-                sTipoDoc === "ZACN";
-            oModelProyect.setProperty("/inputForm/showSeparationDates", bShowSeparationDates);
-            let sMoneda = "PEN";
-            oModelProyect.setProperty("/inputForm/moneda", sMoneda);
-            oModelProyect.setProperty("/inputForm/isMaterialEnabled", sTipoDoc !== "ZPEE");
-            const bShowReasonOrd = (sTipoDoc === "ZGNA");
-            oModelProyect.setProperty("/inputForm/showReasonOrd", bShowReasonOrd);
-            if (!bShowReasonOrd) {
-                oModelProyect.setProperty("/inputForm/reasonOrd", "");
-                oModelProyect.setProperty("/inputForm/txtReasonOrd", "");
-            }
-            if (!bShowSeparationDates) {
-                oModelProyect.setProperty("/inputForm/fechInicio", "");
-                oModelProyect.setProperty("/inputForm/fechFin", "");
-            }
-        },
-        getDocumento: function (oContext) {
-            if (!oContext) return "";
-            return (
-                oContext.TaxNumber1 ||
-                oContext.TaxNumber2 ||
-                oContext.TaxNumber3 ||
-                oContext.TaxNumber4 ||
-                oContext.TaxNumber5 ||
-                oContext.TaxNumber6 ||
-                ""
-            );
         },
         _cleanPayload: function (oData) {
             return JSON.parse(JSON.stringify(oData, (key, value) => {
@@ -7853,12 +7372,7 @@ sap.ui.define([
             oModel.setProperty("/oCantidadesByItm", oCantidadesByItm);
             oModel.setProperty("/oRefByItm", oRefByItm);
 
-            console.log("✅ Mapper modificación Cerámicos:", {
-                inputForm: JSON.parse(JSON.stringify(oModel.getProperty("/inputForm") || {})),
-                oDatClient: JSON.parse(JSON.stringify(oModel.getProperty("/oDatClient") || {})),
-                oClientData: JSON.parse(JSON.stringify(oModel.getProperty("/oClientData") || {})),
-                materiales: aMaterialUI.length
-            });
+            void 0;
 
             oModel.refresh(true);
         },
@@ -8665,14 +8179,12 @@ sap.ui.define([
 
                     oModel.setProperty("/bBultoOrderDetailsInicializado", true);
                 } else if (!bSnapshotInicializado && bHayCambiosUsuario) {
-                    console.warn(
-                        "No se actualiza snapshot original porque ya existen cambios del usuario."
-                    );
+                    void 0;
                 }
 
                 return aEnriched;
             } catch (e) {
-                console.warn("No se pudo enriquecer pallets/cajas desde OrderDetails:", e);
+                void 0;
                 return aUI;
             }
         },
@@ -9215,13 +8727,7 @@ sap.ui.define([
                 z0: sZ0Inicial
             });
 
-            console.log("📌 Entrega inicial capturada para modificación:", {
-                tipoEntrega: sTipoEntrega,
-                destino: sDestinoInicial,
-                agencia: sAgenciaInicial,
-                we: sWEInicial,
-                z0: sZ0Inicial
-            });
+            void 0;
         },
 
         _buildHeaderToItemSimCeramicos: function (aItemsTech) {

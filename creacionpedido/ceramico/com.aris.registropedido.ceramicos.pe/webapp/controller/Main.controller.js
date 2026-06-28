@@ -344,13 +344,6 @@ sap.ui.define([
             oMulti.addToken(oToken);
             oProj.setProperty("/Main/filter/fSeller", [sBP]);
         },
-        _onPressFilterInit: function () {
-            const tbReporte = this._byId("vbTableMain").getItems().length > 0 ? this._byId("vbTableMain").getItems()[0] : null;
-            if (!this.isEmpty(tbReporte)) { tbReporte.removeSelections(true); }
-            that.setFragment("_dialogFilterInit", this.frgIdFilterInit, "FilterInit", this);
-            that._onClearComponentFilter(that.getI18nText("sStateInit"), [], true);
-            that._onClearDataFilter();
-        },
         _onClearComponentFilter: function (sState, oComponent, bOtherComponent) {
             if (sState === that.getI18nText("sStateInit")) {
                 let oContent = that["_dialogFilterInit"].getContent()[0];
@@ -380,7 +373,7 @@ sap.ui.define([
             const sCustomer = jData.Customer;
             const oModel = this.getOwnerComponent().getModel("oModelEntity");
             if (!oModel) {
-                console.error("El modelo oModelEntity no está definido en el componente.");
+                void 0;
                 return;
             }
             sap.ui.core.BusyIndicator.show(0);
@@ -418,7 +411,7 @@ sap.ui.define([
             return new Promise((resolve, reject) => {
                 const oModel = this.getOwnerComponent().getModel("oModelEntity");
                 if (!oModel) {
-                    console.error("El modelo oModelEntity no está definido en el componente.");
+                    void 0;
                     reject("Modelo no definido");
                     return;
                 }
@@ -439,7 +432,7 @@ sap.ui.define([
                         }
                     },
                     error: (oError) => {
-                        console.error("Error al leer crédito:", oError);
+                        void 0;
                         reject(oError);
                     }
                 });
@@ -674,13 +667,6 @@ sap.ui.define([
             }
         },
         // para cambiar el idioma
-        onLanguageEsp: function () {
-            this._setLanguageModel("esp");
-        },
-
-        onLanguageEng: function () {
-            this._setLanguageModel("ing");
-        },
         FilterSelling: function () {
             const that = this;
 
@@ -987,50 +973,6 @@ sap.ui.define([
         onTokenUpdateDocument: function (oEvent) {
             const keys = this._getTokenKeys(this.byId("multiInputDocument"));
             this._setArray("/Main/filter/fDocument", keys);
-        },
-        _buildTableFilters: function (jFilter) {
-            const F = sap.ui.model.Filter, FO = sap.ui.model.FilterOperator;
-            const a = [];
-
-            if (jFilter.fSeller?.length) {
-                a.push(new F({
-                    filters: jFilter.fSeller.map(k =>
-                        new F({ filters: [new F("Seller", FO.EQ, k), new F("txt13", FO.EQ, k)], and: false })
-                    ),
-                    and: false
-                }));
-            }
-            if (jFilter.fCodClient?.length) {
-                a.push(new F({ filters: jFilter.fCodClient.map(k => new F("Customer", FO.EQ, k)), and: false }));
-            }
-            if (jFilter.fRazSocial?.length) {
-                a.push(new F({
-                    filters: jFilter.fRazSocial.map(k =>
-                        new F({ filters: [new F("CustomerFullName", FO.Contains, k)], and: false })
-                    ),
-                    and: false
-                }));
-            }
-
-            if (jFilter.fRazSocial?.length) {
-                a.push(new F({
-                    filters: jFilter.fRazSocial.map(k =>
-                        new F({
-                            filters: [
-                                new F("CustomerFullName", FO.Contains, k),
-                                new F("TaxNumber1", FO.Contains, k),
-                                new F("TaxNumber2", FO.Contains, k),
-                                new F("TaxNumber3", FO.Contains, k),
-                                new F("TaxNumber4", FO.Contains, k),
-                                new F("TaxNumber5", FO.Contains, k),
-                                new F("TaxNumber6", FO.Contains, k)
-                            ], and: false
-                        })
-                    ),
-                    and: false
-                }));
-            }
-            return a;
         },
         formatTipoCambioLabel: function (oTipChangeData) {
             if (!oTipChangeData || !oTipChangeData.from || !oTipChangeData.to) {

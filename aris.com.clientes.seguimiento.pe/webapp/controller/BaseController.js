@@ -63,7 +63,7 @@ sap.ui.define([
 							var oDataTemp = model.getData();
 							resolve(oDataTemp);
 						}).catch(err => {
-							console.log("Error:" + err.message);
+							void 0;
 							reject(err);
 						});
 					}
@@ -93,9 +93,9 @@ sap.ui.define([
 			oModel.loadData("/services/userapi/attributes");
 			return new Promise(function (resolve, reject) {
 				oModel.attachRequestCompleted(function onCompleted(oEvent) {
-					console.log("--------------------------:---------------------------");
-					console.log(oEvent);
-					console.log(oModel);
+					void 0;
+					void 0;
+					void 0;
 					if (oEvent.getParameter("success")) {
 						resolve(oModel.getData());
 					} else {
@@ -232,24 +232,24 @@ sap.ui.define([
 			writeFile(fileToSave);
 
 			function writeFile() {
-				console.log("request file system");
+				void 0;
 				window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, onFileSystemRetrieved, onFileSystemFail);
 			}
 
 			function onFileSystemRetrieved(fileSystem) {
-				console.log("file system retrieved");
+				void 0;
 				fileSystem.root.getFile(fileName, {
 					create: true
 				}, onFileEntryRetrieved, onFileSystemFail);
 			}
 
 			function onFileEntryRetrieved(fileEntry) {
-				console.log("file entry retrieved");
+				void 0;
 				fileEntry.createWriter(gotFileWriter, onFileSystemFail);
 			}
 
 			function gotFileWriter(writer) {
-				console.log("write to file");
+				void 0;
 
 				writer.onwrite = function (evt) {
 					alert('done');
@@ -260,7 +260,7 @@ sap.ui.define([
 			}
 
 			function onFileSystemFail(error) {
-				console.log(error.code);
+				void 0;
 				alert(error.code)
 			}
 		},
@@ -1055,7 +1055,7 @@ sap.ui.define([
 			var root = roots[roots.length - 1];
 			var json = {};
 			parse(root, json);
-			console.log(json);
+			void 0;
 		},
 		onColorForState: function (value) {
 			var sReturn;
@@ -1956,7 +1956,7 @@ sap.ui.define([
 			} else if (langKey === "ing") {
 				bundleName = "aris.com.clientes.seguimiento.pe.i18n.i18n_ing";
 			} else {
-				console.warn("Idioma no soportado:", langKey);
+				void 0;
 				return;
 			}
 
@@ -2381,7 +2381,7 @@ sap.ui.define([
 						});
 				});
 			} catch (e) {
-				console.warn("No se pudo inicializar ShellUIService:", e);
+				void 0;
 			}
 		},
 		_getDatClient: function (sSalesOrg) {
@@ -2810,7 +2810,7 @@ sap.ui.define([
 										aRaw = oData.d.results;
 									}
 								} catch (e) {
-									console.error("❌ Error normalizando respuesta de MarMat:", e);
+									void 0;
 									aRaw = [];
 								}
 								const aFiltered = (aRaw || []).filter(function (row) {
@@ -2844,7 +2844,7 @@ sap.ui.define([
 								resolve(oResp);
 							},
 							error: function (message) {
-								console.error("❌ Error OData MarMat:", message);
+								void 0;
 								oResp.oResults = [];
 
 								const oModelData = that.getView().getModel("oModelData");
@@ -2871,7 +2871,7 @@ sap.ui.define([
 				return new Promise(function (resolve, reject) {
 					let sUrl = "";
 					if (!sCustomer) {
-						console.warn("⚠️ No se proporcionó sCustomer en _getAddresTravel");
+						void 0;
 						resolve(oResp);
 						return;
 					}
@@ -3083,7 +3083,7 @@ sap.ui.define([
 			const that = this;
 			return new Promise((resolve) => {
 				if (!sBP) {
-					console.warn("⚠️ No se recibió BP válido para _getSalesOrgByBP");
+					void 0;
 					resolve([]);
 					return;
 				}
@@ -3101,7 +3101,7 @@ sap.ui.define([
 					sUrl = sPath;
 				}
 
-				console.log("📡 Consultando iBpSalesOrganizationSet para BP:", sBP, "→", sUrl);
+				void 0;
 
 				Services.getoDataERPSync(that, sUrl, function (result) {
 					util.response.validateAjaxGetERPNotMessage(result, {
@@ -3121,11 +3121,11 @@ sap.ui.define([
 							});
 
 							const aUnique = [...new Set(aSalesOrgs)];
-							console.log("🏢 Unidades organizacionales (SALES_ORG) encontradas:", aUnique);
+							void 0;
 							resolve(aUnique);
 						},
 						error: function (err) {
-							console.error("💥 Error consultando unidades organizacionales:", err);
+							void 0;
 							resolve([]);
 						}
 					});

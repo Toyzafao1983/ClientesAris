@@ -162,15 +162,11 @@ sap.ui.define([
                     return aPermitidos.includes(String(doc.auart || "").trim().toUpperCase());
                 });
 
-                console.log("TIPDOC ALL:", aTipDocsAll);
-                console.log("TIPDOC país:", sCountry);
-                console.log("TIPDOC rol:", {
-                    bIsCliente,
-                    bIsVendedor,
-                    bIsCoord
-                });
-                console.log("TIPDOC permitidos:", aPermitidos);
-                console.log("TIPDOC filtrados:", aTipDocsFiltrados);
+                void 0;
+                void 0;
+                void 0;
+                void 0;
+                void 0;
 
                 oModelData.setProperty("/oTipDocumentData", aTipDocsFiltrados);
 
@@ -183,7 +179,7 @@ sap.ui.define([
                     oModelProyect.setProperty("/oPrincipalSeller", oPrincipalSeller);
                 }
 
-                console.log("PrincipalSeller CustSalesPartnertNerFunc:", oPrincipalSeller);
+                void 0;
 
                 const aDatClient = values[9]?.oResults || [];
                 const oClientDataCurrent = aDatClient.find(function (item) {
@@ -199,11 +195,7 @@ sap.ui.define([
                     oPrincipalSeller
                 );
 
-                console.log("Seller principal resuelto:", {
-                    oClientDataCurrent: oClientDataCurrent,
-                    oPrincipalSeller: oPrincipalSeller,
-                    oSellerPrincipal: oSellerPrincipal
-                });
+                void 0;
 
                 const aSellerRaw = values[14]?.oResults || [];
                 const mSeller = new Map();
@@ -267,11 +259,7 @@ sap.ui.define([
                 oModelProyect.setProperty("/oClientData/kunn2", oSellerPrincipalFinal.kunn2 || "");
                 oModelProyect.setProperty("/oClientData/Seller", oSellerPrincipalFinal.Seller || "");
 
-                console.log("FORMCLIENT Seller principal final aplicado:", {
-                    aSellerOptions: aSellerOptions,
-                    oSellerPrincipalOriginal: oSellerPrincipal,
-                    oSellerPrincipalFinal: oSellerPrincipalFinal
-                });
+                void 0;
 
                 const aAgencias = values[10]?.oResults || [];
                 if (aAgencias.length) {
@@ -294,7 +282,7 @@ sap.ui.define([
                     });
                 });
 
-                console.log("TypeShipment normalizado:", aTypeShipment);
+                void 0;
 
                 oModelData.setProperty("/oTypeShipment", aTypeShipment);
                 const aPortEmbarkationRaw = values[16]?.oResults || [];
@@ -678,7 +666,7 @@ sap.ui.define([
                     .replace(/[\u0300-\u036f]/g, "");
             };
 
-            console.log("Buscando Ventas Courier en TypeShipment:", aTypeShipment);
+            void 0;
 
             // Primero busca exactamente Ventas Courier, para no tomar "Muestras Courier".
             const oVentasCourier = aTypeShipment.find(function (oItem) {
@@ -855,17 +843,14 @@ sap.ui.define([
                 oModelProyect.setProperty("/inputForm/tipoEmbarque", String(oTipoEmbarqueCourier.sKey).trim());
                 oModelProyect.setProperty("/inputForm/tipoEmbarqueText", oTipoEmbarqueCourier.sText || "Ventas Courier / BY COURIER");
 
-                console.log("Tipo de embarque aplicado para exterior ZPEF:", {
-                    key: oTipoEmbarqueCourier.sKey,
-                    text: oTipoEmbarqueCourier.sText
-                });
+                void 0;
             } else {
                 // Fallback controlado según catálogo visto en Network:
                 // Code "05" = Ventas Courier / BY COURIER.
                 oModelProyect.setProperty("/inputForm/tipoEmbarque", "05");
                 oModelProyect.setProperty("/inputForm/tipoEmbarqueText", "Ventas Courier / BY COURIER");
 
-                console.warn("No se encontró Ventas Courier por texto, se aplicó fallback Code 05.");
+                void 0;
             }
 
             oModelProyect.refresh(true);
@@ -1070,7 +1055,7 @@ sap.ui.define([
                     JSON.stringify(oDataToDetail)
                 );
 
-                console.log("FORMCLIENT -> Seller enviado a Detail:", oDataToDetail);
+                void 0;
 
                 this._hideBusy();
                 this.getRouter().navTo("Detail", { app: sCustomer });
@@ -1668,7 +1653,7 @@ sap.ui.define([
                                     });
                                 });
 
-                                console.log("📌 Clientes referencia mapeados:", aMap);
+                                void 0;
 
                                 oResp.oResults = aMap;
                                 resolve(oResp);
@@ -1839,9 +1824,9 @@ sap.ui.define([
             }
         },
 
-        // Manejo de Dialog Para Referencia 
+        // Manejo de Dialog Para Referencia
 
-        // Para Documentos Pendientes 
+        // Para Documentos Pendientes
         onOpenPedidoConReferencia: function () {
             const oModelProyect = this.getView().getModel("oModelProyect");
             const sTipDocument = oModelProyect.getProperty("/inputForm/tipDocument") || "";
@@ -2008,14 +1993,14 @@ sap.ui.define([
                         },
                         error: function (/* message */) {
                             sap.ui.core.BusyIndicator.hide(0);
-                            console.error("❌ Error al leer observaciones desde ObserPedSet");
+                            void 0;
                             resolve();
                         }
                     });
                 });
             });
         },
-        // Para la tabla Final 
+        // Para la tabla Final
         _loadPosicionesDocumento: function (oDocHeader) {
             const oModel = this.getView().getModel("oModelProyect");
             const sSalesDocument =
@@ -2078,14 +2063,9 @@ sap.ui.define([
 
                         oModel.refresh(true);
 
-                        console.log("📌 Grupo de materiales tomado desde primera posición DoRePeItem:", {
-                            SalesDocument: sSalesDocument,
-                            MaterialGroup: sGrupoMaterial,
-                            DscMaterialGroup: sDescGrupoMaterial,
-                            FirstItem: oFirstItem
-                        });
+                        void 0;
                     } else {
-                        console.warn("⚠️ Primera posición DoRePeItem no trajo MaterialGroup:", oFirstItem);
+                        void 0;
                     }
                 }
 
@@ -2307,7 +2287,7 @@ sap.ui.define([
             ).trim();
 
             if (!sCodMotivo) {
-                console.warn("⚠️ DoRePe no trajo CodMotivoPedido para el documento de referencia:", oRaw);
+                void 0;
                 return;
             }
 
@@ -2339,11 +2319,7 @@ sap.ui.define([
             oModel.setProperty("/inputForm/reasonOrd", sCodMotivo);
             oModel.setProperty("/inputForm/txtReasonOrd", sTextoMotivo);
 
-            console.log("📌 Motivo pedido tomado desde DoRePe:", {
-                SalesDocument: oRaw.SalesDocument || oDocRef.DocComercial,
-                CodMotivoPedido: sCodMotivo,
-                txtReasonOrd: sTextoMotivo
-            });
+            void 0;
         },
 
         _applyCabeceraFromDoRePeReferencia: function (oDocRef) {
@@ -2824,25 +2800,10 @@ sap.ui.define([
                     }, 0);
                 }
 
-                console.log("📌 Condición de pago tomada desde documento de referencia:", {
-                    PaymentCondition: sCondPagoRefKey,
-                    DesCondition: sCondPagoRefText
-                });
+                void 0;
             }
 
-            console.log("📌 Cabecera DoRePe aplicada a pedido con referencia Textil:", {
-                rawKeys: Object.keys(oRaw),
-                SalesDocument: oRaw.SalesDocument || oDocRef.DocComercial,
-                CodMotivoPedido: sCodMotivo,
-                GrupoMaterial: sGrupoMaterial,
-                DeliveryCondition: sDeliveryCondition,
-                ShippingDestination: sShippingDestination,
-                FinalDestination: sFinalDestination,
-                TipoEntregaAplicado: oInputForm.tipoEntrega,
-                DestinoAplicado: oInputForm.destinoTextil,
-                AgenciaAplicada: oInputForm.direccionAgencia,
-                inputForm: JSON.parse(JSON.stringify(oInputForm))
-            });
+            void 0;
         },
 
         onDocPendientesContinuar: function () {
@@ -2965,7 +2926,7 @@ sap.ui.define([
                 }
             });
         },
-        //Inicializa el pedido con referencia 
+        //Inicializa el pedido con referencia
         onTipoReferenciaCancelar: function () {
             if (this._oDlgTipoRef) {
                 this._oDlgTipoRef.close();
@@ -3079,15 +3040,11 @@ sap.ui.define([
                 return aPermitidos.includes(String(doc.auart || "").trim().toUpperCase());
             });
 
-            console.log("REAPLICA TIPDOC -> país:", sCountry);
-            console.log("REAPLICA TIPDOC -> es Perú:", bClientePE);
-            console.log("REAPLICA TIPDOC -> rol:", {
-                bIsCliente: bIsCliente,
-                bIsVendedor: bIsVendedor,
-                bIsCoord: bIsCoord
-            });
-            console.log("REAPLICA TIPDOC -> permitidos:", aPermitidos);
-            console.log("REAPLICA TIPDOC -> filtrados:", aTipDocsFiltrados);
+            void 0;
+            void 0;
+            void 0;
+            void 0;
+            void 0;
 
             oModelData.setProperty("/oTipDocumentData", aTipDocsFiltrados);
 
@@ -3193,10 +3150,7 @@ sap.ui.define([
             oModel.setProperty("/inputForm/puertoEmbarque", sKey);
             oModel.setProperty("/inputForm/puertoEmbarqueText", sText);
 
-            console.log("Puerto destino sincronizado FormClient:", {
-                puertoEmbarque: sKey,
-                puertoEmbarqueText: sText
-            });
+            void 0;
         },
 
         onPuertoEmbarqueChange: function () {

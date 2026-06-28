@@ -45,9 +45,9 @@ sap.ui.define([
                     sEstado = oEstadoResp.oResults[0].EstadoGeneral || "";
                 } else {
                     sEstado = "";
-                    console.warn("⚠️ _getEstadoGeneral no devolvió resultados para", sNumPedido);
+                    void 0;
                 }
-                console.log("✅ EstadoGeneral obtenido:", sEstado);
+                void 0;
 
                 let aInvoices = [];
                 if (oEstadoResp && Array.isArray(oEstadoResp.oResults)) {
@@ -61,7 +61,7 @@ sap.ui.define([
                         }
                     });
                 }
-                console.log("🧾 Invoices encontradas:", aInvoices);
+                void 0;
 
                 return Promise.all([
                     this._getData(sNumPedido),
@@ -173,11 +173,11 @@ sap.ui.define([
 
                 return that._getDireccionCliente(sNumPedido);
             }).then(oDir => {
-                console.log("📍 Dirección cargada en despachos:", oDir.Direccion);
+                void 0;
                 sap.ui.core.BusyIndicator.hide(0);
 
             }).catch((oError) => {
-                console.error("❌ Error en handleRouteMatched:", oError);
+                void 0;
                 that.getMessageBox("error", that.getI18nText("errorUserData"));
                 sap.ui.core.BusyIndicator.hide(0);
             });
@@ -219,7 +219,7 @@ sap.ui.define([
                         sUrl = sPath;
                     }
 
-                    console.log("➡️ Ejecutando _getData con URL:", sUrl);
+                    void 0;
 
                     Services.getoDataERPSync(that, sUrl, function (result) {
                         util.response.validateAjaxGetERPNotMessage(result, {
@@ -238,182 +238,6 @@ sap.ui.define([
                         });
                     });
 
-                });
-            } catch (oError) {
-                that.getMessageBox("error", that.getI18nText("sErrorTry"));
-            }
-        },
-        _getDataPedido2: function (sNumPedido, sEstado) {
-            that = this;
-            try {
-                var oResp = { sEstado: "E", oResults: [], aDeliveries: [] };
-
-                return new Promise(function (resolve) {
-                    let sUrl = "";
-                    let sFilter = "$filter=SalesDocument eq '" + sNumPedido + "'";
-
-                    if (that.local) {
-                        const sPath = "/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/OrderDetails" +
-                            "?" + sFilter + "&$format=json&sap-language=ES";
-                        sUrl = that.getOwnerComponent().getManifestObject().resolveUri(sPath);
-                    } else {
-                        const sPath = jQuery.sap.getModulePath(that.route) +
-                            "/S4HANA/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/OrderDetails" +
-                            "?" + sFilter + "&$format=json&sap-language=ES";
-                        sUrl = sPath;
-                    }
-
-                    Services.getoDataERPSync(that, sUrl, function (result) {
-                        util.response.validateAjaxGetERPNotMessage(result, {
-                            success: function (oData) {
-                                oResp.sEstado = "S";
-                                console.log("📦 Respuesta cruda OrderDetails:", oData);
-
-                                let data = oData.data || [];
-                                if (!Array.isArray(data)) {
-                                    data = [data]; // si es un solo registro, lo forzamos como array
-                                }
-
-                                console.log("📊 Registros originales sin procesar:", data.length);
-                                console.table(data);
-
-                                // === 1) Recolectar deliveries únicos ===
-                                const setDeliveries = new Set();
-                                data.forEach(item => {
-                                    if (item.DeliveryDocument && item.DeliveryDocument.trim() !== "") {
-                                        setDeliveries.add(item.DeliveryDocument);
-                                    }
-                                });
-                                oResp.aDeliveries = Array.from(setDeliveries);
-
-                                // === 2) Agrupar por posición (SalesDocumentItem) ===
-                                const grouped = {};
-                                data.forEach(item => {
-                                    let pos = item.SalesDocumentItem || "0000";
-                                    if (!grouped[pos]) {
-                                        grouped[pos] = {
-                                            ...item,
-                                            TotalDelivered: 0
-                                        };
-                                    }
-                                    let delivered = parseFloat(item.QuantityInBaseUnit) || 0;
-                                    grouped[pos].TotalDelivered += delivered;
-                                });
-
-                                // === 3) Calcular pendiente + Estado de posición ===
-                                let normalized = Object.values(grouped).map(r => {
-                                    const EPS = 1e-4; // tolerancia
-                                    let ordered = parseFloat(r.OrderQuantity).toFixed(2) || 0;
-                                    let delivered = parseFloat(r.QuantityConvert).toFixed(2) || 0;
-                                    let pending = ordered - delivered;
-                                    if (Math.abs(pending) < EPS) pending = 0;
-
-                                    let EstadoPosicion = "";
-                                    switch (sEstado) {
-                                        case "Pend. Aprobación":
-                                        case "Pendiente Aprobación":
-                                        case "Pend. Aprobacion":
-                                        case "Pendiente Aprobacion":
-                                            EstadoPosicion = "Por aprobar";
-                                            break;
-
-                                        case "Rechazado":
-                                            EstadoPosicion = "Cerrado";
-                                            break;
-
-                                        case "Aprobado":
-                                            EstadoPosicion = "Aprobado";
-                                            break;
-
-                                        case "Finalizado":
-                                            EstadoPosicion = "Cerrado";
-                                            break;
-
-                                        case "Facturado":
-                                        case "Facturacion":
-                                            EstadoPosicion = "Cerrado";
-                                            break;
-
-                                        case "En preparación":
-                                        case "En preparacion":
-                                            if (pending <= EPS) {
-                                                EstadoPosicion = "Cerrada";
-                                            } else if (delivered <= EPS) {
-                                                EstadoPosicion = "Pendiente";
-                                            } else {
-                                                EstadoPosicion = "Parcial";
-                                            }
-                                            break;
-
-                                        default:
-                                            EstadoPosicion = "";
-                                    }
-                                    let nroPaletas = 0;
-                                    let nroCajas = 0;
-                                    let PalletUmren = parseFloat(r.PalletUmren) || 0;
-                                    let PalletUmrez = parseFloat(r.PalletUmrez) || 0;
-                                    let CajaUmren = parseFloat(r.CajaUmren) || 0;
-                                    let CajaUmrez = parseFloat(r.CajaUmrez) || 0;
-                                    let orderQty = parseFloat(r.OrderQuantity) || 0;
-
-                                    nroPaletas = PalletUmrez !== 0 ? (orderQty * PalletUmren) / PalletUmrez : 0;
-
-                                    nroCajas = CajaUmrez !== 0 ? (orderQty * CajaUmren) / CajaUmrez : 0;
-
-                                    let tipBultoRaw = r.TipBulto || r.tipbulto || "";
-                                    let TipBultoFinal = (tipBultoRaw && tipBultoRaw.trim() !== "")
-                                        ? tipBultoRaw
-                                        : "C";
-                                    console.log(
-                                        `➡️ Pos ${r.SalesDocumentItem} | Estado=${sEstado} | Ordered=${ordered} | Delivered=${delivered} | Pending=${pending} | EstadoPos=${EstadoPosicion}`
-                                    );
-
-                                    return {
-                                        ...r,
-                                        OrderQuantity: parseFloat(ordered).toFixed(2),
-                                        TotalDelivered: parseFloat(delivered).toFixed(2),
-                                        PendingQuantity: parseFloat(pending).toFixed(2) < 0 ? 0 : pending,
-                                        EstadoPosicion,
-                                        NroPaletas: parseFloat(nroPaletas).toFixed(0),
-                                        NroCajas: parseFloat(nroCajas).toFixed(0),
-                                        TipBulto: TipBultoFinal
-                                    };
-                                });
-
-                                // 👇 asegurar que si hay un solo registro también se muestre
-                                if (normalized.length === 0 && data.length === 1) {
-                                    let item = data[0];
-                                    let ord = parseFloat(item.OrderQuantity).toFixed(2) || 0;
-                                    let del = parseFloat(item.QuantityConvert).toFixed(2) || 0;
-                                    normalized = [{
-                                        ...item,
-                                        OrderQuantity: parseFloat(item.OrderQuantity).toFixed(2) || 0,
-                                        TotalDelivered: del,
-                                        PendingQuantity: ord - del,
-                                        EstadoPosicion: sEstado,
-                                        TipBulto: TipBultoFinal
-                                    }];
-                                }
-
-                                console.log("📊 Normalizados con EstadoPosicion:", normalized);
-                                console.table(normalized, [
-                                    "SalesDocumentItem",
-                                    "OrderQuantity",
-                                    "TotalDelivered",
-                                    "PendingQuantity",
-                                    "EstadoPosicion"
-                                ]);
-
-                                oResp.oResults = normalized;
-                                resolve(oResp);
-                            },
-                            error: function () {
-                                oResp.oResults = [];
-                                oResp.aDeliveries = [];
-                                resolve(oResp);
-                            }
-                        });
-                    });
                 });
             } catch (oError) {
                 that.getMessageBox("error", that.getI18nText("sErrorTry"));
@@ -682,7 +506,7 @@ sap.ui.define([
                         sUrl = sPath;
                     }
 
-                    console.log("➡️ Ejecutando _getDataDespacho con URL:", sUrl);
+                    void 0;
 
                     Services.getoDataERPSync(that, sUrl, function (result) {
                         util.response.validateAjaxGetERPNotMessage(result, {
@@ -722,7 +546,7 @@ sap.ui.define([
                         merged = merged.concat(r.oResults);
                     }
                 });
-                console.log("📋 Despachos consolidados:", merged);
+                void 0;
 
                 return merged;
             });
@@ -732,36 +556,36 @@ sap.ui.define([
             let that = this;
             try {
                 if (!Array.isArray(aInvoices) || aInvoices.length === 0) {
-                    console.warn("⚠️ _getDataFacturas llamado sin facturas");
+                    void 0;
                     return Promise.resolve({ sEstado: "E", oResults: [] });
                 }
 
-                console.log("📝 Facturas a consultar:", aInvoices);
+                void 0;
 
                 // 1️⃣ Crear promesas por cada factura usando la nueva CDS
                 let promises = aInvoices.map(inv => {
-                    console.log("➡️ Preparando consulta para Invoice:", inv);
+                    void 0;
                     return this._getDataFactura(inv);
                 });
 
                 // 2️⃣ Ejecutarlas en paralelo
                 return Promise.all(promises).then(results => {
-                    console.log("✅ Resultados individuales de _getDataFactura:", results);
+                    void 0;
 
                     let merged = [];
                     results.forEach((r, idx) => {
-                        console.log(`📌 Resultado [${idx}] -> Estado:`, r.sEstado, " Registros:", (r.oResults || []).length);
+                        void 0;
                         if (r.sEstado === "S" && Array.isArray(r.oResults)) {
                             merged = merged.concat(r.oResults);
                         }
                     });
 
-                    console.log("🧾 Facturas consolidadas con Notas de Crédito:", merged);
+                    void 0;
                     return { sEstado: "S", oResults: merged };
                 });
 
             } catch (oError) {
-                console.error("❌ Error en _getDataFacturas:", oError);
+                void 0;
                 that.getMessageBox("error", that.getI18nText("sErrorTry"));
                 return Promise.resolve({ sEstado: "E", oResults: [] });
             }
@@ -772,7 +596,7 @@ sap.ui.define([
             let that = this;
             try {
                 var oResp = { sEstado: "E", oResults: [] };
-                console.log("el numero de factura es: " + Invoice);
+                void 0;
 
                 let sFilter = "$filter=Invoice eq '" + Invoice + "'";
 
@@ -787,7 +611,7 @@ sap.ui.define([
                         sUrl = sPath;
                     }
 
-                    console.log("🔗 Ejecutando CDS FacNCND con URL:", sUrl);
+                    void 0;
 
                     Services.getoDataERPSync(that, sUrl, function (result) {
                         util.response.validateAjaxGetERPNotMessage(result, {
@@ -833,7 +657,7 @@ sap.ui.define([
                     });
                 });
             } catch (oError) {
-                console.error("💥 Error en _getDataFactura:", oError);
+                void 0;
                 that.getMessageBox("error", that.getI18nText("sErrorTry"));
                 return Promise.resolve({ sEstado: "E", oResults: [] });
             }
@@ -864,7 +688,7 @@ sap.ui.define([
                         util.response.validateAjaxGetERPNotMessage(resultQ, {
                             success: function (oDataQ) {
                                 if (!oDataQ.data || !Array.isArray(oDataQ.data)) {
-                                    console.warn("⚠️ OrderForQuotation vacío");
+                                    void 0;
                                     resolve({ sEstado: "S", oResults: [] });
                                     return;
                                 }
@@ -879,7 +703,7 @@ sap.ui.define([
                                     return;
                                 }
 
-                                console.log("📌 Orderr relacionados:", aOrders);
+                                void 0;
 
                                 let sSalesOrg = that.sSalesOrg || "1110";
                                 let sFilter = "$filter=SalesOrganization eq '" + sSalesOrg +
@@ -913,7 +737,7 @@ sap.ui.define([
                                         success: function (oData) {
                                             oResp.sEstado = "S";
                                             if (!oData.data || !Array.isArray(oData.data)) {
-                                                console.warn("⚠️ oData.data no es array");
+                                                void 0;
                                                 oResp.oResults = [];
                                                 resolve(oResp);
                                                 return;
@@ -965,7 +789,7 @@ sap.ui.define([
                                             });
                                         },
                                         error: function (err) {
-                                            console.error("❌ Error backend OrderTracking:", err);
+                                            void 0;
                                             oResp.oResults = [];
                                             resolve(oResp);
                                         }
@@ -973,14 +797,14 @@ sap.ui.define([
                                 });
                             },
                             error: function (errQ) {
-                                console.error("❌ Error backend OrderForQuotation:", errQ);
+                                void 0;
                                 resolve({ sEstado: "S", oResults: [] });
                             }
                         });
                     });
                 });
             } catch (e) {
-                console.error("💥 EXCEPTION en _getDataFil:", e);
+                void 0;
                 that.getMessageBox("error", that.getI18nText("sErrorTry"));
             }
         },
@@ -1026,7 +850,7 @@ sap.ui.define([
             try {
                 // 👇 importante: usar mayúscula
                 let sFilter = "$filter=Invoice eq '" + sInvoice + "'";
-                console.log("🔎 Consultando Notas de Crédito para Invoice:", sInvoice);
+                void 0;
 
                 return new Promise(function (resolve) {
                     let sUrl = "";
@@ -1039,7 +863,7 @@ sap.ui.define([
                         sUrl = sPath;
                     }
 
-                    console.log("🔗 Ejecutando CDS GetNCND con URL:", sUrl);
+                    void 0;
 
                     Services.getoDataERPSync(that, sUrl, function (result) {
                         util.response.validateAjaxGetERPNotMessage(result, {
@@ -1058,210 +882,8 @@ sap.ui.define([
                 });
 
             } catch (e) {
-                console.error("💥 Error en _getNotasCredito:", e);
+                void 0;
                 return Promise.resolve([]);
-            }
-        },
-        _getEstadoGeneral2: function (sNumPedido) {
-            var that = this;
-            try {
-                var oResp = { sEstado: "E", oResults: [] };
-                let sFilter = "$filter=SalesDocument eq '" + sNumPedido + "'";
-
-                return new Promise(function (resolve) {
-                    let sUrl = "";
-                    if (that.local) {
-                        const sPath = `/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/DocumentFlow2?$top=8000&${sFilter}&$format=json&sap-language=ES`;
-                        sUrl = that.getOwnerComponent().getManifestObject().resolveUri(sPath);
-                    } else {
-                        const sPath = jQuery.sap.getModulePath(that.route) +
-                            `/S4HANA/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/DocumentFlow2?$top=8000&${sFilter}&$format=json&sap-language=ES`;
-                        sUrl = sPath;
-                    }
-
-                    Services.getoDataERPSync(that, sUrl, function (result) {
-                        util.response.validateAjaxGetERPNotMessage(result, {
-                            success: function (oData) {
-                                oResp.sEstado = "S";
-                                let data = Array.isArray(oData.data) ? oData.data : [];
-
-                                // 1) Normalizar duplicados (SalesDocument|Delivery|Invoice)
-                                const grouped = {};
-                                data.forEach(r => {
-                                    const key = `${r.SalesDocument}|${r.Delivery}|${r.Invoice}`;
-                                    if (!grouped[key]) {
-                                        grouped[key] = {
-                                            ...r,
-                                            // guardamos todos los documentos de compensación
-                                            ClearingDocument: r.ClearingDocument ? [r.ClearingDocument] : []
-                                        };
-                                    } else {
-                                        if (r.ClearingDocument && !grouped[key].ClearingDocument.includes(r.ClearingDocument)) {
-                                            grouped[key].ClearingDocument.push(r.ClearingDocument);
-                                        }
-                                    }
-                                });
-                                const normalized = Object.values(grouped);
-
-                                // 2) Agrupar por pedido
-                                const bySalesDoc = normalized.reduce((acc, r) => {
-                                    (acc[r.SalesDocument] ||= []).push(r);
-                                    return acc;
-                                }, {});
-
-                                const aFinal = [];
-
-                                for (const [salesDoc, records] of Object.entries(bySalesDoc)) {
-                                    // ---------------------------
-                                    // A) DETERMINAR ESTADO BASE
-                                    // ---------------------------
-                                    let EstadoGeneral = "";
-
-                                    // Entregas presentes?
-                                    const deliveries = [...new Set(records.map(r => r.Delivery).filter(Boolean))];
-
-                                    if (deliveries.length === 0) {
-                                        // Sin entregas: evaluar i_salesdocument (mismos criterios que en la general)
-                                        const r = records[0] || {};
-                                        if (r.OverallSDProcessStatus === "A" &&
-                                            r.OverallSDDocumentRejectionSts === "A" &&
-                                            r.OverallTotalDeliveryStatus === "A" &&
-                                            r.OverallDeliveryStatus === "A" &&
-                                            r.OverallDeliveryBlockStatus === "C") {
-                                            EstadoGeneral = "Pend. Aprobación";
-                                        } else if (r.OverallSDProcessStatus === "C" &&
-                                            r.OverallSDDocumentRejectionSts === "C" &&
-                                            r.OverallTotalDeliveryStatus === "C" &&
-                                            r.OverallDeliveryStatus === "A" &&
-                                            (r.OverallDeliveryBlockStatus === "C" || r.OverallDeliveryBlockStatus === "")) {
-                                            EstadoGeneral = "Rechazado";
-                                        } else if (r.OverallSDProcessStatus === "A" &&
-                                            r.OverallSDDocumentRejectionSts === "A" &&
-                                            r.OverallTotalDeliveryStatus === "A" &&
-                                            r.OverallDeliveryStatus === "A" &&
-                                            (!r.OverallDeliveryBlockStatus || r.OverallDeliveryBlockStatus.trim() === "")) {
-                                            EstadoGeneral = "Aprobado";
-                                        }
-                                    } else {
-                                        // Hay entregas → analizar facturas válidas (no anuladas) por entrega
-                                        const facturasValidas = records.filter(
-                                            r => r.Invoice && !r.BillingDocumentIsCancelled
-                                        );
-
-                                        // Para cada entrega, ¿existe alguna factura válida asociada?
-                                        const deliveriesWithInv = new Set(
-                                            facturasValidas.map(r => r.Delivery).filter(Boolean)
-                                        );
-
-                                        const allHaveInvoices = deliveries.length > 0 &&
-                                            deliveries.every(d => deliveriesWithInv.has(d));
-                                        const someHaveInvoices = deliveries.some(d => deliveriesWithInv.has(d));
-
-                                        if (!someHaveInvoices) {
-                                            // ninguna entrega con factura válida
-                                            EstadoGeneral = "En preparación";
-                                        } else if (someHaveInvoices && !allHaveInvoices) {
-                                            // mezcla: algunas con factura válida, otras sin
-                                            EstadoGeneral = "En preparación";
-                                        } else {
-                                            // todas las entregas tienen al menos una factura válida → ver compensación
-                                            const isCompensada = (r) =>
-                                                r.ClearingDocument && r.ClearingDocument.length > 0;
-
-                                            const allComp = facturasValidas.length > 0 &&
-                                                facturasValidas.every(isCompensada);
-                                            // si hay alguna compensada, pero no todas → sigue siendo Facturado
-                                            // si ninguna compensada → Facturado
-
-                                            EstadoGeneral = allComp ? "Finalizado" : "Facturado";
-                                        }
-                                    }
-
-                                    // ---------------------------
-                                    // B) MAPEO A FASES (COLORES)
-                                    // ---------------------------
-                                    let PendienteAprobacion = "";
-                                    let PedidoRechazado = "";
-                                    let Aprobado = "";
-                                    let EnPreparacion = ""; // "", "OK", "Parcial"
-                                    let Facturacion = "";   // "", "OK", "Parcial"
-                                    let Finalizado = "";
-
-                                    // Reglas según la tabla y respetando “arrastre”
-                                    switch (EstadoGeneral) {
-                                        case "Pend. Aprobación":
-                                            PendienteAprobacion = "OK";
-                                            break;
-
-                                        case "Rechazado":
-                                            PedidoRechazado = "OK";
-                                            break;
-
-                                        case "Aprobado":
-                                            PendienteAprobacion = "OK";
-                                            Aprobado = "OK";
-                                            break;
-
-                                        case "En preparación": {
-                                            // decidir OK vs Parcial según mezcla de entregas con/sin factura válida
-                                            const facturasValidas = records.filter(r => r.Invoice && !r.BillingDocumentIsCancelled);
-                                            const deliveries = [...new Set(records.map(r => r.Delivery).filter(Boolean))];
-                                            const deliveriesWithInv = new Set(facturasValidas.map(r => r.Delivery).filter(Boolean));
-                                            const allHave = deliveries.length > 0 && deliveries.every(d => deliveriesWithInv.has(d));
-                                            const someHave = deliveries.some(d => deliveriesWithInv.has(d));
-
-                                            PendienteAprobacion = "OK";
-                                            Aprobado = "OK";
-                                            EnPreparacion = (someHave && !allHave) ? "Parcial" : "OK";
-                                            // Si es parcial, también Facturado es Parcial 
-                                            if (EnPreparacion === "Parcial") {
-                                                Facturacion = "Parcial";
-                                            }
-                                            break;
-                                        }
-
-                                        case "Facturado":
-                                            // para llegar aquí, todas las entregas tienen factura válida
-                                            PendienteAprobacion = "OK";
-                                            Aprobado = "OK";
-                                            EnPreparacion = "OK";
-                                            Facturacion = "OK";
-                                            break;
-
-                                        case "Finalizado":
-                                            PendienteAprobacion = "OK";
-                                            Aprobado = "OK";
-                                            EnPreparacion = "OK";
-                                            Facturacion = "OK";
-                                            Finalizado = "OK";
-                                            break;
-                                    }
-
-                                    aFinal.push({
-                                        SalesDocument: salesDoc,
-                                        PendienteAprobacion,
-                                        PedidoRechazado,
-                                        Aprobado,
-                                        EnPreparacion,
-                                        Facturacion,
-                                        Finalizado,
-                                        EstadoGeneral,
-                                        RawRecords: records
-                                    });
-                                }
-
-                                oResp.oResults = aFinal;
-                                resolve(oResp);
-                            },
-                            error: function () {
-                                oResp.oResults = [];
-                                resolve(oResp);
-                            }
-                        });
-                    });
-                });
-            } catch (oError) {
-                that.getMessageBox("error", that.getI18nText("sErrorTry"));
             }
         },
         _createExtraModelCS: function (oResults) {
@@ -1290,9 +912,9 @@ sap.ui.define([
 
                 const oModelExtra = new sap.ui.model.json.JSONModel(aExtraData);
                 that.getView().setModel(oModelExtra, "oModelExtra"); // 👈 nuevo modelo SOLO para CS
-                console.log("✅ Modelo Extra creado para DetailCS:", aExtraData);
+                void 0;
             } catch (e) {
-                console.error("❌ Error creando oModelExtra:", e);
+                void 0;
             }
         },
         _getDireccionCliente: function (sNumPedido) {
@@ -1346,14 +968,14 @@ sap.ui.define([
                                 resolve({ Direccion: direccionFinal });
                             },
                             error: function () {
-                                console.error("❌ Error consultando DirDes");
+                                void 0;
                                 resolve({ Direccion: "" });
                             }
                         });
                     });
                 });
             } catch (e) {
-                console.error("💥 Exception en _getDireccionCliente:", e);
+                void 0;
                 return Promise.resolve({ Direccion: "" });
             }
         },

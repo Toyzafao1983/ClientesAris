@@ -316,12 +316,12 @@ sap.ui.define([
                     sap.ui.core.BusyIndicator.hide(0);
                     return;
                 }
-                console.warn("Usuario sin atributos válidos IAS");
+                void 0;
                 sap.ui.core.BusyIndicator.hide(0);
                 oRouter.navTo("AccessDenied");
 
             } catch (oError) {
-                console.error("Error en _validateAccessToPortal:", oError);
+                void 0;
                 sap.ui.core.BusyIndicator.hide(0);
                 const oRouter = sap.ui.core.UIComponent.getRouterFor(that);
                 oRouter.navTo("AccessDenied");
@@ -1109,10 +1109,6 @@ sap.ui.define([
             oModel.refresh(true);
             this._recalcTotalPeso();
         },
-        _onPressAddManual: function () {
-            this["_dialogAddProduct"].close();
-            this.setFragment("_dialogAddManualProduct", this.frgIdAddManualProduct, "AddManualProduct", this);
-        },
         _onAcceptProductManual: async function (oEvent) {
             const oModelProyect = this.getView().getModel("oModelProyect");
             const oData = oModelProyect.getData();
@@ -1180,11 +1176,11 @@ sap.ui.define([
                             };
                         });
                     } catch (eTax) {
-                        console.warn("Falló reconsulta de TaxClasification, se usará la data actual de la grilla:", eTax);
+                        void 0;
                     }
                 }
 
-                console.log("ANTES DE SIMULAR - aRows seleccionados válidos:", aRowsSelectedWithTax);
+                void 0;
 
                 const aBaseUI = oModelProyect.getProperty("/oMaterialUI") || [];
                 const aMaterialBase = oModelProyect.getProperty("/oMaterialBase") || [];
@@ -1195,17 +1191,14 @@ sap.ui.define([
                     TaxClasification: this._getMaterialTaxClassification(oRow)
                 }));
 
-                console.log("BASE EXISTENTE TAX:", aBaseExistente.map(x => ({
-                    Material: x.Material || x.Matnr,
-                    TaxClasification: x.TaxClasification
-                })));
+                void 0;
 
                 const oTaxRuleAdd = this._applyTaxClassificationRuleToRows(aRowsSelectedWithTax, aBaseExistente);
-                console.log("TAX RULE ADD COMPLETO:", oTaxRuleAdd);
-                console.log("TAX RULE ADD rows:", oTaxRuleAdd.rows);
-                console.log("TAX RULE ADD excludedNoIgv:", oTaxRuleAdd.excludedNoIgv);
-                console.log("TAX RULE ADD excludedOtros:", oTaxRuleAdd.excludedOtros);
-                console.log("TAX RULE ADD excludedInvalid:", oTaxRuleAdd.excludedInvalid);
+                void 0;
+                void 0;
+                void 0;
+                void 0;
+                void 0;
                 const aRows = oTaxRuleAdd.rows || [];
 
                 // Guardar materiales excluidos para mostrarlos después de la simulación
@@ -1293,7 +1286,7 @@ sap.ui.define([
                     aAddedItmNumbers.push(sItmNumber);
                 });
 
-                console.log("ANTES DE SIMULAR - oMaterialUI nuevo:", aMaterialUIPrev);
+                void 0;
 
                 oModelProyect.setProperty("/_tmpAddedItmNumbers", aAddedItmNumbers);
                 oModelProyect.setProperty("/oMaterial", aMaterialPrev);
@@ -1303,12 +1296,12 @@ sap.ui.define([
                 oEvent.getSource().getParent().close();
 
                 sap.ui.core.BusyIndicator.hide(0);
-                console.log("SE GUARDÓ pendingExcludedNoIgv:", oModelProyect.getProperty("/ui/pendingExcludedNoIgv"));
+                void 0;
                 setTimeout(() => this.onSimulateOrder(), 0);
 
             } catch (e) {
                 sap.ui.core.BusyIndicator.hide(0);
-                console.error("Error en _onAcceptProductManual:", e);
+                void 0;
                 sap.m.MessageBox.error("No se pudo validar la clasificación de impuesto de los materiales seleccionados.");
             }
         },
@@ -1613,19 +1606,8 @@ sap.ui.define([
                             });
                         }
                     });
-                    console.log("=== SIMULACIÓN / oMaterial ANTES DE ARMAR PAYLOAD ===");
-                    console.table(
-                        (aMatForSap || []).map(x => ({
-                            ItmNumber: x.ItmNumber,
-                            Material: x.Material || x.Matnr,
-                            RefDoc: x.RefDoc,
-                            RefDocIt: x.RefDocIt,
-                            RefDocCa: x.RefDocCa,
-                            precioBase: x.precioBase,
-                            usarPrecioManual: x.usarPrecioManual,
-                            descuentoManualPct: x.descuentoManualPct
-                        }))
-                    );
+                    void 0;
+                    void 0;
 
                     const aHeaderToItem = aMatForSap.map(item => {
                         const oItm = {
@@ -1674,20 +1656,8 @@ sap.ui.define([
                     const sPoSupplem = isClienteIAS ? "CLTE" : "VEND";
                     const extraPoSupplem = sPoSupplem ? { PoSupplem: sPoSupplem } : {};
 
-                    console.log("=== SIMULACIÓN / HeaderToItem ===");
-                    console.table(
-                        (aHeaderToItem || []).map(x => ({
-                            ItmNumber: x.ItmNumber,
-                            Material: x.Material,
-                            RefDoc: x.RefDoc,
-                            RefDocIt: x.RefDocIt,
-                            RefDocCa: x.RefDocCa,
-                            CondType: x.CondType,
-                            CondValue: x.CondValue,
-                            CdType2: x.CdType2,
-                            CdValue2: x.CdValue2
-                        }))
-                    );
+                    void 0;
+                    void 0;
 
                     const oPayload = this._cleanPayload({
                         ClientId: sCliente,
@@ -1724,15 +1694,15 @@ sap.ui.define([
                     const findCond = (conds, type, itmNumber) =>
                         conds.find(c => c.CondType === type && (!itmNumber || c.ItmNumber === itmNumber));
 
-                    console.log("=== SIMULACIÓN / PAYLOAD FINAL ===");
-                    console.log("DocType:", oPayload.DocType);
-                    console.log("ClientId:", oPayload.ClientId);
-                    console.log("SalesOrg:", oPayload.SalesOrg);
-                    console.log("PriceDate:", oPayload.PriceDate);
-                    console.log("HeaderToItem:", oPayload.HeaderToItem);
-                    console.log("HeaderToSchedule:", oPayload.HeaderToSchedule);
-                    console.log("HeaderToPartners:", oPayload.HeaderToPartners);
-                    console.log("toConditions:", oPayload.toConditions);
+                    void 0;
+                    void 0;
+                    void 0;
+                    void 0;
+                    void 0;
+                    void 0;
+                    void 0;
+                    void 0;
+                    void 0;
 
                     const oPriceCondResp = await this._getPriceConditionsBySalesOrg(sSalesOrg);
                     const mPriceConditionTypes = this._buildDiscountConditionTypeMap(oPriceCondResp.oResults);
@@ -1745,10 +1715,7 @@ sap.ui.define([
                     }
 
                     if (!Object.keys(mPriceConditionTypes).length) {
-                        console.error("PriceConditions respondió, pero no se identificaron condiciones de descuento:", {
-                            SalesOrg: sSalesOrg,
-                            PriceConditions: oPriceCondResp.oResults
-                        });
+                        void 0;
 
                         sap.m.MessageBox.error(
                             "El servicio PriceConditions respondió, pero no se identificaron condiciones de descuento para la organización " +
@@ -1761,8 +1728,8 @@ sap.ui.define([
                         return;
                     }
 
-                    console.log("PriceConditions usadas para descuentos:", oPriceCondResp.oResults);
-                    console.log("CondTypes activos para descuento:", mPriceConditionTypes);
+                    void 0;
+                    void 0;
 
                     oModelEntity.create("/iHeaderSet", oPayload, {
                         success: async (oResponse) => {
@@ -1817,9 +1784,9 @@ sap.ui.define([
                                     !(c.ItmNumber === "000000" && (!c.CondType || c.CondType === ""))
                                 );
 
-                                console.log("SIMULACION - HeaderToReturn:", aReturn);
-                                console.log("SIMULACION - aConditions:", aConditions);
-                                console.log("SIMULACION - oMaterialUI actual:", oModelProyect.getProperty("/oMaterialUI"));
+                                void 0;
+                                void 0;
+                                void 0;
 
                                 const aErrors = aReturnFiltered.filter(r => r.Type === "E");
 
@@ -2165,7 +2132,7 @@ sap.ui.define([
                                     if (hasDescManual) {
                                         const fPctManual = parseFloat(srcItem?.descuentoManualPct || 0);
 
-                                        console.log("[CALCULO] porcentaje manual detectado:", fPctManual);
+                                        void 0;
 
                                         if (fPctManual > 0) {
                                             item.descuentoManualPctDisplay = fPctManual.toString().replace(/\.0+$/, "") + "%";
@@ -2173,27 +2140,27 @@ sap.ui.define([
                                             const nBaseDescuento = _n(item.totalpos || item.precioBase || 0);
                                             const nZDMPImporte = (nBaseDescuento * fPctManual) / 100;
 
-                                            console.log("[CALCULO] base para descuento:", nBaseDescuento);
-                                            console.log("[CALCULO] importe calculado descuento:", nZDMPImporte);
+                                            void 0;
+                                            void 0;
 
                                             item.descuentoManualImporte = nZDMPImporte;
                                             item.totalpos = nBaseDescuento - nZDMPImporte;
                                             item.subtotal = item.totalpos;
 
-                                            console.log("[CALCULO] totalpos después descuento:", item.totalpos);
-                                            console.log("[CALCULO] subtotal después descuento:", item.subtotal);
-                                            console.log("[CALCULO] porcentaje display:", item.descuentoManualPctDisplay);
+                                            void 0;
+                                            void 0;
+                                            void 0;
                                         } else {
                                             item.descuentoManualPctDisplay = "";
                                             item.descuentoManualImporte = 0;
 
-                                            console.log("[CALCULO] porcentaje <= 0, no se aplica descuento");
+                                            void 0;
                                         }
                                     } else {
                                         item.descuentoManualPctDisplay = "";
                                         item.descuentoManualImporte = 0;
 
-                                        console.log("[CALCULO] hasDescManual = false, no entra al cálculo");
+                                        void 0;
                                     }
 
                                     item.total = item.subtotal + item.impuesto;
@@ -2308,7 +2275,7 @@ sap.ui.define([
                                 resolve(oResponse);
                             } catch (e) {
                                 oModelProyect.setProperty("/ui/materialesBusy", false);
-                                console.error("Error en success de simulación:", e);
+                                void 0;
                                 reject(e);
                             }
                         },
@@ -2318,7 +2285,7 @@ sap.ui.define([
                             this._showPendingExcludedNoIgvMessage();
 
                             sap.m.MessageBox.error("❌ Error en la simulación");
-                            console.error("Error:", oError);
+                            void 0;
                             reject(oError);
                         }
                     });
@@ -2329,7 +2296,7 @@ sap.ui.define([
                         this._showPendingExcludedNoIgvMessage();
                     }, 200);
 
-                    console.error("Error en success de simulación:", e);
+                    void 0;
                     reject(e);
                 }
             });
@@ -2396,7 +2363,7 @@ sap.ui.define([
                     const oResp = await this._uploadSharepoint(
                         oFile,
                         function (percent) {
-                            console.log("Upload OC " + sUploadName + ": " + percent + "%");
+                            void 0;
                         },
                         sUploadName
                     );
@@ -2404,30 +2371,18 @@ sap.ui.define([
                     if (oResp.sEstado === "S" && oResp.oResults && oResp.oResults.id) {
                         oResult.success++;
 
-                        console.log("📎 Archivo OC subido:", {
-                            originalName: oFile.name,
-                            uploadName: sUploadName,
-                            webUrl: oResp.oResults.webUrl
-                        });
+                        void 0;
                     } else {
                         oResult.error++;
                         oResult.errors.push(oFile.name + ": error al subir a SharePoint.");
 
-                        console.error("❌ Error subiendo OC:", {
-                            originalName: oFile.name,
-                            uploadName: sUploadName,
-                            response: oResp
-                        });
+                        void 0;
                     }
                 } catch (e) {
                     oResult.error++;
                     oResult.errors.push(oFile.name + ": excepción al subir a SharePoint.");
 
-                    console.error("❌ Excepción subiendo OC:", {
-                        originalName: oFile.name,
-                        uploadName: sUploadName,
-                        error: e
-                    });
+                    void 0;
                 }
             }
 
@@ -2488,7 +2443,7 @@ sap.ui.define([
                     return;
                 }
             }
-            //  PARTNERS 
+            //  PARTNERS
             let aPartners = [];
             if (sSalesOrg === "1120") {
                 aPartners.push({ ClientId: sCliente, PartnRole: "AG", PartnNumber: sCliente });
@@ -2537,7 +2492,7 @@ sap.ui.define([
             } else {
                 aPartners = [{ ClientId: sCliente, PartnRole: "AG", PartnNumber: sCliente }];
             }
-            // SCHEDULE 
+            // SCHEDULE
             let aSchedule = [];
             if (!bCantidadEnItemSinSchedule) {
                 aSchedule = (oData.oMaterial || []).map(item => ({
@@ -2547,7 +2502,7 @@ sap.ui.define([
                     ReqQty: this._getCantidadFromMap(oCantidades, item).toFixed(3)
                 }));
             }
-            //  TEXTOS 
+            //  TEXTOS
             const aTexts = [
                 {
                     ClientId: sCliente,
@@ -2564,7 +2519,7 @@ sap.ui.define([
                     TextLine: oData.inputForm?.obsDelivery || ""
                 }
             ].filter(t => t.TextLine);
-            // CONDITIONS (flete + precio manual) 
+            // CONDITIONS (flete + precio manual)
             const sMoneda = oData.inputForm?.monedaText || "USD";
             const sMonedaKey = oData.inputForm?.moneda || "USD";
 
@@ -2655,7 +2610,7 @@ sap.ui.define([
                 }
             });
 
-            //  ITEMS (TargetQty para ZACN + REFERENCIA) 
+            //  ITEMS (TargetQty para ZACN + REFERENCIA)
             const aItems = (oData.oMaterial || []).map(item => {
                 const sQty = this._getCantidadFromMap(oCantidades, item).toFixed(3);
 
@@ -2671,7 +2626,7 @@ sap.ui.define([
                     oItemPayload.TargetQty = sQty;
                 }
 
-                // ZPMA a nivel de item 
+                // ZPMA a nivel de item
                 if (item.usarPrecioManual && item.precioBase) {
                     const nPrecioManual = parseFloat(item.precioBase || "0");
                     const nPrecioBapi = isNaN(nPrecioManual) ? 0 : nPrecioManual;
@@ -2947,8 +2902,8 @@ sap.ui.define([
                 tieneDescuentoManual: bTieneDescManual
             };
 
-            console.log("[onSelectProducto] detalle cargado en /oSelecTableDetalle:", JSON.parse(JSON.stringify(oDetalleSeleccionado)));
-            console.log("========== [onSelectProducto] FIN ==========");
+            void 0;
+            void 0;
 
             oModel.setProperty("/oSelecTableDetalle", oDetalleSeleccionado);
         },
@@ -2962,10 +2917,10 @@ sap.ui.define([
             const sMaxText = oModel.getProperty("/oSelecTableDetalle/DescuentoPermitido") || "";
             const sItmNumber = oModel.getProperty("/oSelecTableDetalle/ItmNumber");
 
-            console.log("========== [onChangeDescuentoManual] INICIO ==========");
-            console.log("[onChangeDescuentoManual] valor digitado:", sValue);
-            console.log("[onChangeDescuentoManual] valor parseado:", fValor);
-            console.log("[onChangeDescuentoManual] item:", sItmNumber);
+            void 0;
+            void 0;
+            void 0;
+            void 0;
 
             if (sValue.trim() === "" || isNaN(fValor) || fValor <= 0) {
                 oInput.setValueState("None");
@@ -3057,10 +3012,10 @@ sap.ui.define([
             });
             oModel.setProperty("/oMaterialUI", aMaterialUI);
 
-            console.log("[onChangeDescuentoManual] /oSelecTableDetalle:", JSON.parse(JSON.stringify(oModel.getProperty("/oSelecTableDetalle"))));
-            console.log("[onChangeDescuentoManual] /oMaterial guardado:", JSON.parse(JSON.stringify(aMaterial)));
-            console.log("[onChangeDescuentoManual] /oMaterialUI guardado:", JSON.parse(JSON.stringify(aMaterialUI)));
-            console.log("========== [onChangeDescuentoManual] FIN ==========");
+            void 0;
+            void 0;
+            void 0;
+            void 0;
         },
         onChangePrecioManual: function (oEvent) {
             const oInput = oEvent.getSource();
@@ -3139,10 +3094,10 @@ sap.ui.define([
             const oView = this.getView();
             const oModel = oView.getModel("oModelProyect");
 
-            console.log("========== [onRecalculatePrices] INICIO ==========");
-            console.log("[onRecalculatePrices] /oSelecTableDetalle antes:", JSON.parse(JSON.stringify(oModel.getProperty("/oSelecTableDetalle"))));
-            console.log("[onRecalculatePrices] /oMaterial antes:", JSON.parse(JSON.stringify(oModel.getProperty("/oMaterial"))));
-            console.log("[onRecalculatePrices] /oMaterialUI antes:", JSON.parse(JSON.stringify(oModel.getProperty("/oMaterialUI"))));
+            void 0;
+            void 0;
+            void 0;
+            void 0;
 
             const _getCtrl = (sId) => {
                 return oView.byId(sId) || sap.ui.getCore().byId(sId) || sap.ui.getCore().byId(oView.getId() + "--" + sId);
@@ -3380,7 +3335,7 @@ sap.ui.define([
                 }
             } catch (e) {
                 // En caso de algún problema con la selección, solo logueamos
-                console.warn("No se pudo seleccionar automáticamente la fila:", e);
+                void 0;
             }
         },
         _onPressNavButtonDetail: function () {
@@ -3548,77 +3503,6 @@ sap.ui.define([
 
             return oCurrencyFormatter.format(fValor);
         },
-        onFleteToggle: function (oEvent) {
-            let bSelected = oEvent.getParameter("selected");
-            let oVBox = this.byId("fleteSection");
-            oVBox.setVisible(bSelected);
-            if (!bSelected) {
-                let oModel = this.getView().getModel("oModelProyect");
-                oModel.setProperty("/inputForm/igv", "");
-                oModel.setProperty("/inputForm/fleteUSD", "");
-                oModel.setProperty("/inputForm/fletePEN", "");
-            }
-        },
-        onFleteUSDChange: function (oEvent) {
-            const oInput = oEvent.getSource();
-            const oModel = this.getView().getModel("oModelProyect");
-            const oModelData = this.getView().getModel("oModelData");
-            let sValue = oEvent.getParameter("newValue");
-            if (sValue === undefined || sValue === null) {
-                sValue = oEvent.getParameter("value");
-            }
-
-            sValue = (sValue || "").toString();
-            sValue = sValue.replace(/,/g, ".");
-            sValue = sValue.replace(/[^0-9.]/g, "");
-
-            const iFirstDot = sValue.indexOf(".");
-            if (iFirstDot !== -1) {
-                const sBefore = sValue.slice(0, iFirstDot + 1);
-                const sAfter = sValue.slice(iFirstDot + 1).replace(/\./g, "");
-                sValue = sBefore + sAfter;
-            }
-
-            if (!sValue || sValue === ".") {
-                oInput.setValue("");
-                oModel.setProperty("/inputForm/fleteUSD", "");
-                oModel.setProperty("/inputForm/fletePEN", "0.00");
-                oModel.setProperty("/inputForm/fleteUSDNum", 0);
-                oModel.setProperty("/inputForm/fleteUSD_SAP", "0.000");
-                oModel.setProperty("/inputForm/fleteIncluido", null);
-                return;
-            }
-
-            let fleteUSD = parseFloat(sValue);
-            if (!isFinite(fleteUSD) || fleteUSD < 0) {
-                fleteUSD = 0;
-            }
-
-            let tipoCambio = 1;
-            const oTipChangeData = oModelData && oModelData.getProperty("/oTipChangeData");
-            if (oTipChangeData && oTipChangeData.from) {
-                const fTC = parseFloat(oTipChangeData.from.valor);
-                if (!isNaN(fTC) && fTC > 0) {
-                    tipoCambio = fTC;
-                }
-            }
-
-            const fletePEN = fleteUSD * tipoCambio;
-            const sPEN = fletePEN.toFixed(2);
-            const fleteUSD3Num = Math.round(fleteUSD * 1000) / 1000;
-            const sFleteUSD3 = fleteUSD3Num.toFixed(3);
-
-            oInput.setValue(sValue);
-            oModel.setProperty("/inputForm/fleteUSD", sValue);
-            oModel.setProperty("/inputForm/fletePEN", sPEN);
-            oModel.setProperty("/inputForm/fleteUSDNum", fleteUSD3Num);
-            oModel.setProperty("/inputForm/fleteUSD_SAP", sFleteUSD3);
-
-            if (fleteUSD <= 0) {
-                oModel.setProperty("/inputForm/fleteIncluido", null);
-            }
-        },
-
         onSelectFleteYes: function (oEvent) {
             if (!oEvent.getParameter("selected")) return;
             const oModel = this.getView().getModel("oModelProyect");
@@ -3725,14 +3609,6 @@ sap.ui.define([
                     this.getRouter().navTo("Main", {}, true);
                 }
             });
-        },
-        _resetDetailHeavy: function (oM) {
-            oM.setProperty("/oMaterial", []);
-            oM.setProperty("/oMaterialUI", []);
-            oM.setProperty("/oCantidades", {});
-            oM.setProperty("/oDatCalculo", {});
-            oM.setProperty("/oSelecTableDetalle", {});
-            oM.refresh(true);
         },
         getMonedaDescripcion: function (sKey) {
             if (!sKey) return "";
@@ -3975,29 +3851,6 @@ sap.ui.define([
             oModel.setProperty("/inputForm", oData);
             return true;
         },
-        _afterOpenAddManualProduct: function () {
-            this._clearAddManualProductSelection();
-        },
-        _clearAddManualProductSelection: function () {
-            const oView = this.getView();
-            const sTableId = this.frgIdAddManualProduct + "--tbMaterialesManual";
-            const oTable = sap.ui.getCore().byId(sTableId) || oView.byId(sTableId);
-            if (oTable) {
-                oTable.removeSelections(true);
-            }
-            const oModelP = oView.getModel("oModelProyect");
-            const aRows = oModelP.getProperty("/oMaterialSelect") || [];
-
-            aRows.forEach(r => {
-                r.cantidad = "";      // o "0" si prefieres
-                r.state = "None";
-                r.icon = "";
-            });
-
-            oModelP.setProperty("/oMaterialSelect", aRows);
-            oModelP.refresh(true);
-        },
-
         _syncEntregaEditData: function () {
             const oModel = this.getView().getModel("oModelProyect");
             const oModelData = this.getView().getModel("oModelData");
@@ -4290,23 +4143,6 @@ sap.ui.define([
                 excludedInvalid: aExcludedInvalid
             };
         },
-        _showTaxClassificationMixMessage: function (aExcludedNoIgv) {
-            const aListaNoIgv = Array.isArray(aExcludedNoIgv) ? aExcludedNoIgv.filter(Boolean) : [];
-
-            if (!aListaNoIgv.length) {
-                return;
-            }
-
-            const sMsg =
-                "Estos materiales:\n\n" +
-                aListaNoIgv.map(x => "• " + x).join("\n") +
-                "\n\nson inafectos a IGV y no fueron agregados a la tabla.";
-
-            sap.m.MessageBox.warning(sMsg, {
-                title: "Materiales inafectos a IGV"
-            });
-        },
-
         _buildPriceConditionsUrl: function (sSalesOrg) {
             const sOrg = String(sSalesOrg || "").trim().replace(/'/g, "''");
             const sFilter = "$filter=SalesOrganization eq '" + sOrg + "'";
@@ -4861,7 +4697,7 @@ sap.ui.define([
             const oModelProyect = this.getView().getModel("oModelProyect");
             const aExcluded = oModelProyect.getProperty("/ui/pendingExcludedNoIgv") || [];
 
-            console.log("ENTRÓ A _showPendingExcludedNoIgvMessage:", aExcluded);
+            void 0;
 
             if (!Array.isArray(aExcluded) || !aExcluded.length) {
                 return;

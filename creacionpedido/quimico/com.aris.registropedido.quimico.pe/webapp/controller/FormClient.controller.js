@@ -251,7 +251,7 @@ sap.ui.define([
         },
         _validateAccessToPortal: async function (values) {
             try {
-                console.log("🚀 INICIO _validateAccessToPortal");
+                void 0;
 
                 let sURL = window.parent.location.href;
                 let tUniNeg = "";
@@ -261,8 +261,8 @@ sap.ui.define([
                 else if (sURL.includes("site-quimicos")) { tUniNeg = "QUIMICOS"; tSalesOrg = "1120"; }
                 else if (sURL.includes("site-ceramicos")) { tUniNeg = "CERAMICOS"; tSalesOrg = "1130"; }
 
-                console.log("🌐 URL:", sURL);
-                console.log("🏢 Unidad Negocio:", tUniNeg, "SalesOrg:", tSalesOrg);
+                void 0;
+                void 0;
 
                 const oRouter = sap.ui.core.UIComponent.getRouterFor(that);
                 const oModelUser = that.getModel("oModelUser");
@@ -271,17 +271,17 @@ sap.ui.define([
                 // 1) USUARIO IAS
                 // ========================
                 const oUserResp = values[12];
-                console.log("👤 oUserResp:", oUserResp);
+                void 0;
 
                 if (!oUserResp || !oUserResp.Resources || !oUserResp.Resources.length) {
-                    console.warn("❌ No se encontró usuario IAS");
+                    void 0;
                     sap.ui.core.BusyIndicator.hide(0);
                     oRouter.navTo("AccessDenied");
                     return;
                 }
 
                 let oUser = oUserResp.Resources[0];
-                console.log("👤 Usuario IAS:", oUser);
+                void 0;
 
                 let sFullName = `${oUser?.name?.givenName || ""} ${oUser?.name?.familyName || ""}`.trim();
                 oModelUser.setProperty("/bUserName", sFullName);
@@ -292,7 +292,7 @@ sap.ui.define([
                 let oAttrIAS = oUser["urn:sap:cloud:scim:schemas:extension:custom:2.0:User"];
                 let aAttr = (oAttrIAS && oAttrIAS.attributes) ? oAttrIAS.attributes : [];
 
-                console.log("📦 Atributos IAS:", aAttr);
+                void 0;
 
                 let oAttr1 = aAttr.find(a => a.name === "customAttribute1");
                 let oAttr2 = aAttr.find(a => a.name === "customAttribute2");
@@ -302,26 +302,26 @@ sap.ui.define([
                 let sBPVendedor = oAttr2 ? String(oAttr2.value || "").trim() : "";
                 let sBPCoord = oAttr3 ? String(oAttr3.value || "").trim() : "";
 
-                console.log("📌 BP Cliente:", sBPCliente);
-                console.log("📌 BP Vendedor:", sBPVendedor);
-                console.log("📌 BP Coordinador:", sBPCoord);
+                void 0;
+                void 0;
+                void 0;
 
                 let sBPFinal = sBPVendedor || sBPCoord || "";
                 oModelUser.setProperty("/bBPFinal", sBPFinal);
 
-                console.log("📌 sBPFinal:", sBPFinal);
+                void 0;
 
                 // ========================
                 // 3) CASO CLIENTE
                 // ========================
                 if (sBPCliente) {
-                    console.log("✅ ES CLIENTE");
+                    void 0;
 
                     const aSalesOrgs = await that._getSalesOrgByBP(sBPCliente);
-                    console.log("📊 SalesOrg Cliente:", aSalesOrgs);
+                    void 0;
 
                     if (!Array.isArray(aSalesOrgs) || !aSalesOrgs.includes(tSalesOrg)) {
-                        console.warn("❌ Cliente no pertenece a la sociedad");
+                        void 0;
                         sap.ui.core.BusyIndicator.hide(0);
                         oRouter.navTo("AccessDenied");
                         return;
@@ -332,7 +332,7 @@ sap.ui.define([
                     oModelUser.setProperty("/bIsVendedor", false);
                     oModelUser.setProperty("/bIsCoord", false);
 
-                    console.log("🎯 Resultado Cliente OK");
+                    void 0;
                     return;
                 }
 
@@ -340,16 +340,16 @@ sap.ui.define([
                 // 4) CASO INTERNO
                 // ========================
                 if (sBPVendedor || sBPCoord) {
-                    console.log("👨‍💼 ES USUARIO INTERNO");
+                    void 0;
 
                     const sUsuarioIAS = String(sBPVendedor || sBPCoord).trim();
                     const sOrgActual = String(tSalesOrg);
 
-                    console.log("📌 Usuario IAS:", sUsuarioIAS);
-                    console.log("📌 Org actual:", sOrgActual);
+                    void 0;
+                    void 0;
 
                     const oVendResp = values[13]?.oResults;
-                    console.log("📦 UsOrve raw:", oVendResp);
+                    void 0;
 
                     let aVendedores = [];
 
@@ -359,16 +359,16 @@ sap.ui.define([
                         aVendedores = oVendResp;
                     }
 
-                    console.log("📊 Total vendedores:", aVendedores.length);
+                    void 0;
 
                     const aUserRows = aVendedores.filter(v =>
                         String(v.usuario || "").trim() === sUsuarioIAS
                     );
 
-                    console.log("🔎 aUserRows:", aUserRows);
+                    void 0;
 
                     if (!aUserRows.length) {
-                        console.warn("❌ Usuario no encontrado en UsOrve");
+                        void 0;
                         oRouter.navTo("AccessDenied");
                         return;
                     }
@@ -377,10 +377,10 @@ sap.ui.define([
                         String(v.orgventas || "").trim() === sOrgActual
                     );
 
-                    console.log("🏢 aRowsOrg:", aRowsOrg);
+                    void 0;
 
                     if (!aRowsOrg.length) {
-                        console.warn("❌ Usuario sin org válida");
+                        void 0;
                         oRouter.navTo("AccessDenied");
                         return;
                     }
@@ -390,34 +390,34 @@ sap.ui.define([
                         aRowsOrg.find(r => String(r.perfil || "").toUpperCase().trim() === "VD") ||
                         aRowsOrg[0];
 
-                    console.log("🎯 oMatchOrg:", oMatchOrg);
+                    void 0;
 
                     const sPerfilCode = String(oMatchOrg?.perfil || "").toUpperCase().trim();
 
-                    console.log("📌 Perfil crudo:", oMatchOrg?.perfil);
-                    console.log("📌 Perfil normalizado:", sPerfilCode);
+                    void 0;
+                    void 0;
 
                     const bIsVendedor = (sPerfilCode === "VD");
                     const bIsCoord = (sPerfilCode === "CD");
 
-                    console.log("✅ bIsVendedor:", bIsVendedor);
-                    console.log("✅ bIsCoord:", bIsCoord);
+                    void 0;
+                    void 0;
 
                     oModelUser.setProperty("/bIsCliente", false);
                     oModelUser.setProperty("/bIsInterno", true);
                     oModelUser.setProperty("/bIsVendedor", bIsVendedor);
                     oModelUser.setProperty("/bIsCoord", bIsCoord);
 
-                    console.log("🎯 FINAL oModelUser:", oModelUser.getData());
+                    void 0;
 
                     return;
                 }
 
-                console.warn("❌ No cumple ningún perfil");
+                void 0;
                 oRouter.navTo("AccessDenied");
 
             } catch (oError) {
-                console.error("💥 ERROR en _validateAccessToPortal:", oError);
+                void 0;
                 const oRouter = sap.ui.core.UIComponent.getRouterFor(that);
                 oRouter.navTo("AccessDenied");
             }
@@ -965,7 +965,7 @@ sap.ui.define([
             oModel.setProperty(sKeyPath, sKey);
             oModel.setProperty(sTextPath, sText);
         },
-        // Para validar el pedido con referencia por perfil 
+        // Para validar el pedido con referencia por perfil
         _updateBtnPedidoReferenciaVisibility: function () {
             const oView = this.getView();
             const oModelProyect = oView.getModel("oModelProyect");
@@ -1062,7 +1062,7 @@ sap.ui.define([
         },
 
 
-        // Manejo de Dialog Para Referencia 
+        // Manejo de Dialog Para Referencia
         _getClienteReferencia: function () {
             that = this;
             try {
@@ -1269,7 +1269,7 @@ sap.ui.define([
             }
         },
 
-        // BTN para inicializar el dialog 
+        // BTN para inicializar el dialog
         onOpenPedidoConReferencia: function () {
             const oModelProyect = this.getView().getModel("oModelProyect");
             const sTipDocument = oModelProyect.getProperty("/inputForm/tipDocument") || "";
@@ -1282,7 +1282,7 @@ sap.ui.define([
             oModelProyect.setProperty("/inputForm/posRefSeleccionadas", []);
             this._openDlgPedidoReferencia();
         },
-        // Para Documentos Pendientes 
+        // Para Documentos Pendientes
         _loadDocumentosPendientes: function () {
             const oModel = this.getView().getModel("oModelProyect");
             const oDatClient = oModel.getProperty("/oDatClient") || {};
@@ -1342,7 +1342,7 @@ sap.ui.define([
                 return aClientes;
             });
         },
-        // Para la tabla Final 
+        // Para la tabla Final
 
         _loadPosicionesDocumento: function (oDocHeader) {
             const oModel = this.getView().getModel("oModelProyect");
@@ -1584,136 +1584,6 @@ sap.ui.define([
             this._openDlgDocPosiciones();
             this._loadPosicionesDocumento(oSeleccionado);
         },
-        _aplicarRecomendacionesDestinoYTransporte: function (oDocHeader) {
-            const oModelProyect = this.getView().getModel("oModelProyect");
-            const oModelData = this.getView().getModel("oModelData");
-
-            if (!oModelProyect || !oModelData || !oDocHeader) {
-                return;
-            }
-
-            // Puede venir mapeado en tu tabla o en _raw desde DoRePe
-            const oRaw = oDocHeader._raw || oDocHeader;
-
-            const sDestBP = oRaw.Destination || oRaw.FinalDestination || "";
-            const sCarrier = oRaw.Carrier || "";
-            const sCarrierName = oRaw.CarrierName || "";
-            const sDelivCond = oRaw.DeliveryCondition || "";
-
-            let oInputForm = oModelProyect.getProperty("/inputForm") || {};
-
-            const aDestinos = oModelProyect.getProperty("/oDestinosCliente") || [];
-            const aFinalDestinos = oModelProyect.getProperty("/oFinalDestinosCliente") || [];
-            const aAgencias = oModelProyect.getProperty("/oAgenciasCliente") || [];
-            const aTransportes = oModelData.getProperty("/oTrasport") || [];
-
-            // =========================
-            // 1) Tipo de entrega (opcional, solo si aún no hay valor)
-            // =========================
-            if (!oInputForm.tipoEntrega && sDelivCond) {
-                switch (String(sDelivCond || "").trim()) {
-                    case "02":
-                        oInputForm.tipoEntrega = "1"; // Cliente recoge
-                        break;
-                    case "01":
-                        // Mantener o inferir según otros campos
-                        // Si hay agencia -> "3"
-                        // Si no hay agencia -> "2"
-                        if (oInputForm.direccionAgencia || oInputForm.direccionAgenciaText) {
-                            oInputForm.tipoEntrega = "3";
-                        } else {
-                            oInputForm.tipoEntrega = "2";
-                        }
-                        break;
-                }
-            }
-
-            // =========================
-            // 2) Destino recomendado
-            // =========================
-            let oDestinoMatch = null;
-
-            if (sDestBP) {
-                // Intentamos en Destinos
-                oDestinoMatch = aDestinos.find(d =>
-                    d.Destination === sDestBP ||
-                    d.Destinationid === sDestBP ||
-                    d.Customer === sDestBP ||
-                    d.Id === sDestBP
-                );
-
-                // Si no se encontró, probamos en FinalDestinos
-                if (!oDestinoMatch) {
-                    oDestinoMatch = aFinalDestinos.find(d =>
-                        d.Destination === sDestBP ||
-                        d.Destinationid === sDestBP ||
-                        d.Customer === sDestBP ||
-                        d.Id === sDestBP
-                    );
-                }
-
-                // Como último recurso, buscar por nombre
-                if (!oDestinoMatch && oRaw.DestinationName) {
-                    oDestinoMatch = aDestinos.find(d =>
-                        d.Destinationname === oRaw.DestinationName ||
-                        d.Finaldestinationname === oRaw.DestinationName ||
-                        d.Agencyname === oRaw.DestinationName
-                    ) || aFinalDestinos.find(d =>
-                        d.Destinationname === oRaw.DestinationName ||
-                        d.Finaldestinationname === oRaw.DestinationName ||
-                        d.Agencyname === oRaw.DestinationName
-                    );
-                }
-            }
-
-            if (oDestinoMatch) {
-                const sKeyDestino =
-                    oDestinoMatch.Id ||
-                    oDestinoMatch.Destinationid ||
-                    oDestinoMatch.Destination ||
-                    sDestBP;
-
-                const sTextDestino =
-                    oDestinoMatch.Text ||
-                    oDestinoMatch.Destinationname ||
-                    oDestinoMatch.Finaldestinationname ||
-                    oDestinoMatch.Agencyname ||
-                    "";
-
-                oInputForm.destinoQuimicos = sKeyDestino;
-                oInputForm.destinoQuimicosText = sTextDestino;
-            }
-
-            // =========================
-            // 3) Transportista recomendado
-            // =========================
-            let oCarrierMatch = null;
-
-            if (sCarrier) {
-                oCarrierMatch = aTransportes.find(t =>
-                    t.Carrier === sCarrier ||
-                    t.Customer === sCarrier
-                );
-            }
-
-            if (!oCarrierMatch && sCarrierName) {
-                oCarrierMatch = aTransportes.find(t =>
-                    t.Name1 === sCarrierName ||
-                    t.Agencyname === sCarrierName
-                );
-            }
-
-            if (oCarrierMatch) {
-                oInputForm.transporte = oCarrierMatch.Carrier;
-                oInputForm.transporteText = oCarrierMatch.Name1 || oCarrierMatch.Agencyname || "";
-            }
-
-            // =========================
-            // 4) Actualizamos modelo y resumen
-            // =========================
-            oModelProyect.setProperty("/inputForm", oInputForm);
-            this._updateResumenEntrega();
-        },
         _openDlgDocPosiciones: function () {
             const oView = this.getView();
 
@@ -1862,7 +1732,7 @@ sap.ui.define([
             // Al deseleccionar no borrar nada
         },
         //Control de Navegacion entre Dialog
-        //Inicializa el pedido con referencia 
+        //Inicializa el pedido con referencia
         onTipoReferenciaCancelar: function () {
             if (this._oDlgTipoRef) {
                 this._oDlgTipoRef.close();
@@ -1900,7 +1770,7 @@ sap.ui.define([
             this._clearPosDocRefSelection(false);
         },
 
-        // Control de Tipo de documentos y las funciones 
+        // Control de Tipo de documentos y las funciones
         _updateFormState: function () {
             const oModelProyect = this.getView().getModel("oModelProyect");
             if (!oModelProyect) {
@@ -2001,34 +1871,6 @@ sap.ui.define([
             const oMoneda = aMonedas.find(item => item.sKey === sKey);
             return oMoneda ? oMoneda.sText : sKey;
         },
-        onDestinoChange: function (oEvent) {
-            const oModel = this.getView().getModel("oModelProyect");
-            const oSelectedItem = oEvent.getParameter("selectedItem");
-            if (!oSelectedItem) return;
-            const sId = oEvent.getSource().getId();
-            const sKey = oSelectedItem.getKey();
-            const sText = oSelectedItem.getText();
-            let oInputForm = oModel.getProperty("/inputForm") || {};
-            if (sId.includes("DestinationTexChemicals")) {
-                oInputForm.destinoQuimicos = sKey;
-                oInputForm.destinoQuimicosText = sText;
-            }
-            if (sId.includes("DestinationFinishChemicals")) {
-                oInputForm.destinoFinal = sKey;
-                oInputForm.destinoFinalText = sText;
-            }
-            const sDestino1 = oInputForm.destinoQuimicosText || "";
-            const sDestino2 = oInputForm.destinoFinalText || "";
-            const sDestinoCompleto = sDestino2
-                ? (sDestino1 ? `${sDestino1} / ${sDestino2}` : sDestino2)
-                : sDestino1;
-
-            oInputForm.destinoTextil = sDestinoCompleto;
-
-            oModel.setProperty("/inputForm", oInputForm);
-        },
-
-
         _buildOCFileKey: function (file) {
             return [
                 file.name || "",
@@ -2233,12 +2075,6 @@ sap.ui.define([
             if (!sCodigo) return sTexto;
             return `${sCodigo} - ${sTexto}`;
         },
-        _filtrarAgenciasPorTransportista: function (sCarrier) {
-            const oModel = this.getView().getModel("oModelProyect");
-            const aAll = oModel.getProperty("/oAgenciasCliente") || [];
-            const aFiltered = aAll.filter(row => String(row.Carrier || "").trim() === String(sCarrier || "").trim());
-            oModel.setProperty("/oAgenciasClienteFiltradas", aFiltered);
-        },
         onUpdateFinishedQuimicos: function (oEvent) {
             var oTable = oEvent.getSource();
             var aItems = oTable.getItems();
@@ -2323,26 +2159,6 @@ sap.ui.define([
                 oBind.filter([]);
             }
         },
-        _setFechaHoyCotizacion: function () {
-            const oModel = this.getView().getModel("oModelProyect");
-            if (!oModel) return;
-
-            const sActual = oModel.getProperty("/inputForm/fechInicio");
-            const dActual = oModel.getProperty("/inputForm/fechInicioDate");
-
-            // ✅ no pisar si ya existe
-            if (sActual || dActual) return;
-
-            const dHoy = new Date();
-
-            // string dd/MM/yyyy
-            const pad = (n) => String(n).padStart(2, "0");
-            const sHoy = `${pad(dHoy.getDate())}/${pad(dHoy.getMonth() + 1)}/${dHoy.getFullYear()}`;
-
-            oModel.setProperty("/inputForm/fechInicioDate", dHoy);
-            oModel.setProperty("/inputForm/fechInicio", sHoy);
-        },
-
         _loadDatosPedidoReferencia: function () {
             const oView = this.getView();
             const oModel = oView.getModel("oModelProyect");
@@ -2677,140 +2493,6 @@ sap.ui.define([
             oModel.setProperty("/inputForm/destinoFinal", "");
             oModel.setProperty("/inputForm/destinoFinalText", "");
         },
-        _applyReferenciaEntregaQuimicos: function (oRaw) {
-            const oModel = this.getView().getModel("oModelProyect");
-            const oModelData = this.getView().getModel("oModelData");
-            if (!oModel || !oRaw) return;
-
-            const sDeliveryCondition = this._getRefValue(oRaw, ["DELIVERYCONDITION", "DeliveryCondition", "ShipCond", "ShippingCondition"]);
-            const sAgency = this._getRefValue(oRaw, ["AGENCY", "Agency"]);
-            const sFinalDestination = this._getRefValue(oRaw, ["FINALDESTINATION", "FinalDestination"]);
-            const sCarrier = this._getRefValue(oRaw, ["CARRIER", "Carrier"]);
-            const sShippingDestination = this._getRefValue(oRaw, ["SHIPPINGDESTINATION", "ShippingDestination"]);
-            const sCustomerGroup = this._getRefValue(oRaw, ["CUSTOMERGROUP", "CustomerGroup"]);
-
-            const aTransportes = oModelData?.getProperty("/oTrasport") || [];
-            const aAgencias = oModel.getProperty("/oAgenciasCliente") || [];
-            const aDestinos = oModel.getProperty("/oDestinosCliente") || [];
-            const aFinalDestinos = oModel.getProperty("/oFinalDestinosCliente") || [];
-
-            // 1) Tipo de reparto
-            let sTipoEntrega = "";
-            if (sDeliveryCondition === "02") {
-                sTipoEntrega = "1"; // Cliente recoge
-            } else if (sDeliveryCondition === "01") {
-                sTipoEntrega = sAgency ? "3" : "2"; // Agencia o Directo
-            }
-
-            oModel.setProperty("/inputForm/tipoEntrega", sTipoEntrega);
-
-            // 2) Destino envío = FINALDESTINATION
-            if (sFinalDestination) {
-                const oDestinoFinal =
-                    this._findByAnyKey(aFinalDestinos, ["Id", "Customer", "Kunnr", "Partner", "Destination", "Destinationid"], sFinalDestination) ||
-                    this._findByAnyKey(aDestinos, ["Id", "Customer", "Kunnr", "Partner", "Destination", "Destinationid"], sFinalDestination);
-
-                oModel.setProperty("/inputForm/sedeFinalDiferente", false);
-                oModel.setProperty("/inputForm/destinoQuimicos", sFinalDestination);
-                oModel.setProperty(
-                    "/inputForm/destinoQuimicosText",
-                    oDestinoFinal
-                        ? (oDestinoFinal.Text || oDestinoFinal.Destinationname || oDestinoFinal.Finaldestinationname || oDestinoFinal.Name || "")
-                        : ""
-                );
-
-                oModel.setProperty("/inputForm/destinoFinal", "");
-                oModel.setProperty("/inputForm/destinoFinalText", "");
-            } else {
-                oModel.setProperty("/inputForm/sedeFinalDiferente", false);
-                oModel.setProperty("/inputForm/destinoQuimicos", "");
-                oModel.setProperty("/inputForm/destinoQuimicosText", "");
-                oModel.setProperty("/inputForm/destinoFinal", "");
-                oModel.setProperty("/inputForm/destinoFinalText", "");
-            }
-
-            // 3) Cliente recoge -> limpiar todo
-            if (sTipoEntrega === "1") {
-                this._setEmptyTransporte(oModel);
-                this._setEmptyDirAgencia(oModel);
-                oModel.setProperty("/oAgenciasClienteFiltradas", []);
-                return;
-            }
-
-            // 4) Transportista = Nombre + Código
-            let sCarrierKey = "";
-            let sCarrierText = "";
-
-            if (sCarrier) {
-                const oCarrier = this._findByAnyKey(aTransportes, ["Carrier", "Customer", "Kunnr", "Id"], sCarrier);
-                if (oCarrier) {
-                    sCarrierKey = oCarrier.Carrier || oCarrier.Customer || sCarrier;
-                    const sNombreCarrier = oCarrier.Name1 || oCarrier.Name || oCarrier.Text || "";
-                    sCarrierText = [sNombreCarrier, sCarrierKey].filter(Boolean).join(" - ");
-                }
-            }
-
-            oModel.setProperty("/inputForm/transporte", sCarrierKey);
-            oModel.setProperty("/inputForm/transporteText", sCarrierText);
-
-            // 5) IMPORTANTÍSIMO:
-            //    filtrar la lista de agencias igual que onSelectTransporte,
-            //    porque el ComboBox usa /oAgenciasClienteFiltradas
-            const aAgenciasFiltradas = aAgencias.filter(row => {
-                const sRowCarrier = String(
-                    row.Carrier ||
-                    (row._raw && row._raw.Carrier) ||
-                    ""
-                ).trim();
-
-                return sRowCarrier === String(sCarrierKey || sCarrier).trim();
-            });
-
-            if (aAgenciasFiltradas.length > 0) {
-                oModel.setProperty("/oAgenciasClienteFiltradas", aAgenciasFiltradas);
-            } else {
-                oModel.setProperty("/oAgenciasClienteFiltradas", []);
-            }
-
-            // 6) Seleccionar Dr.Agencia luego de filtrar lista
-            let sAgencyKeyToSelect = "";
-            let oAgencyMatch = null;
-
-            // Caso real del proyecto:
-            // el ComboBox usa key = Customer
-            // para referencia quieres comparar Customer con Agency
-            if (sAgency) {
-                oAgencyMatch =
-                    aAgenciasFiltradas.find(a => String(a.Customer || "").trim() === String(sAgency).trim()) ||
-                    aAgencias.find(a => String(a.Customer || "").trim() === String(sAgency).trim()) ||
-                    null;
-            }
-
-            // Si por regla de negocio quisieras usar SHIPPINGDESTINATION en algunos casos,
-            // aquí lo dejamos solo como respaldo, sin desplazar la comparación por Agency
-            if (!oAgencyMatch && sCustomerGroup === "18" && sShippingDestination) {
-                oAgencyMatch =
-                    aAgenciasFiltradas.find(a => String(a.Customer || "").trim() === String(sShippingDestination).trim()) ||
-                    aAgencias.find(a => String(a.Customer || "").trim() === String(sShippingDestination).trim()) ||
-                    null;
-            }
-
-            if (oAgencyMatch) {
-                sAgencyKeyToSelect = oAgencyMatch.Customer || "";
-                oModel.setProperty("/inputForm/direccionAgencia", sAgencyKeyToSelect);
-                oModel.setProperty("/inputForm/direccionAgenciaAddrText", oAgencyMatch.Agencyaddress || "");
-                oModel.setProperty("/inputForm/direccionAgenciaText", oAgencyMatch.Agencyname || "");
-                oModel.setProperty(
-                    "/inputForm/agenciaFullText",
-                    [oAgencyMatch.Agencyname, oAgencyMatch.Agencyaddress].filter(Boolean).join(" - ")
-                );
-            } else {
-                this._setEmptyDirAgencia(oModel);
-            }
-
-            oModel.refresh(true);
-        },
-
         _normalizeComboSearch: function (sValue) {
             let sText = String(sValue || "").trim().toUpperCase();
 

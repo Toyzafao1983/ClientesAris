@@ -371,7 +371,7 @@ sap.ui.define([
 				// Retorna en formato ISO que SAP entiende
 				return oDate.toISOString().split("T")[0] + "T00:00:00";
 			} catch (e) {
-				console.error("❌ Error convirtiendo fecha:", sDate, e);
+				void 0;
 				return "";
 			}
 		},
