@@ -2688,7 +2688,7 @@ sap.ui.define([
 
         _sanitizeSharePointFileNamePart: function (sValue) {
             return String(sValue || "")
-                .replace(/[\\/:*?"<>|#%&{}~]/g, "-")
+                .replace(/[\\/:*?"<>|#%&{}~()°]/g, "-")
                 .replace(/\s+/g, " ")
                 .trim();
         },

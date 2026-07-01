@@ -13,7 +13,7 @@ sap.ui.define([
     "sap/ui/model/FilterOperator",
     "sap/m/MessageToast",
     "sap/ui/model/json/JSONModel",
-], (BaseController, Controller, ResourceModel, models, Formatter, Services, util, utilUI, Filter, FilterOperator, Fragment, MessageToast, JSONModel) => {
+], (BaseController, Controller, ResourceModel, models, Formatter, Services, util, utilUI, Fragment, Filter, FilterOperator, MessageToast, JSONModel) => {
     "use strict";
     var that;
     var tUniNeg="", tRol="", tPerfil = "", tSalesOrg = "";
@@ -45,45 +45,60 @@ sap.ui.define([
              Promise.all([that._getUsers(), that._getPrueba(),
             that._getTipChangeData(),that._getCreditDispo(),that._getDatClient(),
             that._getClientPet(),that._getBPVendedor()
-            ]).then((values) => {
-                that._setLanguageModel("esp");
-                that.oModelProyect = that.getModel("oModelProyect");
-                that.oModelData = that.getModel("oModelData");
-                that.oModelUser = that.getModel("oModelUser");
-                that.oModelDevice = that.getModel("oModelDevice");
-                that._onClearDataFilter();
-                that.onClearFilters();
-                let sIdioma = that.getModel("oModelProyect").getProperty("/sIdioma");
-                that.oModelProyect.setSizeLimit(99999999);
-                that.oModelData.setSizeLimit(99999999);
-                that._validateAccessToPortal(values);
-                that.oModelProyect.setProperty("/oSeller", values[4].oResults);
-                that.oModelProyect.setProperty("/oClienteFilter", values[5].oResults);
-                let oData = values[3].oResults;
-                let oTipoCambio = {
-                    from: {
-                        moneda: oData.FromCurr || "PEN",
-                        valor: oData.ExchRateV || 0
-                    },
-                    to: {
-                        moneda: oData.ToCurrncy || "USD",
-                        valor: oData.ExchRate || 0
-                    },
-                    fechaValidez: oData.ValidFrom ? new Date(parseInt(oData.ValidFrom.match(/\d+/)[0], 10)) : null,
-                    fecha: oData.Date ? new Date(parseInt(oData.Date.match(/\d+/)[0], 10)) : null
-                };
-                that.oModelData.setProperty("/oTipChangeData", oTipoCambio);
-                if(sIdioma == undefined){
+            ]).then(async (values) => {
+                try {
                     that._setLanguageModel("esp");
-                }else{
-                    that._setLanguageModel(sIdioma);
+                    that.oModelProyect = that.getModel("oModelProyect");
+                    that.oModelData = that.getModel("oModelData");
+                    that.oModelUser = that.getModel("oModelUser");
+                    that.oModelDevice = that.getModel("oModelDevice");
+                    that._onClearDataFilter();
+                    let sIdioma = that.getModel("oModelProyect").getProperty("/sIdioma");
+                    that.oModelProyect.setSizeLimit(99999999);
+                    that.oModelData.setSizeLimit(99999999);
+                    const bAccessOk = await that._validateAccessToPortal(values);
+                    if (!bAccessOk) {
+                        sap.ui.core.BusyIndicator.hide(0);
+                        return;
+                    }
+
+                    that.oModelProyect.setProperty("/oSeller", values[6].oResults);
+                    that.oModelProyect.setProperty("/oClienteFilter", values[5].oResults);
+                    that.onClearFilters();
+
+                    let oData = values[2].oResults;
+                    let oTipoCambio = {
+                        from: {
+                            moneda: oData.FromCurr || "PEN",
+                            valor: oData.ExchRateV || 0
+                        },
+                        to: {
+                            moneda: oData.ToCurrncy || "USD",
+                            valor: oData.ExchRate || 0
+                        },
+                        fechaValidez: oData.ValidFrom ? new Date(parseInt(oData.ValidFrom.match(/\d+/)[0], 10)) : null,
+                        fecha: oData.Date ? new Date(parseInt(oData.Date.match(/\d+/)[0], 10)) : null
+                    };
+                    that.oModelData.setProperty("/oTipChangeData", oTipoCambio);
+                    if(sIdioma == undefined){
+                        that._setLanguageModel("esp");
+                    }else{
+                        that._setLanguageModel(sIdioma);
+                    }
+                    const oIASUser = values[0]?.Resources?.[0] || {};
+                    const oIASName = oIASUser.name || {};
+                    const sNameComp = `${oIASName.givenName || ""} ${oIASName.familyName || ""}`.trim();
+
+                    that.getModel("oModelUser").setProperty("/Information", oIASUser);
+                    that.getModel("oModelUser").setProperty("/sNameComp", sNameComp);
+                    that.getModel("oModelUser").setProperty("/bUniNeg", tUniNeg);
+                    that.getModel("oModelUser").setProperty("/bRol", tRol);
+                    that.getModel("oModelUser").setProperty("/bPerfil", tPerfil);
+                    sap.ui.core.BusyIndicator.hide(0);
+                } catch (oError) {
+                    that.getMessageBox("error", that.getI18nText("errorUserData"));
+                    sap.ui.core.BusyIndicator.hide(0);
                 }
-                that.getModel("oModelUser").setProperty("/Information", values[0].Resources[0]);
-                that.getModel("oModelUser").setProperty("/sNameComp", values[0].Resources[0].name.givenName + " " + values[0].Resources[0].name.familyName);
-                that.getModel("oModelUser").setProperty("/bUniNeg", tUniNeg);
-                that.getModel("oModelUser").setProperty("/bRol", tRol);
-                that.getModel("oModelUser").setProperty("/bPerfil", tPerfil);
-                sap.ui.core.BusyIndicator.hide(0);
             }).catch(function (oError) {
                 that.getMessageBox("error", that.getI18nText("errorUserData"));
                 sap.ui.core.BusyIndicator.hide(0);
@@ -98,10 +113,9 @@ sap.ui.define([
         // 👤 Usuario IAS (SCIM)
         let oUser = values[0]?.Resources?.[0];
         if (!oUser) {
-            void 0;
             sap.ui.core.BusyIndicator.hide(0);
             oRouter.navTo("AccessDenied");
-            return;
+            return false;
         }
 
         // 🧩 Nombre
@@ -153,10 +167,9 @@ sap.ui.define([
 
             const aSalesOrgs = await this._getSalesOrgByBP(sBPCliente);
             if (!Array.isArray(aSalesOrgs) || !aSalesOrgs.includes(tSalesOrg)) {
-                void 0;-
                 sap.ui.core.BusyIndicator.hide(0);
                 oRouter.navTo("AccessDenied");
-                return;
+                return false;
             }
 
             oModelUser.setProperty("/bRol", "CLIENTES");
@@ -175,7 +188,7 @@ sap.ui.define([
             sap.ui.core.BusyIndicator.hide(0);
 
             oRouter.navTo("FormClient", { app: sBPCliente });
-            return;
+            return false;
         }
 
         // ========================================================
@@ -195,13 +208,11 @@ sap.ui.define([
                 }
             }
 
-
             let oMatch = aVendedores.find(item => item.usuario === sUsuarioIAS);
             if (!oMatch) {
-                void 0;
                 sap.ui.core.BusyIndicator.hide(0);
                 oRouter.navTo("AccessDenied");
-                return;
+                return false;
             }
 
             // 📌 Determinar organizaciones de venta permitidas desde _getBPVendedor
@@ -224,10 +235,9 @@ sap.ui.define([
             }
 
             if (!Array.isArray(aSalesOrgs) || !aSalesOrgs.includes(oMatch.orgventas)) {
-                void 0;
                 sap.ui.core.BusyIndicator.hide(0);
                 oRouter.navTo("AccessDenied");
-                return;
+                return false;
             }
 
             // 🔍 Ahora diferenciamos por PERFIL
@@ -249,22 +259,21 @@ sap.ui.define([
             oModelUser.setProperty("/customAttribute", "customAttribute2");
 
             sap.ui.core.BusyIndicator.hide(0);
-            oRouter.navTo("Main");
-            return;
+            return true;
         }
 
         // ========================================================
         // 3️⃣ SIN ATRIBUTOS VÁLIDOS
         // ========================================================
-        void 0;
         sap.ui.core.BusyIndicator.hide(0);
         oRouter.navTo("AccessDenied");
+        return false;
 
     } catch (oError) {
-        void 0;
         sap.ui.core.BusyIndicator.hide(0);
         const oRouter = sap.ui.core.UIComponent.getRouterFor(this);
         oRouter.navTo("AccessDenied");
+        return false;
     }
 },
 

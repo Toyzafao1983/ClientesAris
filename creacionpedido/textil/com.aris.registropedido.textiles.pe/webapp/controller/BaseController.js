@@ -32,7 +32,7 @@ sap.ui.define([
 		AdminUser: true,
 		userSet: "kestefo@ravaconsulting.com.pe",
 		route: "com.aris.registropedido.textiles.pe",
-		driveId: "b!ger65VR1VEerCnoWFakAb9nmGbJ284hOpTWdHF4jSOIq-iKPjcYQRr6ew-GrzZyr",
+		driveId: "b!ger65VR1VEerCnoWFakAb9nmGbJ284hOpTWdHF4jSOIq-iKPjCYQRr6ew-GrzZyr",
 		_getUsers: function () {
 			that = this;
 			try {
@@ -1609,7 +1609,11 @@ sap.ui.define([
 
 				const encodedPath = `${folderPath}/${sFileName}`
 					.split("/")
-					.map(encodeURIComponent)
+					.map(function (seg) {
+						return encodeURIComponent(seg)
+							.replace(/\(/g, "%28")
+							.replace(/\)/g, "%29");
+					})
 					.join("/");
 
 				let sUrl = "";

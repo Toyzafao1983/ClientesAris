@@ -16,10 +16,12 @@ sap.ui.define([
 	"com/aris/registropedido/quimico/pe/model/formatter",
 	"com/aris/registropedido/quimico/pe/services/Services",
 	"com/aris/registropedido/quimico/pe/util/util",
+	"com/aris/registropedido/quimico/pe/util/utilResponse",
 	"sap/ui/model/resource/ResourceModel"
 ], function (Controller, History, UIComponent, MessageBox, MessageToast, Fragment, BusyIndicator, JSONModel,
-	Filter, FilterOperator, Spreadsheet, Token, ServiceOdata, models, Formatter, Services, util, ResourceModel) {
+	Filter, FilterOperator, Spreadsheet, Token, ServiceOdata, models, Formatter, Services, util, utilResponse, ResourceModel) {
 	"use strict";
+	util.response = util.response || utilResponse;
 	var that;
 	var sMessage = "";
 	var that;
@@ -31,7 +33,7 @@ sap.ui.define([
 		AdminUser: true,
 		userSet: "kestefo@ravaconsulting.com.pe",
 		route: "com.aris.registropedido.quimico.pe",
-		driveId: "b!ger65VR1VEerCnoWFakAb9nmGbJ284hOpTWdHF4jSOIq-iKPjcYQRr6ew-GrzZyr",
+		driveId: "b!ger65VR1VEerCnoWFakAb9nmGbJ284hOpTWdHF4jSOIq-iKPjCYQRr6ew-GrzZyr",
 		_getUsers: function () {
 			that = this;
 			try {
@@ -1608,7 +1610,11 @@ sap.ui.define([
 
 				const encodedPath = `${folderPath}/${sFileName}`
 					.split("/")
-					.map(encodeURIComponent)
+					.map(function (seg) {
+						return encodeURIComponent(seg)
+							.replace(/\(/g, "%28")
+							.replace(/\)/g, "%29");
+					})
 					.join("/");
 
 				let sUrl = "";
