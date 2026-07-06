@@ -2554,7 +2554,7 @@ sap.ui.define([
 
 			return new Promise((resolve, reject) => {
 
-				const subPath = "UA_AF/AF_Sistemas/Documentos/Repositorio Apps/SAP Hana/Portal BTP/clientes/materiales";
+				const subPath = "Pruebas BTP/Clientes/materiales";
 				const safePath = subPath.split("/").map(encodeURIComponent).join("/");
 
 				const url = `/SharePointAris/sites/${siteId}/drives/${driveId}/root:/${safePath}:/children`;
@@ -2586,8 +2586,8 @@ sap.ui.define([
 					let sUrl = "";
 					const sRel =
 						"/SharePointAris/" +
-						"drives/b!ger65VR1VEerCnoWFakAb9nmGbJ284hOpTWdHF4jSOLjVnYNoEj0QrJVZ7_OziEd" +
-						"/root:/Repositorio Apps/SAP Hana/Portal BTP/clientes/materiales:/children";
+						"drives/b!ger65VR1VEerCnoWFakAb9nmGbJ284hOpTWdHF4jSOIq-iKPjCYQRr6ew-GrzZyr" +
+						"/root:/Pruebas BTP/Clientes/materiales:/children";
 
 					if (that.local) {
 						sUrl = that.getOwnerComponent().getManifestObject().resolveUri(sRel);

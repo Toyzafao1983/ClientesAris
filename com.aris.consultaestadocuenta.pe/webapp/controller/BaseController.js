@@ -1655,7 +1655,35 @@ sap.ui.define([
 				that.getMessageBox("error", that.getI18nText("sErrorTry"));
 			}
 		},
-		_getEstadoCuenta: function (sCustomer, sBukrs = "1001", sForma = "1") {
+		_getEstadoCuentaListSelect: function () {
+			return [
+				"Bukrs",
+				"Kunnr",
+				"Datum",
+				"Forma",
+				"Vencido",
+				"Xblnr",
+				"ItemText",
+				"Banco",
+				"RefKey1",
+				"DocDate",
+				"Netduedate",
+				"Waers",
+				"Monto",
+				"Condicion"
+			].join(",");
+		},
+		_getEstadoCuentaPdfSelect: function () {
+			return [
+				"Bukrs",
+				"Kunnr",
+				"Datum",
+				"Forma",
+				"Xblnr",
+				"EPdf"
+			].join(",");
+		},
+		_getEstadoCuenta: function (sCustomer, sBukrs = "1001", sForma = "1", sSelect) {
 			that = this;
 			try {
 				var oResp = {
@@ -1674,6 +1702,10 @@ sap.ui.define([
 					let sFecha = `${sYear}-${sMonth}-${sDay}T00:00:00`;
 
 					let sPath = `/sap/opu/odata/sap/ZSDWS_PORTAL_CLIENTES_SRV/eEstadoCuentaSet` + `?$filter=Bukrs eq '${sBukrs}' and Kunnr eq '${sCustomer}'` + ` and Datum eq datetime'${sFecha}' and Forma eq '${sForma}'`;
+					let sSelectParam = sSelect || that._getEstadoCuentaListSelect();
+					if (sSelectParam) {
+						sPath += `&$select=${sSelectParam}`;
+					}
 
 					if (that.local) {
 						sUrl = that.getOwnerComponent().getManifestObject().resolveUri(sPath);

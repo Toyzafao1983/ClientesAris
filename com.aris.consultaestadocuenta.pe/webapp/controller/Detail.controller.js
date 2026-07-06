@@ -104,7 +104,7 @@ sap.ui.define([
 		_onPressNavButtonDetail: function () {
 			this.oRouter.navTo("Main");
 		},
-		DownloadPdf: function () {
+		DownloadPdf: async function () {
 			const oDetalle = this.getModel("oModelProyect").getProperty("/oDetalle");
 			const oCliente = this.getModel("oModelProyect").getProperty("/oDatClient");
 
@@ -113,9 +113,28 @@ sap.ui.define([
 				return;
 			}
 
-			const sBase64 = oDetalle[0].EPdf;
+			let sBase64 = oDetalle[0].EPdf;
+			let oDetallePdf = oDetalle[0];
 			if (!sBase64) {
-				sap.m.MessageToast.show("El registro no contiene PDF");
+				sap.ui.core.BusyIndicator.show(0);
+				try {
+					const sCustomer = oCliente?.Customer || this.oRouter.getHashChanger().hash.split("/")[1];
+					const oResp = await this._getEstadoCuenta(sCustomer, "1001", "1", this._getEstadoCuentaPdfSelect());
+					const aResults = oResp?.oResults || [];
+					oDetallePdf = aResults[0] || oDetallePdf;
+					sBase64 = oDetallePdf?.EPdf;
+				} catch (e) {
+					void 0;
+				} finally {
+					sap.ui.core.BusyIndicator.hide();
+				}
+			}
+
+			if (!sBase64) {
+				sap.m.MessageBox.error(
+					"No se pudo generar el PDF del estado de cuenta. SAP devolvió un error al ejecutar el SmartForm.",
+					{ title: "Error al descargar PDF" }
+				);
 				return;
 			}
 
@@ -131,7 +150,6 @@ sap.ui.define([
 				link.href = URL.createObjectURL(blob);
 				const sNombreCliente = oCliente?.CustomerFullName || "Cliente";
 				const sBP = oCliente?.Customer || "BP";
-				const sFactura = oDetalle[0].Xblnr || "Factura";
 
 				const sFileName = `EECC_${sNombreCliente}_${sBP}`;
 				link.download = `${sFileName}.pdf`;

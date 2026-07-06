@@ -29,6 +29,9 @@ sap.ui.define([
             this.frgIdAddProduct = "frgIdAddProduct";
             this.frgIdAddManualProduct = "frgIdAddManualProduct";
         },
+        onAfterRendering: function () {
+            this._applyContainsFilterToCombos();
+        },
         handleRouteMatched: function (bInit) {
             sap.ui.core.BusyIndicator.show(0);
             let sCustomer = this.oRouter.getHashChanger().hash.split("/")[1];
@@ -3621,8 +3624,12 @@ sap.ui.define([
             const oModel = this.getView().getModel("oModelProyect");
             const oInputForm = oModel.getProperty("/inputForm") || {};
             oModel.setProperty("/inputFormBackup", JSON.parse(JSON.stringify(oInputForm)));
+            this._syncAgenciasFiltradasPorTransporte();
             oModel.setProperty("/isDetailEdit", true);
             oModel.setProperty("/isFormEnabled", true);
+            setTimeout(function () {
+                this._applyContainsFilterToCombos();
+            }.bind(this), 0);
         },
         onDetailCancel: function () {
             const oModel = this.getView().getModel("oModelProyect");
@@ -3670,6 +3677,259 @@ sap.ui.define([
                 oModel.setProperty("/inputForm/direccionAgencia", "");
                 oModel.setProperty("/inputForm/direccionAgenciaAddrText", "");
                 oModel.setProperty("/inputForm/direccionAgenciaText", "");
+                oModel.setProperty("/inputForm/agenciaFullText", "");
+                oModel.setProperty("/oAgenciasClienteFiltradas", []);
+            }
+
+            this._updateResumenEntrega();
+        },
+        _normalizeComboSearch: function (sValue) {
+            let sText = String(sValue || "").trim().toUpperCase();
+
+            if (sText.normalize) {
+                sText = sText.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            }
+
+            return sText
+                .replace(/[.,;:/\\\-#°º]/g, " ")
+                .replace(/\s+/g, " ")
+                .trim();
+        },
+
+        _applyContainsFilterToCombos: function () {
+            this._applyContainsFilterToCombo("inputTransporteDetail");
+            this._applyContainsFilterToCombo("cbDireccionAgenciaDetail");
+        },
+
+        _applyContainsFilterToCombo: function (sComboId) {
+            const oCombo = this.byId(sComboId);
+
+            if (!oCombo || !oCombo.setFilterFunction) {
+                return;
+            }
+
+            const fnNormalize = this._normalizeComboSearch.bind(this);
+
+            oCombo.setFilterFunction(function (sTerm, oItem) {
+                const sNeedle = fnNormalize(sTerm);
+
+                if (!sNeedle) {
+                    return true;
+                }
+
+                const aTexts = [
+                    oItem.getText && oItem.getText(),
+                    oItem.getAdditionalText && oItem.getAdditionalText(),
+                    oItem.getKey && oItem.getKey()
+                ];
+
+                return aTexts.some(function (sText) {
+                    return fnNormalize(sText).indexOf(sNeedle) !== -1;
+                });
+            });
+        },
+
+        _syncAgenciasFiltradasPorTransporte: function (sCarrierParam) {
+            const oModel = this.getView().getModel("oModelProyect");
+
+            if (!oModel) {
+                return [];
+            }
+
+            const sCarrier = String(
+                sCarrierParam !== undefined
+                    ? sCarrierParam
+                    : (oModel.getProperty("/inputForm/transporte") || "")
+            ).trim();
+
+            const aAll = oModel.getProperty("/oAgenciasCliente") || [];
+            let aFiltered = [];
+
+            if (sCarrier) {
+                aFiltered = aAll.filter(function (row) {
+                    const sRowCarrier = String(
+                        row.Carrier ||
+                        (row._raw && row._raw.Carrier) ||
+                        ""
+                    ).trim();
+
+                    return sRowCarrier === sCarrier;
+                });
+
+                if (!aFiltered.length) {
+                    const bHayCarrierEnAlguno = aAll.some(function (r) {
+                        return String(r.Carrier || "").trim();
+                    });
+
+                    if (!bHayCarrierEnAlguno) {
+                        aFiltered = aAll;
+                    }
+                }
+            }
+
+            oModel.setProperty("/oAgenciasClienteFiltradas", aFiltered);
+            return aFiltered;
+        },
+
+        onChangeComboSoloSeleccion: function (oEvent) {
+            const oCombo = oEvent.getSource();
+            const sId = String(oCombo.getId() || "");
+            const sValue = String(oCombo.getValue() || "").trim();
+
+            const oModel = this.getView().getModel("oModelProyect");
+            const oModelData = this.getView().getModel("oModelData");
+
+            const bEsTransporte = sId.includes("inputTransporte");
+            const bEsAgencia = sId.includes("cbDireccionAgencia");
+
+            const fnNorm = this._normalizeComboSearch.bind(this);
+
+            const fnClearAgencia = function () {
+                oModel.setProperty("/inputForm/direccionAgencia", "");
+                oModel.setProperty("/inputForm/direccionAgenciaAddrText", "");
+                oModel.setProperty("/inputForm/direccionAgenciaText", "");
+                oModel.setProperty("/inputForm/agenciaFullText", "");
+            };
+
+            const fnClearTransporte = function () {
+                oModel.setProperty("/inputForm/transporte", "");
+                oModel.setProperty("/inputForm/transporteText", "");
+                fnClearAgencia();
+                oModel.setProperty("/oAgenciasClienteFiltradas", []);
+            };
+
+            if (!sValue) {
+                if (bEsTransporte) {
+                    fnClearTransporte();
+                }
+
+                if (bEsAgencia) {
+                    fnClearAgencia();
+                }
+
+                this._updateResumenEntrega();
+                return;
+            }
+
+            if (bEsTransporte) {
+                const aTransportes = oModelData.getProperty("/oTrasport") || [];
+                const sNeedle = fnNorm(sValue);
+
+                let oMatch = null;
+
+                const oSelectedItem = oCombo.getSelectedItem();
+                if (oSelectedItem) {
+                    const sKey = String(oSelectedItem.getKey() || "").trim();
+                    oMatch = aTransportes.find(function (row) {
+                        return String(row.Carrier || "").trim() === sKey;
+                    });
+                }
+
+                if (!oMatch) {
+                    const aExact = aTransportes.filter(function (row) {
+                        const sCarrier = String(row.Carrier || "").trim();
+                        const sName = String(row.Name1 || "").trim();
+                        const sFull = [sName, sCarrier].filter(Boolean).join(" - ");
+
+                        return fnNorm(sCarrier) === sNeedle ||
+                            fnNorm(sName) === sNeedle ||
+                            fnNorm(sFull) === sNeedle;
+                    });
+
+                    if (aExact.length === 1) {
+                        oMatch = aExact[0];
+                    }
+                }
+
+                if (!oMatch) {
+                    fnClearTransporte();
+                    oCombo.setSelectedKey("");
+                    sap.m.MessageToast.show("Debe seleccionar un transportista de la lista.");
+                    this._updateResumenEntrega();
+                    return;
+                }
+
+                const sCarrier = String(oMatch.Carrier || "").trim();
+                const sName = String(oMatch.Name1 || "").trim();
+
+                oCombo.setSelectedKey(sCarrier);
+                oCombo.setValue(sName);
+
+                oModel.setProperty("/inputForm/transporte", sCarrier);
+                oModel.setProperty("/inputForm/transporteText", sName);
+
+                fnClearAgencia();
+
+                const oComboAgencia = this.byId("cbDireccionAgenciaDetail");
+                if (oComboAgencia) {
+                    oComboAgencia.setSelectedKey("");
+                    oComboAgencia.setValue("");
+                }
+
+                this._syncAgenciasFiltradasPorTransporte(sCarrier);
+            }
+
+            if (bEsAgencia) {
+                const aAgencias = oModel.getProperty("/oAgenciasClienteFiltradas") || [];
+                const sNeedle = fnNorm(sValue);
+
+                let oMatch = null;
+
+                const oSelectedItem = oCombo.getSelectedItem();
+                if (oSelectedItem) {
+                    const sKey = String(oSelectedItem.getKey() || "").trim();
+                    const sText = String(oSelectedItem.getText() || "").trim();
+                    const sAdditional = String(oSelectedItem.getAdditionalText() || "").trim();
+
+                    oMatch = aAgencias.find(function (row) {
+                        return String(row.Customer || "").trim() === sKey &&
+                            String(row.Agencyaddress || "").trim() === sText &&
+                            String(row.Agencyname || "").trim() === sAdditional;
+                    }) || aAgencias.find(function (row) {
+                        return String(row.Customer || "").trim() === sKey;
+                    });
+                }
+
+                if (!oMatch) {
+                    const aExact = aAgencias.filter(function (row) {
+                        const sKey = String(row.Customer || "").trim();
+                        const sAddress = String(row.Agencyaddress || "").trim();
+                        const sAgency = String(row.Agencyname || "").trim();
+                        const sFull = [sAddress, sAgency].filter(Boolean).join(" - ");
+
+                        return fnNorm(sKey) === sNeedle ||
+                            fnNorm(sAddress) === sNeedle ||
+                            fnNorm(sAgency) === sNeedle ||
+                            fnNorm(sFull) === sNeedle;
+                    });
+
+                    if (aExact.length === 1) {
+                        oMatch = aExact[0];
+                    }
+                }
+
+                if (!oMatch) {
+                    fnClearAgencia();
+                    oCombo.setSelectedKey("");
+                    sap.m.MessageToast.show("Debe seleccionar una agencia de la lista.");
+                    this._updateResumenEntrega();
+                    return;
+                }
+
+                const sKey = String(oMatch.Customer || "").trim();
+                const sAddrText = String(oMatch.Agencyaddress || "").trim();
+                const sAgencyName = String(oMatch.Agencyname || "").trim();
+
+                oCombo.setSelectedKey(sKey);
+                oCombo.setValue(sAddrText);
+
+                oModel.setProperty("/inputForm/direccionAgencia", sKey);
+                oModel.setProperty("/inputForm/direccionAgenciaAddrText", sAddrText);
+                oModel.setProperty("/inputForm/direccionAgenciaText", sAgencyName);
+                oModel.setProperty(
+                    "/inputForm/agenciaFullText",
+                    [sAgencyName, sAddrText].filter(Boolean).join(" - ")
+                );
             }
 
             this._updateResumenEntrega();
@@ -3876,8 +4136,13 @@ sap.ui.define([
                 }
             }
 
+            this._syncAgenciasFiltradasPorTransporte(sCarrier);
+
             if (sAgencia) {
-                const oAgencia = aAgencias.find(function (row) {
+                const aAgenciasFiltradas = oModel.getProperty("/oAgenciasClienteFiltradas") || [];
+                const oAgencia = aAgenciasFiltradas.find(function (row) {
+                    return String(row.Customer || "").trim() === sAgencia;
+                }) || aAgencias.find(function (row) {
                     return String(row.Customer || "").trim() === sAgencia;
                 });
 

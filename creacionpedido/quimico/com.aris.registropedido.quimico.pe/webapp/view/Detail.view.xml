@@ -159,7 +159,7 @@
                                                 visible="{= ${oModelProyect>/inputForm/tipoEntrega} === '2' || ${oModelProyect>/inputForm/tipoEntrega} === '3'}"/>
                                             <ComboBox
                                             id="inputTransporteDetail"
-                                            selectionChange=".onSelectTransporte"
+                                            change=".onChangeComboSoloSeleccion"
                                             visible="{= ${oModelProyect>/inputForm/tipoEntrega} === '2' || ${oModelProyect>/inputForm/tipoEntrega} === '3'}"
                                             selectedKey="{oModelProyect>/inputForm/transporte}"
                                             items="{ path: 'oModelData>/oTrasport' }"
@@ -178,14 +178,14 @@
                                             <ComboBox
                                                 id="cbDireccionAgenciaDetail"
                                                 visible="{= ${oModelProyect>/inputForm/tipoEntrega} === '2' || ${oModelProyect>/inputForm/tipoEntrega} === '3'}"
+                                                enabled="{= !!${oModelProyect>/inputForm/transporte} &amp;&amp; ${oModelProyect>/isFormEnabled} }"
                                                 selectedKey="{oModelProyect>/inputForm/direccionAgencia}"
-                                                selectionChange=".onSelectDireccionAgencia"
-                                                items="{ path: 'oModelProyect>/oAgenciasCliente' }"
+                                                change=".onChangeComboSoloSeleccion"
+                                                items="{ path: 'oModelProyect>/oAgenciasClienteFiltradas' }"
                                                 showSecondaryValues="true"
                                                 filterSecondaryValues="true"
                                                 showClearIcon="true"
-                                                placeholder="Seleccione una agencia"
-                                                enabled="{oModelProyect>/isFormEnabled}">
+                                                placeholder="{= !!${oModelProyect>/inputForm/transporte} ? 'Seleccione una agencia' : 'Seleccione primero un transportista' }">
                                                 <core:ListItem
                                                     key="{oModelProyect>Customer}"
                                                     text="{oModelProyect>Agencyaddress}"

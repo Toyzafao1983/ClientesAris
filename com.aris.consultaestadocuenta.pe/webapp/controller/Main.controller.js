@@ -552,6 +552,9 @@ sap.ui.define([
             return new Promise((resolve, reject) => {
                 oModelEntity.read("/eEstadoCuentaSet", {
                     filters: aFilters,
+                    urlParameters: {
+                        "$select": this._getEstadoCuentaListSelect()
+                    },
                     success: (oData) => {
                         oModelProyect.setProperty("/oDetalle", oData.results || []);
 
@@ -613,6 +616,9 @@ sap.ui.define([
             ];
             oModel.read("/eEstadoCuentaSet", {
                 filters: aFilters,
+                urlParameters: {
+                    "$select": this._getEstadoCuentaListSelect()
+                },
                 success: (oData) => {
                     this.oModelProyect.setProperty("/oDetalle", oData.results || []);
                     Promise.all([
