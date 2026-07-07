@@ -120,35 +120,35 @@
             </Column>
 
             <!-- UMV -->
-            <Column width="8rem" hAlign="Center" vAlign="Middle"
+            <Column width="5rem" hAlign="Center" vAlign="Middle"
                 minScreenWidth="Tablet" demandPopin="true"
                 popinDisplay="Inline" mergeDuplicates="false">
                 <header>
                     <Text text="{i18n>txtTabledUMV}"
-                        width="8rem" maxLines="2" wrapping="true"
+                        width="5rem" maxLines="2" wrapping="true"
                         textAlign="Begin" textDirection="Inherit" visible="true"/>
                 </header>
             </Column>
 
             <!-- Precio Lista -->
-            <Column width="4rem"  hAlign="End" vAlign="Middle"
+            <Column width="3.5rem"  hAlign="End" vAlign="Middle"
                 minScreenWidth="Tablet" demandPopin="true"
                 popinDisplay="Inline" mergeDuplicates="false">
                 <header>
                     <Text text="Pr.Lista"
-                        width="6rem" maxLines="2" wrapping="true"
+                        width="3.5rem" maxLines="2" wrapping="true"
                         textAlign="Begin" textDirection="Inherit" visible="true"/>
                 </header>
             </Column>
 
             <!-- Descuento -->
-            <Column width="5rem"
+            <Column width="4.5rem"
                 visible="{=${oModelcom.aris.registropedido.quimico.pe>/DataGeneral/sStatus}==='C'?true:false}"
                 hAlign="End" vAlign="Middle" minScreenWidth="Tablet"
                 demandPopin="true" popinDisplay="Inline" mergeDuplicates="false">
                 <header>
                     <Text text="{i18n>txtTabledDiscount}"
-                        width="5rem" maxLines="2" wrapping="true"
+                        width="4.5rem" maxLines="2" wrapping="true"
                         textAlign="Begin" textDirection="Inherit" visible="true"/>
                 </header>
             </Column>
@@ -185,7 +185,7 @@
             </Column>
 
             <!-- Total línea -->
-            <Column width="5rem" hAlign="End" vAlign="Middle"
+            <Column width="8rem" hAlign="End" vAlign="Middle"
                 minScreenWidth="Tablet" demandPopin="true"
                 popinDisplay="Inline" mergeDuplicates="false">
                 <header>
@@ -201,6 +201,7 @@
                                 formatter: '.formatter.formatMonto2Dec'
                             }"
                             visible="{=${device>/system/phone}?false:true}"
+                            width="8rem"
                             textAlign="End"
                             editable="false"/>
                         <Input id="TotalEmba"
@@ -209,6 +210,7 @@
                                 formatter: '.formatter.formatMonto2Dec'
                             }"
                             visible="{=${device>/system/phone}?false:true}"
+                            width="8rem"
                             textAlign="End"
                             editable="false"/>
                         <Input id="TotalIgvMat"
@@ -217,6 +219,7 @@
                                 formatter: '.formatter.formatMonto2Dec'
                             }"
                             visible="{=${device>/system/phone}?false:true}"
+                            width="8rem"
                             textAlign="End"
                             editable="false"/>
                         <Input id="TotalMat"
@@ -225,18 +228,19 @@
                                 formatter: '.formatter.formatMonto2Dec'
                             }"
                             visible="{=${device>/system/phone}?false:true}"
+                            width="8rem"
                             textAlign="End"
                             editable="false"/>
                     </VBox>
                 </footer>
             </Column>
              <!-- UMV Peso -->
-             <Column id="clDetailTablePeso" width="4rem"
+             <Column id="clDetailTablePeso" width="7rem"
                 hAlign="End" vAlign="Middle" minScreenWidth="Tablet"
                 demandPopin="true" popinDisplay="Inline" mergeDuplicates="false">
                 <header>
                     <Text text="{i18n>txtWeight}"
-                        width="2rem" maxLines="2" wrapping="true"
+                        width="7rem" maxLines="2" wrapping="true"
                         textAlign="Begin" textDirection="Inherit" visible="true"/>
                 </header>
                 <footer>
@@ -252,7 +256,7 @@
             </Column>
             
             <!-- Peso -->
-            <Column id="clDetailTableUMVWeigth" width="5rem"
+            <Column id="clDetailTableUMVWeigth" width="4rem"
                 hAlign="Center" vAlign="Middle" minScreenWidth="Tablet"
                 demandPopin="true" popinDisplay="Inline" mergeDuplicates="false">
                 <header>
@@ -268,6 +272,7 @@
                                 formatter: '.formatter.formatMonto2Dec'
                             }"
                             visible="{=${device>/system/phone}?false:true}"
+                            width="7rem"
                             textAlign="End"
                             editable="false"/>
                     </VBox>
