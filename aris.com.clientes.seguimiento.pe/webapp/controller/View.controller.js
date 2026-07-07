@@ -29,6 +29,7 @@ sap.ui.define([
 
             this.frgIdTableMain = "frgIdTableMain";
             this.frgIdFilterInit = "frgIdFilterInit";
+            this._bInitialTextilSellerDefaultApplied = false;
 
             // Crear modelo proyect
             var oModelProyect = models.createModelProyect();
@@ -180,7 +181,13 @@ sap.ui.define([
                         case "Vendedor":
                             tRol = "VENDEDOR";
                             accesoPermitido = true;
-                            that.oModelProyect.setProperty("/Main/filter/cbVendor", oBPUser ? [oBPUser.trim()] : []);
+                            const bTextilesSellerFreeScope = tUniNeg === "TEXTILES";
+                            if (!bTextilesSellerFreeScope || !this._bInitialTextilSellerDefaultApplied) {
+                                that.oModelProyect.setProperty("/Main/filter/cbVendor", oBPUser ? [oBPUser.trim()] : []);
+                            }
+                            if (bTextilesSellerFreeScope) {
+                                this._bInitialTextilSellerDefaultApplied = true;
+                            }
                             that.oModelUser.setProperty("/bVendedor", oBPUser ? oBPUser.trim() : "");
 
                             break;

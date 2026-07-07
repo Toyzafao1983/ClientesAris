@@ -2664,117 +2664,143 @@ sap.ui.define([
                 "ClientId"
             ));
 
+            const sClientePedidoActual = fnOnlyCode(
+                oModel.getProperty("/oDatClient/Customer") ||
+                oModel.getProperty("/oClienteSeleccionado/Customer") ||
+                oModel.getProperty("/inputForm/clienteActual") ||
+                ""
+            );
+
+            const bReferenciaMismoCliente =
+                !!sCustomer &&
+                !!sClientePedidoActual &&
+                fnNorm(sCustomer) === fnNorm(sClientePedidoActual);
+
             const sCodigoShipTo = sShippingDestination;
             const sCodigoFinal = sFinalDestination || sShippingDestination || sCustomer;
 
             let sTipoEntrega = "";
             let bMostrarAgencia = false;
 
-            if (sDeliveryCondition === "02") {
-                sTipoEntrega = "1";
-                bMostrarAgencia = false;
-            } else if (sDeliveryCondition === "01") {
-                if (sCodigoShipTo && sCodigoFinal && sCodigoShipTo !== sCodigoFinal) {
+            if (bReferenciaMismoCliente) {
+                if (sDeliveryCondition === "02") {
+                    sTipoEntrega = "1";
+                    bMostrarAgencia = false;
+                } else if (sDeliveryCondition === "01") {
+                    if (sCodigoShipTo && sCodigoFinal && sCodigoShipTo !== sCodigoFinal) {
+                        sTipoEntrega = "3";
+                        bMostrarAgencia = true;
+                    } else {
+                        sTipoEntrega = "2";
+                        bMostrarAgencia = false;
+                    }
+                } else if (sCodigoShipTo && sCodigoFinal && sCodigoShipTo !== sCodigoFinal) {
                     sTipoEntrega = "3";
                     bMostrarAgencia = true;
-                } else {
-                    sTipoEntrega = "2";
-                    bMostrarAgencia = false;
-                }
-            } else if (sCodigoShipTo && sCodigoFinal && sCodigoShipTo !== sCodigoFinal) {
-                sTipoEntrega = "3";
-                bMostrarAgencia = true;
-            }
-
-            if (sCodigoFinal) {
-                let aDestinos = oModel.getProperty("/oDestinosCliente") || [];
-
-                let oDestino = aDestinos.find(function (item) {
-                    return fnNorm(item.Destinationid) === fnNorm(sCodigoFinal) ||
-                        fnNorm(item.Customer) === fnNorm(sCodigoFinal) ||
-                        fnNorm(item.Destination) === fnNorm(sCodigoFinal) ||
-                        fnNorm(item.Finaldestination) === fnNorm(sCodigoFinal);
-                });
-
-                if (!oDestino) {
-                    oDestino = {
-                        Destinationid: sCodigoFinal,
-                        Destination: sFinalDestinationName || sCodigoFinal,
-                        Destinationname: sFinalDestinationName || sCodigoFinal,
-                        Customer: sCustomer,
-                        Source: "DOREPE"
-                    };
-
-                    aDestinos = [oDestino].concat(aDestinos);
-                    oModel.setProperty("/oDestinosCliente", aDestinos);
                 }
 
-                oInputForm.destinoTextil = oDestino.Destinationid || sCodigoFinal;
-                oInputForm.destinoTextilText = oDestino.Destination || oDestino.Destinationname || sFinalDestinationName || sCodigoFinal;
+                if (sCodigoFinal) {
+                    let aDestinos = oModel.getProperty("/oDestinosCliente") || [];
 
-                /*
-                 * Algunas funciones del formulario aún leen destinoCeramicoText.
-                 * Se llena también para evitar que el resumen quede vacío.
-                 */
-                oInputForm.destinoCeramicoText = oInputForm.destinoTextilText;
-                oInputForm.detalleEntrega = oInputForm.destinoTextilText;
-            }
-
-            if (sTipoEntrega) {
-                oInputForm.tipoEntrega = sTipoEntrega;
-
-                if (sTipoEntrega === "1") {
-                    oInputForm.resumenEntrega = "Cliente recoge";
-                    oInputForm.direccionAgencia = "";
-                    oInputForm.direccionAgenciaText = "";
-                    oInputForm.showAgencia = false;
-                    oInputForm.mostrarAgencia = false;
-                    oInputForm.direccionAgenciaVisible = false;
-                }
-
-                if (sTipoEntrega === "2") {
-                    oInputForm.resumenEntrega = "Despacho directo";
-                    oInputForm.direccionAgencia = "";
-                    oInputForm.direccionAgenciaText = "";
-                    oInputForm.showAgencia = false;
-                    oInputForm.mostrarAgencia = false;
-                    oInputForm.direccionAgenciaVisible = false;
-                }
-
-                if (sTipoEntrega === "3") {
-                    let aAgencias = oModel.getProperty("/oAgenciasCliente") || [];
-
-                    let oAgencia = aAgencias.find(function (item) {
-                        return fnNorm(item.Customer) === fnNorm(sCodigoShipTo) ||
-                            fnNorm(item.Agencyaddress) === fnNorm(sCodigoShipTo) ||
-                            fnNorm(item.Agencyname) === fnNorm(sCodigoShipTo);
+                    let oDestino = aDestinos.find(function (item) {
+                        return fnNorm(item.Destinationid) === fnNorm(sCodigoFinal) ||
+                            fnNorm(item.Customer) === fnNorm(sCodigoFinal) ||
+                            fnNorm(item.Destination) === fnNorm(sCodigoFinal) ||
+                            fnNorm(item.Finaldestination) === fnNorm(sCodigoFinal);
                     });
 
-                    if (!oAgencia && sCodigoShipTo) {
-                        oAgencia = {
-                            Customer: sCodigoShipTo,
-                            Agencyaddress: sShippingDestinationName || sCodigoShipTo,
-                            Agencyname: sShippingDestinationName || sCodigoShipTo,
+                    if (!oDestino) {
+                        oDestino = {
+                            Destinationid: sCodigoFinal,
+                            Destination: sFinalDestinationName || sCodigoFinal,
+                            Destinationname: sFinalDestinationName || sCodigoFinal,
+                            Customer: sCustomer,
                             Source: "DOREPE"
                         };
 
-                        aAgencias = [oAgencia].concat(aAgencias);
-                        oModel.setProperty("/oAgenciasCliente", aAgencias);
-                        oModel.setProperty("/oAgenciasClienteFiltradas", aAgencias);
+                        aDestinos = [oDestino].concat(aDestinos);
+                        oModel.setProperty("/oDestinosCliente", aDestinos);
                     }
 
-                    oInputForm.resumenEntrega = "Despacho agencia";
-                    oInputForm.direccionAgencia = oAgencia
-                        ? (oAgencia.Customer || sCodigoShipTo)
-                        : sCodigoShipTo;
+                    oInputForm.destinoTextil = oDestino.Destinationid || sCodigoFinal;
+                    oInputForm.destinoTextilText = oDestino.Destination || oDestino.Destinationname || sFinalDestinationName || sCodigoFinal;
 
-                    oInputForm.direccionAgenciaText = oAgencia
-                        ? (oAgencia.Agencyname || oAgencia.Agencyaddress || sShippingDestinationName || sCodigoShipTo)
-                        : (sShippingDestinationName || sCodigoShipTo);
+                    /*
+                     * Algunas funciones del formulario aún leen destinoCeramicoText.
+                     * Se llena también para evitar que el resumen quede vacío.
+                     */
+                    oInputForm.destinoCeramicoText = oInputForm.destinoTextilText;
+                    oInputForm.detalleEntrega = oInputForm.destinoTextilText;
+                }
 
-                    oInputForm.showAgencia = true;
-                    oInputForm.mostrarAgencia = true;
-                    oInputForm.direccionAgenciaVisible = true;
+                if (sTipoEntrega) {
+                    oInputForm.tipoEntrega = sTipoEntrega;
+
+                    if (sTipoEntrega === "1") {
+                        oInputForm.resumenEntrega = "Cliente recoge";
+                        oInputForm.direccionAgencia = "";
+                        oInputForm.direccionAgenciaText = "";
+                        oInputForm.showAgencia = false;
+                        oInputForm.mostrarAgencia = false;
+                        oInputForm.direccionAgenciaVisible = false;
+                    }
+
+                    if (sTipoEntrega === "2") {
+                        oInputForm.resumenEntrega = "Despacho directo";
+                        oInputForm.direccionAgencia = "";
+                        oInputForm.direccionAgenciaText = "";
+                        oInputForm.showAgencia = false;
+                        oInputForm.mostrarAgencia = false;
+                        oInputForm.direccionAgenciaVisible = false;
+                    }
+
+                    if (sTipoEntrega === "3") {
+                        let aAgencias = oModel.getProperty("/oAgenciasCliente") || [];
+
+                        let oAgencia = aAgencias.find(function (item) {
+                            return fnNorm(item.Customer) === fnNorm(sCodigoShipTo) ||
+                                fnNorm(item.Agencyaddress) === fnNorm(sCodigoShipTo) ||
+                                fnNorm(item.Agencyname) === fnNorm(sCodigoShipTo);
+                        });
+
+                        if (!oAgencia && sCodigoShipTo) {
+                            oAgencia = {
+                                Customer: sCodigoShipTo,
+                                Agencyaddress: sShippingDestinationName || sCodigoShipTo,
+                                Agencyname: sShippingDestinationName || sCodigoShipTo,
+                                Source: "DOREPE"
+                            };
+
+                            aAgencias = [oAgencia].concat(aAgencias);
+                            oModel.setProperty("/oAgenciasCliente", aAgencias);
+                            oModel.setProperty("/oAgenciasClienteFiltradas", aAgencias);
+                        }
+
+                        oInputForm.resumenEntrega = "Despacho agencia";
+                        oInputForm.direccionAgencia = oAgencia
+                            ? (oAgencia.Customer || sCodigoShipTo)
+                            : sCodigoShipTo;
+
+                        oInputForm.direccionAgenciaText = oAgencia
+                            ? (oAgencia.Agencyname || oAgencia.Agencyaddress || sShippingDestinationName || sCodigoShipTo)
+                            : (sShippingDestinationName || sCodigoShipTo);
+
+                        oInputForm.showAgencia = true;
+                        oInputForm.mostrarAgencia = true;
+                        oInputForm.direccionAgenciaVisible = true;
+                    }
+                }
+            } else if (!oInputForm.destinoTextil) {
+                const aDestinosClienteActual = oModel.getProperty("/oDestinosCliente") || [];
+                const oDestinoActual = aDestinosClienteActual.find(function (item) {
+                    return item && item.Destinationid;
+                });
+
+                if (oDestinoActual) {
+                    oInputForm.destinoTextil = oDestinoActual.Destinationid || "";
+                    oInputForm.destinoTextilText = oDestinoActual.Destination || oDestinoActual.Destinationname || "";
+                    oInputForm.destinoCeramicoText = oInputForm.destinoTextilText;
+                    oInputForm.detalleEntrega = oInputForm.destinoTextilText;
                 }
             }
 
