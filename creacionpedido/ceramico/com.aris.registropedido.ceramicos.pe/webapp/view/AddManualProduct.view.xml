@@ -111,11 +111,11 @@
             <f:content>
                 <core:Title text=""/>
 
-                <Label text="{i18n>txtTypeD}" />
-                <HBox>
-                    <RadioButton id="rbtype1" text="{i18n>txtComplet}" />
-                    <RadioButton id="rbtype2" text="{i18n>txtSaldos}" />
-                    <RadioButton id="rbtype3" text="{i18n>txtTodos}" />
+                <Label text="{i18n>txtTypeD}" visible="{oModelProyect>/showTipoFilter}" />
+                <HBox visible="{oModelProyect>/showTipoFilter}">
+                    <RadioButton id="rbtype1" groupName="tipoStockPedido" text="{i18n>txtComplet}" select=".onTipoRadioSelect" />
+                    <RadioButton id="rbtype2" groupName="tipoStockPedido" text="{i18n>txtSaldos}" select=".onTipoRadioSelect" />
+                    <RadioButton id="rbtype3" groupName="tipoStockPedido" text="{i18n>txtTodos}" select=".onTipoRadioSelect" />
                 </HBox>
 
                 <Label text="{i18n>txtFormatD}" />
@@ -262,7 +262,7 @@
                     </table:Column>
 
                     <!-- PALLETS STOCK -->
-                    <table:Column width="7rem">
+                    <table:Column width="7rem" visible="{= !${oModelProyect>/showTipoFilter} || ${oModelProyect>/tipoStockSeleccionado} !== 'SALDOS' }">
                         <table:label>
                             <Label text="Pallets Stock"/>
                         </table:label>
@@ -280,7 +280,7 @@
                     </table:Column>
 
                     <!-- CAJAS STOCK -->
-                    <table:Column width="7rem">
+                    <table:Column width="7rem" visible="{= !${oModelProyect>/showTipoFilter} || ${oModelProyect>/tipoStockSeleccionado} !== 'COMPLETOS' }">
                         <table:label>
                             <Label text="Cajas Stock"/>
                         </table:label>
@@ -297,7 +297,7 @@
                         </table:template>
                     </table:Column>
 
-                    <table:Column width="7rem">
+                    <table:Column width="7rem" visible="{= !${oModelProyect>/showTipoFilter} || ${oModelProyect>/tipoStockSeleccionado} !== 'SALDOS' }">
                         <table:label>
                             <Label text="Cantidad"/>
                         </table:label>
@@ -308,7 +308,7 @@
                         </table:template>
                     </table:Column>
 
-                    <table:Column width="7rem">
+                    <table:Column width="7rem" visible="{= !${oModelProyect>/showTipoFilter} || ${oModelProyect>/tipoStockSeleccionado} !== 'COMPLETOS' }">
                         <table:label>
                             <Label text="Pallets"/>
                         </table:label>

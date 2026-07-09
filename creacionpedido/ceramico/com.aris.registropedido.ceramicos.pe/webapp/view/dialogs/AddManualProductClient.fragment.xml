@@ -125,11 +125,11 @@
                     <core:Title text=""/>
 
                     <!-- Tipo -->
-                    <Label text="{i18n>txtTypeD}" />
-                    <HBox>
-                        <RadioButton id="rbtype4" text="{i18n>txtComplet}" />
-                        <RadioButton id="rbtype5" text="{i18n>txtSaldos}" />
-                        <RadioButton id="rbtype6" text="{i18n>txtTodos}" />
+                    <Label text="{i18n>txtTypeD}" visible="{oModelProyect>/showTipoFilterClient}" />
+                    <HBox visible="{oModelProyect>/showTipoFilterClient}">
+                        <RadioButton id="rbtype4" groupName="tipoStockPedidoClient" text="{i18n>txtComplet}" select=".onTipoRadioSelectClient" />
+                        <RadioButton id="rbtype5" groupName="tipoStockPedidoClient" text="{i18n>txtSaldos}" select=".onTipoRadioSelectClient" />
+                        <RadioButton id="rbtype6" groupName="tipoStockPedidoClient" text="{i18n>txtTodos}" select=".onTipoRadioSelectClient" />
                     </HBox>
 
                     <!-- Formato -->
@@ -206,11 +206,11 @@
                         <Column><Text text="Descripción"/></Column>
                         <Column><Text text="UM"/></Column>
                         <Column><Text text="Stock Físico"/></Column>
-                        <Column><Text text="Pallets Stock"/></Column>
-                        <Column><Text text="Cajas Stock"/></Column>
+                        <Column visible="{= !${oModelProyect>/showTipoFilterClient} || ${oModelProyect>/tipoStockSeleccionadoClient} !== 'SALDOS' }"><Text text="Pallets Stock"/></Column>
+                        <Column visible="{= !${oModelProyect>/showTipoFilterClient} || ${oModelProyect>/tipoStockSeleccionadoClient} !== 'COMPLETOS' }"><Text text="Cajas Stock"/></Column>
                         <Column><Text text="Cantidad"/></Column>
-                        <Column><Text text="Pallets"/></Column>
-                        <Column><Text text="Cajas "/></Column>
+                        <Column visible="{= !${oModelProyect>/showTipoFilterClient} || ${oModelProyect>/tipoStockSeleccionadoClient} !== 'SALDOS' }"><Text text="Pallets"/></Column>
+                        <Column visible="{= !${oModelProyect>/showTipoFilterClient} || ${oModelProyect>/tipoStockSeleccionadoClient} !== 'COMPLETOS' }"><Text text="Cajas "/></Column>
                     </columns>
 
                     <items>

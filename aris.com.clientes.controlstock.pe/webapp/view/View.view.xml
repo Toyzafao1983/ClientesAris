@@ -256,7 +256,7 @@
                                             </MultiInput>
                                         </fb:control>
                                     </fb:FilterItem>
-                                    <fb:FilterItem name="L" label="{i18n>txtTipe}" visible="{= ${oModelUser>/rCeramicos}}">
+                                    <fb:FilterItem name="L" label="{i18n>txtTipe}" visible="{= ${oModelUser>/rCeramicos} &amp;&amp; ${oModelProyect>/Main/showTipoFilter}}">
                                         <fb:control>
                                             <RadioButtonGroup
                                             id="rbTipo"

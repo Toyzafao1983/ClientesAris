@@ -874,6 +874,129 @@ sap.ui.define([
             const oM = this.getModel("oModelProyect");
             oM.setProperty("/Main/filter/iTipoIndex", i);
             oM.setProperty("/Main/filter/rbTipo", aMap[i] || "TODOS");
+            this._applyCeramicoTipoFromBase();
+        },
+
+        _yieldToBrowser: function () {
+            return new Promise(resolve => setTimeout(resolve, 0));
+        },
+
+        _uniqueMaterialsFromDataAsync: async function (aData) {
+            const seen = new Set();
+            const aMaterials = [];
+            const aSafeData = Array.isArray(aData) ? aData : [];
+
+            for (let i = 0; i < aSafeData.length; i++) {
+                const m = aSafeData[i] && aSafeData[i].Material;
+                if (m && !seen.has(m)) {
+                    seen.add(m);
+                    aMaterials.push(m);
+                }
+
+                if (i > 0 && i % 1000 === 0) {
+                    await this._yieldToBrowser();
+                }
+            }
+
+            return aMaterials;
+        },
+
+        _toStockNumber: function (v) {
+            if (typeof v === "number") return v;
+            let s = String(v ?? "").trim();
+            if (!s) return 0;
+            let bNegative = false;
+            if (s.endsWith("-")) {
+                bNegative = true;
+                s = s.slice(0, -1);
+            }
+            if (s.startsWith("-")) {
+                bNegative = true;
+                s = s.slice(1);
+            }
+            s = s.replace(/\s/g, "");
+            if (s.includes(",") && s.includes(".")) {
+                if (s.lastIndexOf(".") > s.lastIndexOf(",")) {
+                    s = s.replace(/,/g, "");
+                } else {
+                    s = s.replace(/\./g, "").replace(",", ".");
+                }
+            } else if (s.includes(",")) {
+                s = s.replace(",", ".");
+            }
+            const n = parseFloat(s);
+            if (!Number.isFinite(n)) return 0;
+            return bNegative ? -n : n;
+        },
+
+        _getCeramicoTipoActual: function () {
+            const oM = this.getModel("oModelProyect");
+            return String(oM.getProperty("/Main/filter/rbTipo") || "TODOS").toUpperCase();
+        },
+
+        _filterCeramicoClientByTipo: function (aRows, sTipo) {
+            const toNum = this._toStockNumber.bind(this);
+            return (aRows || []).filter(row => {
+                if (sTipo === "SALDOS") return toNum(row.Saldos) > 0;
+                if (sTipo === "COMPLETOS") return toNum(row.Pallets) > 0;
+                return true;
+            });
+        },
+
+        _filterCeramicoTreeByTipo: function (aRows, sTipo) {
+            const toNum = this._toStockNumber.bind(this);
+            const clone = (obj) => Object.assign({}, obj);
+
+            if (sTipo === "TODOS") {
+                return (aRows || []).map(group => Object.assign(clone(group), {
+                    children: (group.children || []).map(clone)
+                }));
+            }
+
+            const sField = sTipo === "SALDOS" ? "Saldos" : "Pallets";
+            const sTotalField = sTipo === "SALDOS" ? "TotalSaldos" : "TotalPallets";
+
+            return (aRows || []).reduce((acc, group) => {
+                const aChildren = (group.children || [])
+                    .filter(child => toNum(child[sField]) > 0)
+                    .map(clone);
+
+                const bKeepGroup = toNum(group[sTotalField]) > 0 || aChildren.length > 0;
+                if (!bKeepGroup) return acc;
+
+                const oGroup = Object.assign(clone(group), { children: aChildren });
+
+                if (aChildren.length) {
+                    oGroup.TotalStockFisico = aChildren.reduce((sum, child) => sum + toNum(child.StockFisico), 0);
+                    oGroup.TotalPallets = aChildren.reduce((sum, child) => sum + toNum(child.Pallets), 0);
+                    oGroup.TotalSaldos = aChildren.reduce((sum, child) => sum + toNum(child.Saldos), 0);
+                    oGroup.TotalStockFisicoFmt = this.formatNumber(oGroup.TotalStockFisico);
+                    oGroup.TotalPalletsFmt = this.formatNumber(oGroup.TotalPallets);
+                    oGroup.TotalSaldosFmt = this.formatNumber(oGroup.TotalSaldos);
+                }
+
+                acc.push(oGroup);
+                return acc;
+            }, []);
+        },
+
+        _applyCeramicoTipoFromBase: function () {
+            if (tUniNeg !== "CERAMICOS") return;
+
+            const oM = this.getModel("oModelProyect");
+            const sTipo = this._getCeramicoTipoActual();
+
+            if (tRol === "CLIENTES") {
+                const aBase = oM.getProperty("/oReporteCeraCliBase") || [];
+                const aRows = this._filterCeramicoClientByTipo(aBase, sTipo);
+                oM.setProperty("/oReporteCeraCli", aRows);
+                oM.setProperty("/oStockDisponible", aRows);
+            } else {
+                const aBase = oM.getProperty("/oTreeCerBase") || [];
+                const aRows = this._filterCeramicoTreeByTipo(aBase, sTipo);
+                oM.setProperty("/oTreeCer", aRows);
+                oM.setProperty("/oStockDisponible", aRows);
+            }
         },
 
 
@@ -997,9 +1120,12 @@ sap.ui.define([
                     } else if (tUniNeg === "CERAMICOS") {
                         if (tRol === "CLIENTES") {
                             that.getModel("oModelProyect").setProperty("/oReporteCeraCli", []);
+                            that.getModel("oModelProyect").setProperty("/oReporteCeraCliBase", []);
                         } else {
                             that.getModel("oModelProyect").setProperty("/oTreeCer", []);
+                            that.getModel("oModelProyect").setProperty("/oTreeCerBase", []);
                         }
+                        that.getModel("oModelProyect").setProperty("/Main/showTipoFilter", false);
                     }
                     return;
                 }
@@ -1030,7 +1156,7 @@ sap.ui.define([
                     that.getModel("oModelProyect").setProperty("/oStockQuimico", results);
 
                 } else if (tUniNeg === "CERAMICOS") {
-                    let aFlatten = that._prepareDataForCeramicos(allResults);
+                    let aFlatten = await that._prepareDataForCeramicos(allResults);
 
                     // Metraje mínimo cerámicos (M2)
                     const minFootCera = _toNum(jFilter.iGreaterFootage);
@@ -1071,8 +1197,9 @@ sap.ui.define([
                             SaldosFmt: this.formatNumber(row.Saldos)
                         }));
 
-                        that.getModel("oModelProyect").setProperty("/oReporteCeraCli", oConsolidados);
-                        results = oConsolidados;
+                        that.getModel("oModelProyect").setProperty("/oReporteCeraCliBase", oConsolidados);
+                        results = this._filterCeramicoClientByTipo(oConsolidados, this._getCeramicoTipoActual());
+                        that.getModel("oModelProyect").setProperty("/oReporteCeraCli", results);
 
                     } else {
                         let oHeaders = Object.values(
@@ -1113,9 +1240,12 @@ sap.ui.define([
                             h.TotalSaldosFmt = this.formatNumber(h.TotalSaldos);
                         });
 
-                        that.getModel("oModelProyect").setProperty("/oTreeCer", oHeaders);
-                        results = oHeaders;
+                        that.getModel("oModelProyect").setProperty("/oTreeCerBase", oHeaders);
+                        results = this._filterCeramicoTreeByTipo(oHeaders, this._getCeramicoTipoActual());
+                        that.getModel("oModelProyect").setProperty("/oTreeCer", results);
                     }
+
+                    that.getModel("oModelProyect").setProperty("/Main/showTipoFilter", true);
                 }
 
                 // Guardamos en modelo principal
@@ -1221,24 +1351,15 @@ sap.ui.define([
 
                     void 0;
 
-                    Services.getoDataERPSync(that, sUrl, function (result) {
+                    Services.getoDataERPAsync(that, sUrl, function (result) {
                         util.response.validateAjaxGetERPNotMessage(result, {
-                            success: function (oData) {
+                            success: async function (oData) {
                                 if (oData.data && Array.isArray(oData.data)) {
                                     if (oData.data.length > 0) {
                                         void 0;
                                     }
 
-                                    // ✅ Se asegura que no haya duplicados
-                                    const seen = new Set();
-                                    const aMaterials = oData.data
-                                        .map(i => i.Material)
-                                        .filter(m => {
-                                            if (!m) return false;
-                                            if (seen.has(m)) return false;
-                                            seen.add(m);
-                                            return true;
-                                        });
+                                    const aMaterials = await that._uniqueMaterialsFromDataAsync(oData.data);
 
                                     void 0;
                                     resolve(aMaterials);
@@ -1347,6 +1468,8 @@ sap.ui.define([
                 });
 
                 for (let i = 0; i < aChunks.length; i++) {
+                    await that._yieldToBrowser();
+
                     const aChunk = aChunks[i];
                     if (!aChunk.length) continue;
 
@@ -1380,7 +1503,7 @@ sap.ui.define([
 
                     // eslint-disable-next-line no-await-in-loop
                     const aChunkData = await new Promise((resolve) => {
-                        Services.getoDataERPSync(that, sUrl, function (result) {
+                        Services.getoDataERPAsync(that, sUrl, function (result) {
                             util.response.validateAjaxGetERPNotMessage(result, {
                                 success: function (oData) {
                                     let data = [];
@@ -1408,9 +1531,12 @@ sap.ui.define([
                     void 0;
                 }
 
+                await that._yieldToBrowser();
+
                 // 🔹 Deduplicar por Materialnumber + Salesorganization + Plant
                 const mUnique = new Map();
-                aResults.forEach(item => {
+                for (let i = 0; i < aResults.length; i++) {
+                    const item = aResults[i];
                     const key = [
                         item.Materialnumber || "",
                         item.Salesorganization || "",
@@ -1420,7 +1546,11 @@ sap.ui.define([
                     if (!mUnique.has(key)) {
                         mUnique.set(key, item);
                     }
-                });
+
+                    if (i > 0 && i % 1000 === 0) {
+                        await that._yieldToBrowser();
+                    }
+                }
 
                 const aFinal = Array.from(mUnique.values());
 
@@ -1643,10 +1773,12 @@ sap.ui.define([
             return aFlatten;
         },
 
-        _prepareDataForCeramicos: function (aStock) {
+        _prepareDataForCeramicos: async function (aStock) {
             let aFlatten = [];
 
-            aStock.forEach(parent => {
+            const aSafeStock = Array.isArray(aStock) ? aStock : [];
+            for (let i = 0; i < aSafeStock.length; i++) {
+                const parent = aSafeStock[i];
                 if (parent.toStockCeramico && parent.toStockCeramico.results) {
 
                     const oGrouped = parent.toStockCeramico.results.reduce((acc, child) => {
@@ -1701,7 +1833,11 @@ sap.ui.define([
 
                     aFlatten.push(...aGrouped);
                 }
-            });
+
+                if (i > 0 && i % 100 === 0) {
+                    await this._yieldToBrowser();
+                }
+            }
 
             aFlatten = this._sortByMaterialAsc(aFlatten);
             return aFlatten;

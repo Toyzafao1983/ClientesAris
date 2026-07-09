@@ -29,6 +29,7 @@ sap.ui.define([
                         this._bRestoreHooked = true;
                         oTree.attachEvent("rowsUpdated", this._restoreSelectionByCantidad.bind(this));
                     }
+                    this._attachMaterialMultiPaste(this.byId("miMaterialSellerandCoord"));
                 }
             });
         },
@@ -110,8 +111,11 @@ sap.ui.define([
                 MetrosMin     : ""
             });
             oProj.setProperty("/oTreeCer", []);
+            oProj.setProperty("/oTreeCerBase", []);
             oProj.setProperty("/oMaterialSelect", []);
             oProj.setProperty("/oMaterialBase", []);
+            oProj.setProperty("/showTipoFilter", false);
+            oProj.setProperty("/tipoStockSeleccionado", "TODOS");
             // MultiInputs
             this.byId("miMaterialSellerandCoord")?.removeAllTokens();
             this.byId("miDescriptionSellerandCoord")?.removeAllTokens();
@@ -168,11 +172,63 @@ sap.ui.define([
         },
         _afterOpenAddManualProduct: function () {
             const oTree = this.byId("ttCer");
+            this._attachMaterialMultiPaste(this.byId("miMaterialSellerandCoord"));
             if (!oTree) return;
             oTree.clearSelection();
             oTree.setFirstVisibleRow(0);
             oTree.collapseAll();
             this._restoreSelectionByCantidad();
+        },
+        _attachMaterialMultiPaste: function (oControl) {
+            if (!oControl || oControl.data("multiPasteAttached")) return;
+
+            oControl.data("multiPasteAttached", true);
+            oControl.attachBrowserEvent("paste", this._handleMaterialMultiPaste.bind(this, oControl));
+        },
+        _handleMaterialMultiPaste: function (oControl, oEvent) {
+            const sText = (oEvent.originalEvent?.clipboardData || oEvent.clipboardData)?.getData("text") || "";
+            const aCodes = Array.from(new Set(
+                String(sText)
+                    .split(/[\s,;\t\r\n]+/)
+                    .map(v => v.trim())
+                    .filter(Boolean)
+            ));
+
+            if (aCodes.length <= 1) return;
+
+            oEvent.preventDefault();
+
+            const oModelData = this.getView().getModel("oModelData");
+            const aCatalog = oModelData ? (oModelData.getProperty("/oFilterMaterial") || []) : [];
+            const mCatalog = {};
+
+            aCatalog.forEach(row => {
+                const sMat = String(row.Material || "").trim();
+                if (sMat) mCatalog[sMat] = row;
+            });
+
+            const aExisting = (oControl.getTokens() || []).map(t => String(t.getKey() || t.getText()).trim());
+
+            aCodes.forEach(sCode => {
+                const oRow = mCatalog[sCode];
+                if (!oRow || aExisting.includes(sCode)) return;
+
+                oControl.addToken(new sap.m.Token({
+                    key: sCode,
+                    text: oRow.Description ? `${sCode} - ${oRow.Description}` : sCode
+                }));
+                aExisting.push(sCode);
+            });
+
+            oControl.setValue("");
+
+            const oModelProyect = this.getView().getModel("oModelProyect");
+            const oSelectDetail = oModelProyect.getProperty("/oSelectDetail") || {};
+            oSelectDetail.aMaterials = (oControl.getTokens() || [])
+                .map(t => String(t.getKey() || t.getText()).trim())
+                .filter(Boolean);
+            oSelectDetail.material = oSelectDetail.aMaterials.length ? oSelectDetail.aMaterials[oSelectDetail.aMaterials.length - 1] : "";
+            oModelProyect.setProperty("/oSelectDetail", oSelectDetail);
         },
         _restoreSelectionByCantidad: function () {
             const oTree = this.byId("ttCer");
@@ -218,6 +274,7 @@ sap.ui.define([
                 MetrosMin     : ""
             });
             oProj.setProperty("/oTreeCer", []);
+            oProj.setProperty("/oTreeCerBase", []);
             const oMiMat  = this.byId("miMaterialSellerandCoord");
             const oMiDesc = this.byId("miDescriptionSellerandCoord");
             if (oMiMat)  { oMiMat.removeAllTokens(); }
@@ -241,6 +298,8 @@ sap.ui.define([
                 rb2.setSelected(false);
                 rb3.setSelected(true);
             }
+            oProj.setProperty("/showTipoFilter", false);
+            oProj.setProperty("/tipoStockSeleccionado", "TODOS");
             const oTree = this.byId("ttCer");
             if (oTree) {
                 this._clearTreeSelectionDeferred();
@@ -270,6 +329,7 @@ sap.ui.define([
 
             });
             oProj.setProperty("/oTreeCer",        []);
+            oProj.setProperty("/oTreeCerBase",    []);
             oProj.setProperty("/oMaterialSelect", []);
             oProj.setProperty("/oMaterialBase",   []);
             const oMiMat  = oView.byId("miMaterialSellerandCoord");
@@ -295,6 +355,8 @@ sap.ui.define([
                 rb2.setSelected(false);
                 rb3.setSelected(true);
             }
+            oProj.setProperty("/showTipoFilter", false);
+            oProj.setProperty("/tipoStockSeleccionado", "TODOS");
             const oTree = oView.byId("ttCer");
             if (oTree) {
                 this._clearTreeSelectionDeferred();
@@ -794,11 +856,86 @@ sap.ui.define([
 
             return aStock;
         },
+        _toStockNumber: function (v) {
+            if (typeof v === "number") return v;
+            let s = String(v ?? "").trim();
+            if (!s) return 0;
+            let bNegative = false;
+            if (s.endsWith("-")) {
+                bNegative = true;
+                s = s.slice(0, -1);
+            }
+            if (s.startsWith("-")) {
+                bNegative = true;
+                s = s.slice(1);
+            }
+            s = s.replace(/\s/g, "");
+            if (s.includes(",") && s.includes(".")) {
+                if (s.lastIndexOf(".") > s.lastIndexOf(",")) {
+                    s = s.replace(/,/g, "");
+                } else {
+                    s = s.replace(/\./g, "").replace(",", ".");
+                }
+            } else if (s.includes(",")) {
+                s = s.replace(",", ".");
+            }
+            const n = parseFloat(s);
+            if (!Number.isFinite(n)) return 0;
+            return bNegative ? -n : n;
+        },
+        _filterTreeByTipo: function (aRows, sTipo) {
+            const toNum = this._toStockNumber.bind(this);
+            const clone = (obj) => Object.assign({}, obj);
+
+            if (sTipo === "TODOS") {
+                return (aRows || []).map(group => Object.assign(clone(group), {
+                    children: (group.children || []).map(clone)
+                }));
+            }
+
+            const sField = sTipo === "SALDOS" ? "Saldos" : "Pallets";
+            const sTotalField = sTipo === "SALDOS" ? "TotalSaldos" : "TotalPallets";
+
+            return (aRows || []).reduce((acc, group) => {
+                const aChildren = (group.children || [])
+                    .filter(child => toNum(child[sField]) > 0)
+                    .map(clone);
+
+                if (toNum(group[sTotalField]) <= 0 && !aChildren.length) {
+                    return acc;
+                }
+
+                const oGroup = Object.assign(clone(group), { children: aChildren });
+                if (aChildren.length) {
+                    oGroup.TotalStockFisico = aChildren.reduce((sum, child) => sum + toNum(child.StockFisico), 0);
+                    oGroup.TotalPallets = aChildren.reduce((sum, child) => sum + toNum(child.Pallets), 0);
+                    oGroup.TotalSaldos = aChildren.reduce((sum, child) => sum + toNum(child.Saldos), 0);
+                }
+                acc.push(oGroup);
+                return acc;
+            }, []);
+        },
+        _applyTipoFromTreeBase: function () {
+            const oModelProyect = this.getView().getModel("oModelProyect");
+            const sTipo = this._getTipoSeleccionado();
+            const aBase = oModelProyect.getProperty("/oTreeCerBase") || [];
+            oModelProyect.setProperty("/tipoStockSeleccionado", sTipo);
+            oModelProyect.setProperty("/oTreeCer", this._filterTreeByTipo(aBase, sTipo));
+            this._clearTreeSelectionDeferred();
+        },
+        onTipoRadioSelect: function (oEvent) {
+            if (oEvent && oEvent.getParameter && oEvent.getParameter("selected") === false) return;
+            this._applyTipoFromTreeBase();
+        },
+        _yieldToBrowser: function () {
+            return new Promise(resolve => setTimeout(resolve, 0));
+        },
         _runInBatches: async function (aItems, iBatchSize, fn) {
             const aSettledAll = [];
             const iSize = Math.max(1, parseInt(iBatchSize, 10) || 8);
 
             for (let i = 0; i < aItems.length; i += iSize) {
+                await this._yieldToBrowser();
                 const aBatch = aItems.slice(i, i + iSize);
                 const aSettled = await Promise.allSettled(aBatch.map(fn));
                 aSettledAll.push(...aSettled);
@@ -813,6 +950,7 @@ sap.ui.define([
             // 👉 Limpia selección de la TreeTable ANTES de buscar
             this._clearTreeSelection();
             oModelProyect.setProperty("/oTreeCer",        []);
+            oModelProyect.setProperty("/oTreeCerBase",    []);
             oModelProyect.setProperty("/oMaterialSelect", []);
             oModelProyect.setProperty("/oMaterialBase",   []);
             aFilters.push(new sap.ui.model.Filter(
@@ -951,21 +1089,21 @@ sap.ui.define([
                     }
                 });
 
-                // 3) Filtros tipo + metraje
-                const sTipo = that._getTipoSeleccionado();
-                let aFiltradoTipo = that._applyTipoFilter(aTotalStock, sTipo);
-                aFiltradoTipo = that._applyMetrajeFilter(aFiltradoTipo, fMetrosMin);
+                // 3) Metraje queda como filtro de búsqueda; tipo se aplica sobre la base local.
+                const aFiltradoBase = that._applyMetrajeFilter(aTotalStock, fMetrosMin);
 
-                if (!aFiltradoTipo.length) {
-                    that.getMessageBox("warning", "No se encontraron materiales con los filtros (tipo y metraje).");
+                if (!aFiltradoBase.length) {
+                    that.getMessageBox("warning", "No se encontraron materiales con los filtros aplicados.");
                 }
 
-                // 4) Set modelo + tree
-                oProjModel.setProperty("/oMaterialSelect", aFiltradoTipo);
+                oProjModel.setProperty("/oMaterialSelect", aFiltradoBase);
 
-                const aTreeData = that._prepareDataForCeramicos(aFiltradoTipo);
+                const aTreeData = await that._prepareDataForCeramicos(aFiltradoBase);
                 const aTreeAdj  = that._applyReservedToTree(aTreeData);
-                oProjModel.setProperty("/oTreeCer", aTreeAdj);
+                oProjModel.setProperty("/oTreeCerBase", aTreeAdj);
+                oProjModel.setProperty("/showTipoFilter", true);
+                oProjModel.setProperty("/tipoStockSeleccionado", that._getTipoSeleccionado());
+                oProjModel.setProperty("/oTreeCer", that._filterTreeByTipo(aTreeAdj, that._getTipoSeleccionado()));
 
                 that._clearTreeSelectionDeferred();
 
@@ -1121,10 +1259,12 @@ sap.ui.define([
             }
             setTimeout(() => this._restoreSelectionByCantidad(), 0);
         },
-        _prepareDataForCeramicos: function (aStock) {
+        _prepareDataForCeramicos: async function (aStock) {
             const map = new Map();
 
-            aStock.forEach(item => {
+            const aSafeStock = Array.isArray(aStock) ? aStock : [];
+            for (let i = 0; i < aSafeStock.length; i++) {
+                const item = aSafeStock[i];
                 const key = `${item.Matnr}_${item.Calibre || ""}_${item.Tono || ""}`;
                 if (!map.has(key)) {
                 map.set(key, {
@@ -1139,9 +1279,13 @@ sap.ui.define([
                 existing.Pallets     += parseFloat(item.Pallets) || 0;
                 existing.Saldos      += parseFloat(item.Saldos) || 0;
                 }
-            });
+                if (i > 0 && i % 500 === 0) {
+                    await this._yieldToBrowser();
+                }
+            }
 
             const grouped = {};
+            let iGrouped = 0;
             for (const item of map.values()) {
                 const key = item.Matnr;
                 if (!grouped[key]) {
@@ -1173,6 +1317,10 @@ sap.ui.define([
                 cantidadPallets: 0,
                 cantidadCajas: 0
                 });
+                iGrouped++;
+                if (iGrouped % 500 === 0) {
+                    await this._yieldToBrowser();
+                }
             }
 
             return Object.values(grouped).map(g => ({

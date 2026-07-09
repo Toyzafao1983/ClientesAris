@@ -2438,13 +2438,16 @@ sap.ui.define([
 					iTipoIndex: 2,      // 0: Completos, 1: Saldos, 2: Todos
 					rbTipo: "TODOS"
 				});
+				oModel.setProperty("/Main/showTipoFilter", false);
 
 				// 🔹 Limpiar datasets
 				oModel.setProperty("/oReporte", []);
 				oModel.setProperty("/oStockDisponible", []);
 				oModel.setProperty("/oStockQueue", []);
 				oModel.setProperty("/oTreeCer", []);
+				oModel.setProperty("/oTreeCerBase", []);
 				oModel.setProperty("/oReporteCeraCli", []);
+				oModel.setProperty("/oReporteCeraCliBase", []);
 				oModel.setProperty("/oStockTextil", []);
 				oModel.setProperty("/oStockQuimico", []);
 			}
@@ -2658,9 +2661,95 @@ sap.ui.define([
 						}
 						return null;
 					});
+					if (id === "miMaterial" && !oControl.data("multiPasteAttached")) {
+						oControl.data("multiPasteAttached", true);
+						oControl.attachBrowserEvent("paste", this._handleMaterialMultiPaste.bind(this, oControl));
+					}
 				} else {
 					void 0;
 				}
+			});
+		},
+		_handleMaterialMultiPaste: async function (oControl, oEvent) {
+			const sText = (oEvent.originalEvent?.clipboardData || oEvent.clipboardData)?.getData("text") || "";
+			const aCodes = Array.from(new Set(
+				String(sText)
+					.split(/[\s,;\t\r\n]+/)
+					.map(v => v.trim())
+					.filter(Boolean)
+			));
+
+			if (aCodes.length <= 1) return;
+
+			oEvent.preventDefault();
+
+			const oModelData = this.getView().getModel("oModelData");
+			const aCatalog = oModelData ? (oModelData.getProperty("/oFiltroMaterial") || []) : [];
+			const mCatalog = {};
+
+			aCatalog.forEach(row => {
+				const sMat = String(row.Material || "").trim();
+				if (sMat) mCatalog[sMat] = row;
+			});
+
+			const aMissing = aCodes.filter(sCode => !mCatalog[sCode]);
+			if (aMissing.length) {
+				const aFetched = await this._fetchMaterialRowsForPaste(aMissing);
+				aFetched.forEach(row => {
+					const sMat = String(row.Material || "").trim();
+					if (sMat) mCatalog[sMat] = row;
+				});
+			}
+
+			const aExisting = (oControl.getTokens() || []).map(t => String(t.getKey() || t.getText()).trim());
+			const aValid = [];
+
+			aCodes.forEach(sCode => {
+				const oRow = mCatalog[sCode];
+				if (!oRow || aExisting.includes(sCode) || aValid.includes(sCode)) return;
+
+				oControl.addToken(new sap.m.Token({
+					key: sCode,
+					text: oRow.Description ? `${sCode} - ${oRow.Description}` : sCode
+				}));
+				aValid.push(sCode);
+			});
+
+			oControl.setValue("");
+			this.getView().getModel("oModelProyect").setProperty(
+				"/Main/filter/cbCodMaterial",
+				(oControl.getTokens() || []).map(t => String(t.getKey() || t.getText()).trim()).filter(Boolean)
+			);
+		},
+		_fetchMaterialRowsForPaste: function (aCodes) {
+			const aSafeCodes = Array.from(new Set((aCodes || []).map(v => String(v || "").trim()).filter(Boolean)));
+			if (!aSafeCodes.length) return Promise.resolve([]);
+
+			const sSalesOrg = this.sSalesOrg || "1130";
+			const escapeOData = (v) => String(v || "").replace(/'/g, "''");
+			const sOrCodes = aSafeCodes.map(sCode => `Material eq '${escapeOData(sCode)}'`).join(" or ");
+			const sFilter = `$filter=SalesOrganization eq '${escapeOData(sSalesOrg)}' and (${sOrCodes})`;
+
+			let sUrl = "";
+			if (this.local) {
+				const sPath = `/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/MaterialsConsultation?${sFilter}&$top=${aSafeCodes.length}&$format=json&sap-language=ES`;
+				sUrl = this.getOwnerComponent().getManifestObject().resolveUri(sPath);
+			} else {
+				sUrl = jQuery.sap.getModulePath(this.route) +
+					`/S4HANA/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/MaterialsConsultation?${sFilter}&$top=${aSafeCodes.length}&$format=json&sap-language=ES`;
+			}
+
+			return new Promise(resolve => {
+				Services.getoDataERPAsync(this, sUrl, function (result) {
+					util.response.validateAjaxGetERPNotMessage(result, {
+						success: function (oData) {
+							resolve(Array.isArray(oData.data) ? oData.data : []);
+						},
+						error: function () {
+							resolve([]);
+						}
+					});
+				});
 			});
 		},
 		_fixNegative: function (value) {

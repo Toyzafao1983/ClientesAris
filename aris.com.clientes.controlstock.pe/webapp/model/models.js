@@ -32,9 +32,12 @@ sap.ui.define([
                             cbStyle: [],            // miOrilloStyle
                             rbTipo: "TODOS",   
                             iTipoIndex: 2
-                        }
+                        },
+                        showTipoFilter: false
                     },
                     oReporte: [],
+                    oTreeCerBase: [],
+                    oReporteCeraCliBase: [],
                     oDetalle: {},
                     oCabecera: {},
                     sIdioma: "esp"

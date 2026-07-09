@@ -701,7 +701,10 @@ sap.ui.define([
             });
 
             oProj.setProperty("/oMaterialSelect", []);
+            oProj.setProperty("/oMaterialSelectBase", []);
             oProj.setProperty("/oMaterialBase", []);
+            oProj.setProperty("/showTipoFilterClient", false);
+            oProj.setProperty("/tipoStockSeleccionadoClient", "TODOS");
 
             const oMiMat = sap.ui.core.Fragment.byId(this.frgIdAddManualProductClient, "miMaterial");
             const oMiDesc = sap.ui.core.Fragment.byId(this.frgIdAddManualProductClient, "miDescription");
@@ -738,6 +741,8 @@ sap.ui.define([
                 rb5.setSelected(false);
                 rb6.setSelected(true);
             }
+            oProj.setProperty("/showTipoFilterClient", false);
+            oProj.setProperty("/tipoStockSeleccionadoClient", "TODOS");
 
             const oTable = sap.ui.core.Fragment.byId(this.frgIdAddManualProductClient, "tblStockCliente2");
             if (oTable) {
@@ -770,6 +775,9 @@ sap.ui.define([
                 Estilo: ""
             });
             oModelProyect.setProperty("/oMaterialSelect", []);
+            oModelProyect.setProperty("/oMaterialSelectBase", []);
+            oModelProyect.setProperty("/showTipoFilterClient", false);
+            oModelProyect.setProperty("/tipoStockSeleccionadoClient", "TODOS");
             oModelProyect.refresh(true);
             this.setFragment(
                 "_dialogAddManualProductClient",
@@ -935,15 +943,29 @@ sap.ui.define([
                 case "COMPLETOS":
                     return aData.filter(item => toNum(item.Pallets) > 0);
                 case "SALDOS":
-                    return aData.filter(item =>
-                        toNum(item.Saldos) > 0 &&
-                        toNum(item.Pallets) === 0
-                    );
+                    return aData.filter(item => toNum(item.Saldos) > 0);
 
                 case "TODOS":
                 default:
                     return aData;
             }
+        },
+        _applyTipoFromMaterialSelectBase: function () {
+            const oModelProyect = this.getView().getModel("oModelProyect");
+            const sTipo = this._getTipoSeleccionado();
+            const aBase = oModelProyect.getProperty("/oMaterialSelectBase") || [];
+
+            oModelProyect.setProperty("/tipoStockSeleccionadoClient", sTipo);
+            oModelProyect.setProperty("/oMaterialSelect", this._applyTipoFilter(aBase, sTipo));
+
+            const oTable = sap.ui.core.Fragment.byId(this.frgIdAddManualProductClient, "tblStockCliente2") || this.byId("tblStockCliente2");
+            if (oTable) {
+                oTable.removeSelections(true);
+            }
+        },
+        onTipoRadioSelectClient: function (oEvent) {
+            if (oEvent && oEvent.getParameter && oEvent.getParameter("selected") === false) return;
+            this._applyTipoFromMaterialSelectBase();
         },
         _applyMetrajeFilter: function (aData, fMetrosMin) {
             if (!Array.isArray(aData) || !aData.length) {
@@ -961,11 +983,15 @@ sap.ui.define([
             const iSize = Math.max(1, parseInt(iBatchSize, 10) || 8);
 
             for (let i = 0; i < aItems.length; i += iSize) {
+                await this._yieldToBrowser();
                 const aBatch = aItems.slice(i, i + iSize);
                 const aSettled = await Promise.allSettled(aBatch.map(fn));
                 aSettledAll.push(...aSettled);
             }
             return aSettledAll;
+        },
+        _yieldToBrowser: function () {
+            return new Promise(resolve => setTimeout(resolve, 0));
         },
         // Para Activar el Boton de stock
         onBuscarPress: function () {
@@ -982,6 +1008,7 @@ sap.ui.define([
             }
 
             oModelProyect.setProperty("/oMaterialSelect", []);
+            oModelProyect.setProperty("/oMaterialSelectBase", []);
             oModelProyect.setProperty("/oMaterialBase", []);
 
             // Sincronizar SIEMPRE desde lo visible en los MultiInput
@@ -1119,16 +1146,17 @@ sap.ui.define([
                                 }
                             });
 
-                            const sTipo = that._getTipoSeleccionado();
-                            let aFiltrado = that._applyTipoFilter(aTotalStock, sTipo);
-                            let aFinal = that._prepareDataForCeramicos(aFiltrado);
+                            let aFinal = await that._prepareDataForCeramicos(aTotalStock);
 
                             aFinal = that._applyMetrajeFilter(aFinal, fMetrosMin);
 
                             if (!aFinal.length) {
-                                that.getMessageBox("warning", "No se encontraron materiales con los filtros (tipo y metraje).");
+                                that.getMessageBox("warning", "No se encontraron materiales con los filtros aplicados.");
                             }
-                            oProjModel.setProperty("/oMaterialSelect", aFinal);
+                            oProjModel.setProperty("/oMaterialSelectBase", aFinal);
+                            oProjModel.setProperty("/showTipoFilterClient", true);
+                            oProjModel.setProperty("/tipoStockSeleccionadoClient", that._getTipoSeleccionado());
+                            oProjModel.setProperty("/oMaterialSelect", that._applyTipoFilter(aFinal, that._getTipoSeleccionado()));
                         } catch (err) {
                             that.getMessageBox("error", "Error consultando stock en paralelo.");
                         } finally {
@@ -1223,12 +1251,14 @@ sap.ui.define([
 
             return m;
         },
-        _prepareDataForCeramicos: function (aStock) {
+        _prepareDataForCeramicos: async function (aStock) {
             const map = new Map();
 
-            (aStock || []).forEach(item => {
+            const aSafeStock = Array.isArray(aStock) ? aStock : [];
+            for (let i = 0; i < aSafeStock.length; i++) {
+                const item = aSafeStock[i];
                 const sMatnr = (item?.Matnr || "").trim();
-                if (!sMatnr) return;
+                if (!sMatnr) continue;
 
                 const nStock = parseFloat(item.StockFisico) || 0;
                 const nPallets = parseFloat(item.Pallets) || 0;
@@ -1267,7 +1297,10 @@ sap.ui.define([
                     if (!acc.Descripcion && item.Descripcion) acc.Descripcion = item.Descripcion;
                     if (!acc.Um && item.Um) acc.Um = item.Um;
                 }
-            });
+                if (i > 0 && i % 500 === 0) {
+                    await this._yieldToBrowser();
+                }
+            }
 
             return Array.from(map.values()).map(item => ({
                 ...item,
@@ -4022,6 +4055,9 @@ sap.ui.define([
             return "";
         },
         _afterOpenAddManualProduct: function () {
+            const oMiMat = sap.ui.core.Fragment.byId(this.frgIdAddManualProductClient, "miMaterial") || this.byId("miMaterial");
+            this._attachMaterialMultiPasteClient(oMiMat);
+
             // Tabla dentro del fragmento de cliente
             const oTable =
                 sap.ui.getCore().byId(this.frgIdAddManualProductClient + "--tblStockCliente2") ||
@@ -4030,6 +4066,57 @@ sap.ui.define([
             if (oTable) {
                 oTable.removeSelections(true);
             }
+        },
+        _attachMaterialMultiPasteClient: function (oControl) {
+            if (!oControl || oControl.data("multiPasteAttached")) return;
+
+            oControl.data("multiPasteAttached", true);
+            oControl.attachBrowserEvent("paste", this._handleMaterialMultiPasteClient.bind(this, oControl));
+        },
+        _handleMaterialMultiPasteClient: function (oControl, oEvent) {
+            const sText = (oEvent.originalEvent?.clipboardData || oEvent.clipboardData)?.getData("text") || "";
+            const aCodes = Array.from(new Set(
+                String(sText)
+                    .split(/[\s,;\t\r\n]+/)
+                    .map(v => v.trim())
+                    .filter(Boolean)
+            ));
+
+            if (aCodes.length <= 1) return;
+
+            oEvent.preventDefault();
+
+            const oModelData = this.getView().getModel("oModelData");
+            const aCatalog = oModelData ? (oModelData.getProperty("/oFilterMaterial") || []) : [];
+            const mCatalog = {};
+
+            aCatalog.forEach(row => {
+                const sMat = String(row.Material || "").trim();
+                if (sMat) mCatalog[sMat] = row;
+            });
+
+            const aExisting = (oControl.getTokens() || []).map(t => String(t.getKey() || t.getText()).trim());
+
+            aCodes.forEach(sCode => {
+                const oRow = mCatalog[sCode];
+                if (!oRow || aExisting.includes(sCode)) return;
+
+                oControl.addToken(new sap.m.Token({
+                    key: sCode,
+                    text: oRow.Description ? `${sCode} - ${oRow.Description}` : sCode
+                }));
+                aExisting.push(sCode);
+            });
+
+            oControl.setValue("");
+
+            const oModelProyect = this.getView().getModel("oModelProyect");
+            const oSelectDetail = oModelProyect.getProperty("/oSelectDetail") || {};
+            oSelectDetail.aMaterials = (oControl.getTokens() || [])
+                .map(t => String(t.getKey() || t.getText()).trim())
+                .filter(Boolean);
+            oSelectDetail.material = oSelectDetail.aMaterials.length ? oSelectDetail.aMaterials[oSelectDetail.aMaterials.length - 1] : "";
+            oModelProyect.setProperty("/oSelectDetail", oSelectDetail);
         },
         // Modificación de Detail
         onDetailEdit: function () {
