@@ -580,12 +580,11 @@ sap.ui.define([
 
 			return nValue <= 0 ? "Error" : "Success";
 		},
-		formatUMVTextil: function (sUMV, sGrupoMaterial, sBrand) {
+		formatUMVTextil: function (sUMV, sGrupoMaterial) {
 			const sUmv = (sUMV || "").trim().toUpperCase();
 			const sGrupo = (sGrupoMaterial || "").trim();
-			const sMarca = (sBrand || "").trim().toUpperCase();
 			const bSerie80 = sGrupo === "02";
-			const bBelfast = sMarca.includes("BELFAST") || sMarca === "T01";
+			const bBelfast = sGrupo === "03";
 			if ((bSerie80 || bBelfast) && sUmv === "MTS") {
 				return "Pzas";
 			}

@@ -2435,6 +2435,13 @@ sap.ui.define([
                         if (it.isExtraFromSAP) {
                             bonusItmSet.add(it.ItmNumber);
                         }
+
+                        const oItemOut = aItemsOut.find(function (io) {
+                            return io.ItmNumber === it.ItmNumber;
+                        });
+                        if (oItemOut && oItemOut.ItemCateg === "ZBOL") {
+                            it.esBolsa = true;
+                        }
                     });
 
                     const getSum = function (sCondType, sItmNumber) {
@@ -2501,9 +2508,11 @@ sap.ui.define([
                                 }
                                 break;
                             case "ZPBO":
-                                if (oItemUI.esBolsa) {
-                                    oItemUI.precioUnit = fUnitCond;
-                                }
+                                // ZPBO identifica el precio de bolsa en la respuesta SAP.
+                                // También cubre bolsas cargadas desde documentos de referencia,
+                                // que inicialmente llegan a la UI con esBolsa = false.
+                                oItemUI.esBolsa = true;
+                                oItemUI.precioUnit = fUnitCond;
                                 break;
                             default:
                                 if (this._isActiveDiscountCondition(cond, mPriceConditionTypes)) {
