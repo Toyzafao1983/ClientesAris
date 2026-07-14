@@ -591,6 +591,10 @@ sap.ui.define([
 
 			return sUMV || "";
 		},
+		formatUnidadTotalTextil: function (sGrupoMaterial) {
+			const sGrupo = (sGrupoMaterial || "").trim();
+			return sGrupo === "02" || sGrupo === "03" ? "PZAS" : "MTS";
+		},
 		formatCreditWithCurrency: function (vValue, sCurrency) {
 			if (vValue === null || vValue === undefined || vValue === "") {
 				return "0.00" + (sCurrency ? " " + sCurrency : "");

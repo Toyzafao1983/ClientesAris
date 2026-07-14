@@ -117,7 +117,12 @@
                             }"
                             editable="false"
                             class="footer-input"/>
-                        <Text text="MTS" class="sapUiTinyMarginBegin"/>
+                        <Text
+                            text="{
+                                path: 'oModelProyect>/inputForm/grupoMaterial',
+                                formatter: '.formatter.formatUnidadTotalTextil'
+                            }"
+                            class="sapUiTinyMarginBegin"/>
                     </HBox>
 
                     <TextArea
