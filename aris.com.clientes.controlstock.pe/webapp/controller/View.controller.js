@@ -936,11 +936,21 @@ sap.ui.define([
 
         _filterCeramicoClientByTipo: function (aRows, sTipo) {
             const toNum = this._toStockNumber.bind(this);
-            return (aRows || []).filter(row => {
-                if (sTipo === "SALDOS") return toNum(row.Saldos) > 0;
-                if (sTipo === "COMPLETOS") return toNum(row.Pallets) > 0;
-                return true;
-            });
+            return (aRows || []).reduce((acc, row) => {
+                const oRow = Object.assign({}, row);
+
+                if (sTipo === "SALDOS") {
+                    if (toNum(oRow.Saldos) <= 0) return acc;
+                    oRow.StockFisico = toNum(oRow.StockFisicoSaldos);
+                } else if (sTipo === "COMPLETOS") {
+                    if (toNum(oRow.Pallets) <= 0) return acc;
+                    oRow.StockFisico = toNum(oRow.StockFisicoCompletos);
+                }
+
+                oRow.StockFisicoFmt = this.formatNumber(oRow.StockFisico);
+                acc.push(oRow);
+                return acc;
+            }, []);
         },
 
         _filterCeramicoTreeByTipo: function (aRows, sTipo) {
@@ -959,7 +969,14 @@ sap.ui.define([
             return (aRows || []).reduce((acc, group) => {
                 const aChildren = (group.children || [])
                     .filter(child => toNum(child[sField]) > 0)
-                    .map(clone);
+                    .map(child => {
+                        const oChild = clone(child);
+                        oChild.StockFisico = sTipo === "SALDOS"
+                            ? toNum(oChild.StockFisicoSaldos)
+                            : toNum(oChild.StockFisicoCompletos);
+                        oChild.StockFisicoFmt = this.formatNumber(oChild.StockFisico);
+                        return oChild;
+                    });
 
                 const bKeepGroup = toNum(group[sTotalField]) > 0 || aChildren.length > 0;
                 if (!bKeepGroup) return acc;
@@ -1171,11 +1188,15 @@ sap.ui.define([
                                         Descripcion: item.Descripcion,
                                         Um: item.Um,
                                         StockFisico: 0,
+                                        StockFisicoCompletos: 0,
+                                        StockFisicoSaldos: 0,
                                         Pallets: 0,
                                         Saldos: 0
                                     };
                                 }
                                 acc[key].StockFisico += Number(item.StockFisico) || 0;
+                                acc[key].StockFisicoCompletos += Number(item.StockFisicoCompletos) || 0;
+                                acc[key].StockFisicoSaldos += Number(item.StockFisicoSaldos) || 0;
                                 acc[key].Pallets += Number(item.Pallets) || 0;
                                 acc[key].Saldos += Number(item.Saldos) || 0;
                                 return acc;
@@ -1212,6 +1233,8 @@ sap.ui.define([
                                         Descripcion: item.Descripcion,
                                         Um: item.Um,
                                         TotalStockFisico: 0,
+                                        TotalStockFisicoCompletos: 0,
+                                        TotalStockFisicoSaldos: 0,
                                         TotalPallets: 0,
                                         TotalSaldos: 0,
                                         children: []
@@ -1219,6 +1242,8 @@ sap.ui.define([
                                 }
 
                                 acc[key].TotalStockFisico += item.StockFisico;
+                                acc[key].TotalStockFisicoCompletos += item.StockFisicoCompletos;
+                                acc[key].TotalStockFisicoSaldos += item.StockFisicoSaldos;
                                 acc[key].TotalPallets += item.Pallets;
                                 acc[key].TotalSaldos += item.Saldos;
                                 acc[key].children.push(item);
@@ -1775,6 +1800,7 @@ sap.ui.define([
 
         _prepareDataForCeramicos: async function (aStock) {
             let aFlatten = [];
+            const toNum = this._toStockNumber.bind(this);
 
             const aSafeStock = Array.isArray(aStock) ? aStock : [];
             for (let i = 0; i < aSafeStock.length; i++) {
@@ -1793,9 +1819,14 @@ sap.ui.define([
                             sUm
                         ].join("|");
 
-                        const nStock = Number(child.StockFisico) || 0;
-                        const nPallet = Number(child.Pallets) || 0;
-                        const nSaldo = Number(child.Saldos) || 0;
+                        const nStock = toNum(child.StockFisico);
+                        const nPallet = toNum(child.Pallets);
+                        const nSaldo = toNum(child.Saldos);
+                        const nMetraje = toNum(child.Metraje);
+                        const nStockSaldos = nSaldo > 0
+                            ? (nMetraje > 0 ? Math.min(nStock, nSaldo * nMetraje) : (nPallet > 0 ? 0 : nStock))
+                            : 0;
+                        const nStockCompletos = nPallet > 0 ? Math.max(0, nStock - nStockSaldos) : 0;
 
                         if (!acc[sKey]) {
                             acc[sKey] = {
@@ -1810,6 +1841,8 @@ sap.ui.define([
                                 Um: sUm,
 
                                 StockFisico: 0,
+                                StockFisicoCompletos: 0,
+                                StockFisicoSaldos: 0,
                                 Pallets: 0,
                                 Saldos: 0,
 
@@ -1818,6 +1851,8 @@ sap.ui.define([
                         }
 
                         acc[sKey].StockFisico += nStock;
+                        acc[sKey].StockFisicoCompletos += nStockCompletos;
+                        acc[sKey].StockFisicoSaldos += nStockSaldos;
                         acc[sKey].Pallets += nPallet;
                         acc[sKey].Saldos += nSaldo;
 

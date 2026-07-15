@@ -297,17 +297,6 @@
                         </table:template>
                     </table:Column>
 
-                    <table:Column width="7rem" visible="{= !${oModelProyect>/showTipoFilter} || ${oModelProyect>/tipoStockSeleccionado} !== 'SALDOS' }">
-                        <table:label>
-                            <Label text="Cantidad"/>
-                        </table:label>
-                        <table:template>
-                            <Text text="{path:'oModelProyect>Cantidad',
-                                    formatter:'.formatter.formatMonto2Dec'
-                            }"/>
-                        </table:template>
-                    </table:Column>
-
                     <table:Column width="7rem" visible="{= !${oModelProyect>/showTipoFilter} || ${oModelProyect>/tipoStockSeleccionado} !== 'COMPLETOS' }">
                         <table:label>
                             <Label text="Pallets"/>

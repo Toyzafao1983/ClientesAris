@@ -208,7 +208,6 @@
                         <Column><Text text="Stock Físico"/></Column>
                         <Column visible="{= !${oModelProyect>/showTipoFilterClient} || ${oModelProyect>/tipoStockSeleccionadoClient} !== 'SALDOS' }"><Text text="Pallets Stock"/></Column>
                         <Column visible="{= !${oModelProyect>/showTipoFilterClient} || ${oModelProyect>/tipoStockSeleccionadoClient} !== 'COMPLETOS' }"><Text text="Cajas Stock"/></Column>
-                        <Column><Text text="Cantidad"/></Column>
                         <Column visible="{= !${oModelProyect>/showTipoFilterClient} || ${oModelProyect>/tipoStockSeleccionadoClient} !== 'SALDOS' }"><Text text="Pallets"/></Column>
                         <Column visible="{= !${oModelProyect>/showTipoFilterClient} || ${oModelProyect>/tipoStockSeleccionadoClient} !== 'COMPLETOS' }"><Text text="Cajas "/></Column>
                     </columns>
@@ -235,12 +234,6 @@
                                 <Text
                                     text="{
                                         path: 'oModelProyect>Saldos',
-                                        formatter: '.formatter.formatMonto2Dec'
-                                    }"
-                                />
-                                <Text
-                                    text="{
-                                        path: 'oModelProyect>Cantidad',
                                         formatter: '.formatter.formatMonto2Dec'
                                     }"
                                 />
