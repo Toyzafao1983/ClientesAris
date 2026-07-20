@@ -941,9 +941,17 @@ sap.ui.define([
             const toNum = v => isNaN(parseFloat(v)) ? 0 : parseFloat(v);
             switch (sTipo) {
                 case "COMPLETOS":
-                    return aData.filter(item => toNum(item.Pallets) > 0);
+                    return aData
+                        .filter(item => toNum(item.Pallets) > 0)
+                        .map(item => Object.assign({}, item, {
+                            StockFisico: toNum(item.StockFisicoCompletos)
+                        }));
                 case "SALDOS":
-                    return aData.filter(item => toNum(item.Saldos) > 0);
+                    return aData
+                        .filter(item => toNum(item.Saldos) > 0)
+                        .map(item => Object.assign({}, item, {
+                            StockFisico: toNum(item.StockFisicoSaldos)
+                        }));
 
                 case "TODOS":
                 default:
@@ -1205,7 +1213,8 @@ sap.ui.define([
                                     Um: c.Um || "",
                                     StockFisico: parseFloat(c.StockFisico) || 0,
                                     Pallets: parseFloat(c.Pallets) || 0,
-                                    Saldos: parseFloat(c.Saldos) || 0
+                                    Saldos: parseFloat(c.Saldos) || 0,
+                                    Metraje: parseFloat(c.Metraje) || 0
                                 }))
                             );
 
@@ -1263,6 +1272,11 @@ sap.ui.define([
                 const nStock = parseFloat(item.StockFisico) || 0;
                 const nPallets = parseFloat(item.Pallets) || 0;
                 const nSaldos = parseFloat(item.Saldos) || 0;
+                const nMetraje = parseFloat(item.Metraje) || 0;
+                const nStockSaldos = nSaldos > 0
+                    ? (nMetraje > 0 ? Math.min(nStock, nSaldos * nMetraje) : (nPallets > 0 ? 0 : nStock))
+                    : 0;
+                const nStockCompletos = nPallets > 0 ? Math.max(0, nStock - nStockSaldos) : 0;
 
                 const sCalibre = item.Calibre || "";
                 const sTono = item.Tono || "";
@@ -1278,6 +1292,8 @@ sap.ui.define([
                         Calidad: sCalidad,
 
                         StockFisico: nStock,
+                        StockFisicoCompletos: nStockCompletos,
+                        StockFisicoSaldos: nStockSaldos,
                         Pallets: nPallets,
                         Saldos: nSaldos,
 
@@ -1289,6 +1305,8 @@ sap.ui.define([
                 } else {
                     const acc = map.get(sMatnr);
                     acc.StockFisico += nStock;
+                    acc.StockFisicoCompletos += nStockCompletos;
+                    acc.StockFisicoSaldos += nStockSaldos;
                     acc.Pallets += nPallets;
                     acc.Saldos += nSaldos;
                     if (!acc.Calibre && sCalibre) acc.Calibre = sCalibre;
@@ -1305,6 +1323,8 @@ sap.ui.define([
             return Array.from(map.values()).map(item => ({
                 ...item,
                 StockFisico: Number(item.StockFisico.toFixed(2)),
+                StockFisicoCompletos: Number(item.StockFisicoCompletos.toFixed(2)),
+                StockFisicoSaldos: Number(item.StockFisicoSaldos.toFixed(2)),
                 Pallets: Number(item.Pallets.toFixed(2)),
                 Saldos: Number(item.Saldos.toFixed(2))
             }));

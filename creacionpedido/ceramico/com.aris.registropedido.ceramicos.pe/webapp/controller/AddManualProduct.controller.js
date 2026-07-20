@@ -899,7 +899,13 @@ sap.ui.define([
             return (aRows || []).reduce((acc, group) => {
                 const aChildren = (group.children || [])
                     .filter(child => toNum(child[sField]) > 0)
-                    .map(clone);
+                    .map(child => {
+                        const oChild = clone(child);
+                        oChild.StockFisico = sTipo === "SALDOS"
+                            ? toNum(oChild.StockFisicoSaldos)
+                            : toNum(oChild.StockFisicoCompletos);
+                        return oChild;
+                    });
 
                 if (toNum(group[sTotalField]) <= 0 && !aChildren.length) {
                     return acc;
@@ -910,6 +916,10 @@ sap.ui.define([
                     oGroup.TotalStockFisico = aChildren.reduce((sum, child) => sum + toNum(child.StockFisico), 0);
                     oGroup.TotalPallets = aChildren.reduce((sum, child) => sum + toNum(child.Pallets), 0);
                     oGroup.TotalSaldos = aChildren.reduce((sum, child) => sum + toNum(child.Saldos), 0);
+                } else {
+                    oGroup.TotalStockFisico = sTipo === "SALDOS"
+                        ? toNum(oGroup.TotalStockFisicoSaldos)
+                        : toNum(oGroup.TotalStockFisicoCompletos);
                 }
                 acc.push(oGroup);
                 return acc;
@@ -1146,7 +1156,8 @@ sap.ui.define([
                                     Um: c.Um || "",
                                     StockFisico: parseFloat(c.StockFisico) || 0,
                                     Pallets: parseFloat(c.Pallets) || 0,
-                                    Saldos: parseFloat(c.Saldos) || 0
+                                    Saldos: parseFloat(c.Saldos) || 0,
+                                    Metraje: parseFloat(c.Metraje) || 0
                                 }))
                             );
 
@@ -1206,6 +1217,8 @@ sap.ui.define([
 
                     node.TotalPallets = Number(sum(node.children, "Pallets").toFixed(3));
                     node.TotalSaldos  = Number(sum(node.children, "Saldos").toFixed(3));
+                    node.TotalStockFisicoCompletos = Number(sum(node.children, "StockFisicoCompletos").toFixed(3));
+                    node.TotalStockFisicoSaldos = Number(sum(node.children, "StockFisicoSaldos").toFixed(3));
                     node.TotalStockFisico = Number(sum(node.children, "StockFisico").toFixed(3));
 
                     return node;
@@ -1216,10 +1229,26 @@ sap.ui.define([
                 const nPal = Math.max(0, toNum(node.Pallets) - oRes.pal);
                 const nCaj = Math.max(0, toNum(node.Saldos)  - oRes.caj);
                 const nFis = Math.max(0, toNum(node.StockFisico) - oRes.m2);
+                const nFisPal = Math.max(
+                    0,
+                    toNum(node.StockFisicoCompletos) -
+                    (toNum(node.Pallets) > 0
+                        ? oRes.pal * toNum(node.StockFisicoCompletos) / toNum(node.Pallets)
+                        : 0)
+                );
+                const nFisCaj = Math.max(
+                    0,
+                    toNum(node.StockFisicoSaldos) -
+                    (toNum(node.Saldos) > 0
+                        ? oRes.caj * toNum(node.StockFisicoSaldos) / toNum(node.Saldos)
+                        : 0)
+                );
 
                 node.Pallets = Number(nPal.toFixed(3));
                 node.Saldos  = Number(nCaj.toFixed(3));
                 node.StockFisico = Number(nFis.toFixed(3));
+                node.StockFisicoCompletos = Number(nFisPal.toFixed(3));
+                node.StockFisicoSaldos = Number(nFisCaj.toFixed(3));
 
                 node.__reservedPal = Number(oRes.pal.toFixed(3));
                 node.__reservedCaj = Number(oRes.caj.toFixed(3));
@@ -1266,18 +1295,30 @@ sap.ui.define([
             for (let i = 0; i < aSafeStock.length; i++) {
                 const item = aSafeStock[i];
                 const key = `${item.Matnr}_${item.Calibre || ""}_${item.Tono || ""}`;
+                const nStock = parseFloat(item.StockFisico) || 0;
+                const nPallets = parseFloat(item.Pallets) || 0;
+                const nSaldos = parseFloat(item.Saldos) || 0;
+                const nMetraje = parseFloat(item.Metraje) || 0;
+                const nStockSaldos = nSaldos > 0
+                    ? (nMetraje > 0 ? Math.min(nStock, nSaldos * nMetraje) : (nPallets > 0 ? 0 : nStock))
+                    : 0;
+                const nStockCompletos = nPallets > 0 ? Math.max(0, nStock - nStockSaldos) : 0;
                 if (!map.has(key)) {
                 map.set(key, {
                     ...item,
-                    StockFisico: parseFloat(item.StockFisico) || 0,
-                    Pallets: parseFloat(item.Pallets) || 0,
-                    Saldos: parseFloat(item.Saldos) || 0
+                    StockFisico: nStock,
+                    StockFisicoCompletos: nStockCompletos,
+                    StockFisicoSaldos: nStockSaldos,
+                    Pallets: nPallets,
+                    Saldos: nSaldos
                 });
                 } else {
                 const existing = map.get(key);
-                existing.StockFisico += parseFloat(item.StockFisico) || 0;
-                existing.Pallets     += parseFloat(item.Pallets) || 0;
-                existing.Saldos      += parseFloat(item.Saldos) || 0;
+                existing.StockFisico += nStock;
+                existing.StockFisicoCompletos += nStockCompletos;
+                existing.StockFisicoSaldos += nStockSaldos;
+                existing.Pallets += nPallets;
+                existing.Saldos += nSaldos;
                 }
                 if (i > 0 && i % 500 === 0) {
                     await this._yieldToBrowser();
@@ -1295,6 +1336,8 @@ sap.ui.define([
                     Descripcion: item.Descripcion,
                     Um: item.Um,
                     TotalStockFisico: 0,
+                    TotalStockFisicoCompletos: 0,
+                    TotalStockFisicoSaldos: 0,
                     TotalPallets: 0,
                     TotalSaldos: 0,
                     expanded: false,
@@ -1302,6 +1345,8 @@ sap.ui.define([
                 };
                 }
                 grouped[key].TotalStockFisico += item.StockFisico;
+                grouped[key].TotalStockFisicoCompletos += item.StockFisicoCompletos;
+                grouped[key].TotalStockFisicoSaldos += item.StockFisicoSaldos;
                 grouped[key].TotalPallets     += item.Pallets;
                 grouped[key].TotalSaldos      += item.Saldos;
                 grouped[key].children.push({
@@ -1312,6 +1357,8 @@ sap.ui.define([
                 Tono: item.Tono || "",
                 Um: item.Um,
                 StockFisico: item.StockFisico,
+                StockFisicoCompletos: item.StockFisicoCompletos,
+                StockFisicoSaldos: item.StockFisicoSaldos,
                 Pallets: item.Pallets,
                 Saldos: item.Saldos,
                 cantidadPallets: 0,
@@ -1326,6 +1373,8 @@ sap.ui.define([
             return Object.values(grouped).map(g => ({
                 ...g,
                 TotalStockFisico: Number(g.TotalStockFisico.toFixed(2)),
+                TotalStockFisicoCompletos: Number(g.TotalStockFisicoCompletos.toFixed(2)),
+                TotalStockFisicoSaldos: Number(g.TotalStockFisicoSaldos.toFixed(2)),
                 TotalPallets: Number(g.TotalPallets.toFixed(2)),
                 TotalSaldos: Number(g.TotalSaldos.toFixed(2))
             }));
