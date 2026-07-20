@@ -348,7 +348,6 @@ sap.ui.define([
                 this._purgeClientTokensOutOfScope();
                 this._setClientFiltersEnabledBySeller();
 
-                const oData = await this._getData();
                 this.getView().getModel("ui").setProperty("/filtersReady", true);
 
                 if (tRol === "CLIENTES" || tRol === "VENDEDOR" || tUniNeg == "QUIMICOS") {
@@ -437,7 +436,7 @@ sap.ui.define([
 
             aVen = aVen.map(v => String(v || "").trim()).filter(Boolean);
 
-            // Si es perfil VENDEDOR, el BP vendedor es obligatorio aunque el control esté oculto/deshabilitado.
+            // En unidades con filtro bloqueado, el BP de IAS prevalece aunque el control esté deshabilitado.
             if (oLocked.aVendedorLocked.length > 0) {
                 aVen = oLocked.aVendedorLocked;
 
@@ -656,40 +655,43 @@ sap.ui.define([
                 sUrl = sPath;
             }
 
-            Services.getoDataERPSync(that, sUrl, function (result) {
-                util.response.validateAjaxGetERPNotMessage(result, {
-                    success: function (oData) {
-                        let aRaw = [];
-                        if (oData && oData.d && Array.isArray(oData.d.results)) {
-                            aRaw = oData.d.results;
-                        } else if (oData.data && Array.isArray(oData.data)) {
-                            aRaw = oData.data;
+            return new Promise(function (resolve) {
+                Services.getoDataERPSync(that, sUrl, function (result) {
+                    util.response.validateAjaxGetERPNotMessage(result, {
+                        success: function (oData) {
+                            let aRaw = [];
+                            if (oData && oData.d && Array.isArray(oData.d.results)) {
+                                aRaw = oData.d.results;
+                            } else if (oData.data && Array.isArray(oData.data)) {
+                                aRaw = oData.data;
+                            }
+
+                            const aVendors = aRaw.map(item => {
+                                const code = (item.vendor || "").toString().trim();
+                                const name = (item.VendorName || "").toString().trim();
+                                return {
+                                    VendorCode: code,
+                                    VendorName: name,
+                                    Display: `${code} - ${name}`
+                                };
+                            });
+
+                            const seen = new Set();
+                            const aUnique = aVendors.filter(v => {
+                                if (!v.VendorCode) return false;
+                                if (seen.has(v.VendorCode)) return false;
+                                seen.add(v.VendorCode);
+                                return true;
+                            });
+
+                            that.getView().getModel("oModelData").setProperty("/oVendedores", aUnique);
+                            resolve(aUnique);
+                        },
+                        error: function () {
+                            that.getView().getModel("oModelData").setProperty("/oVendedores", []);
+                            resolve([]);
                         }
-
-                        const aVendors = aRaw.map(item => {
-                            const code = (item.vendor || "").toString().trim();          // <-- BP/código
-                            const name = (item.VendorName || "").toString().trim();
-                            return {
-                                VendorCode: code,
-                                VendorName: name,
-                                Display: `${code} - ${name}`
-                            };
-                        });
-
-                        // Quitar vacíos y duplicados por VendorCode (BP)
-                        const seen = new Set();
-                        const aUnique = aVendors.filter(v => {
-                            if (!v.VendorCode) return false;
-                            if (seen.has(v.VendorCode)) return false;
-                            seen.add(v.VendorCode);
-                            return true;
-                        });
-
-                        that.getView().getModel("oModelData").setProperty("/oVendedores", aUnique);
-                    },
-                    error: function () {
-                        that.getView().getModel("oModelData").setProperty("/oVendedores", []);
-                    }
+                    });
                 });
             });
         },
@@ -1277,6 +1279,12 @@ sap.ui.define([
                                     return;
                                 }
 
+                                const normalizeVendor = value => String(value || "")
+                                    .replace(/\u00A0/g, "")
+                                    .replace(/[\r\n\t]/g, "")
+                                    .trim()
+                                    .toUpperCase();
+
                                 let aResults = oData.data.map(item => {
                                     let dDoc = that.parseODataDate(item.SalesDocumentDate);
                                     let dReq = that.parseODataDate(item.RequestedDeliveryDate);
@@ -1288,7 +1296,7 @@ sap.ui.define([
                                         SalesDocument: item.SalesDocument,
                                         Customer: item.Customer || "",
                                         CustomerFullName: item.CustomerFullName || "",
-                                        VendorID: (item.VendorID || "").toString().trim(),
+                                        VendorID: normalizeVendor(item.VendorID),
                                         Vendor: (item.Vendor || "").toString().trim(),
                                         SalesOrganization: item.SalesOrganization,
 
@@ -1334,8 +1342,7 @@ sap.ui.define([
                                 const setOf = (arr, prop) => new Set(arr.map(x => x[prop]).filter(Boolean));
                                 const sets = {
                                     documento: setOf(aResults, "SalesDocument"),
-                                    cliente: setOf(aResults, "Customer"),
-                                    vendor: setOf(aResults, "VendorID")
+                                    cliente: setOf(aResults, "Customer")
                                 };
 
                                 // Validar tokens
@@ -1349,7 +1356,9 @@ sap.ui.define([
 
                                 const vDocs = splitValidInvalid(jFilter.cbDocumento, sets.documento);
                                 const vCli = splitValidInvalid(jFilter.cbCliente, sets.cliente);
-                                const vVen = splitValidInvalid(jFilter.cbVendor, sets.vendor);
+                                const aVendorRequested = (jFilter.cbVendor || [])
+                                    .map(normalizeVendor)
+                                    .filter(Boolean);
 
                                 void 0;
                                 void 0;
@@ -1359,7 +1368,7 @@ sap.ui.define([
                                 const k = {
                                     doc: new Set(vDocs.valid),
                                     cli: new Set(vCli.valid),
-                                    ven: new Set(vVen.valid)
+                                    ven: new Set(aVendorRequested)
                                 };
 
                                 const from = jFilter.dStartDate ? that.toUTCDateMs(jFilter.dStartDate) : null;
@@ -1393,7 +1402,6 @@ sap.ui.define([
                                 // === 3) Eliminar tokens inválidos en UI según resultados ===
                                 const foundDocs = new Set(filtered.map(it => it.SalesDocument));
                                 const foundCli = new Set(filtered.map(it => it.Customer));
-                                const foundVen = new Set(filtered.map(it => it.VendorID));
 
                                 if (k.doc.size > 0 && that.byId("miDocumento")) {
                                     const invalidDocs = [...k.doc].filter(d => !foundDocs.has(d));
@@ -1413,15 +1421,6 @@ sap.ui.define([
                                         });
                                     }
                                 }
-                                if (k.ven.size > 0 && that.byId("mcbVendedor")) {
-                                    const invalidVen = [...k.ven].filter(v => !foundVen.has(v));
-                                    if (invalidVen.length) {
-                                        that.byId("mcbVendedor").setSelectedKeys(
-                                            that.byId("mcbVendedor").getSelectedKeys().filter(k => !invalidVen.includes(k))
-                                        );
-                                    }
-                                }
-
                                 void 0;
                                 if (filtered.length > 0) void 0;
 
@@ -2037,18 +2036,26 @@ sap.ui.define([
             const bIsCliente = sRol === "CLIENTE" || sRol === "CLIENTES";
             const bIsVendedor = sRol === "VENDEDOR";
             const bIsSupervisor = sRol === "SUPERVISOR";
+            const sUniNeg = String(
+                (oUser && oUser.getProperty("/bUniNeg")) ||
+                tUniNeg ||
+                ""
+            ).toUpperCase();
             const bVendedorTextilesLibre = this._isVendedorTextilesFreeScope
                 ? this._isVendedorTextilesFreeScope()
                 : false;
+            const bVendedorEditable = bIsVendedor && sUniNeg !== "QUIMICOS";
 
             return {
                 sRol: sRol,
+                sUniNeg: sUniNeg,
                 bIsCliente: bIsCliente,
                 bIsVendedor: bIsVendedor,
                 bIsSupervisor: bIsSupervisor,
+                bVendedorEditable: bVendedorEditable,
                 bVendedorTextilesLibre: bVendedorTextilesLibre,
                 aClienteLocked: bIsCliente && sBP ? [sBP] : [],
-                aVendedorLocked: bIsVendedor && !bVendedorTextilesLibre && sVendedor ? [sVendedor] : []
+                aVendedorLocked: bIsVendedor && !bVendedorEditable && sVendedor ? [sVendedor] : []
             };
         },
         _restoreLockedFiltersByProfile: function () {
@@ -2114,6 +2121,7 @@ sap.ui.define([
             const oModel = this.getModel("oModelProyect");
             const oLocked = this._getLockedFiltersByProfile();
             const bVendedorTextilesLibre = oLocked.bVendedorTextilesLibre === true;
+            const bVendedorEditable = oLocked.bVendedorEditable === true;
 
             // 1. Fechas
             const oToday = new Date();
@@ -2143,10 +2151,9 @@ sap.ui.define([
             }
 
             // 5. Vendedor:
-            // Supervisor puede limpiar vendedor.
-            // Textiles + Vendedor también puede dejarlo vacío para consultar todos los clientes.
+            // Supervisor y vendedores con filtro editable pueden limpiar la selección.
             const oMcbVendedor = oView.byId("mcbVendedor");
-            if (oMcbVendedor && (oLocked.bIsSupervisor || bVendedorTextilesLibre) && oMcbVendedor.setSelectedKeys) {
+            if (oMcbVendedor && (oLocked.bIsSupervisor || bVendedorEditable) && oMcbVendedor.setSelectedKeys) {
                 oMcbVendedor.setSelectedKeys([]);
             }
 
@@ -2186,9 +2193,8 @@ sap.ui.define([
                 }
 
                 // Vendedor:
-                // Supervisor puede limpiar vendedor.
-                // Textiles + Vendedor también puede dejarlo vacío para consultar todos los clientes.
-                if (oLocked.bIsSupervisor || bVendedorTextilesLibre) {
+                // Supervisor y vendedores con filtro editable pueden limpiar la selección.
+                if (oLocked.bIsSupervisor || bVendedorEditable) {
                     oModel.setProperty("/Main/filter/cbVendor", []);
                 }
 
@@ -2219,10 +2225,12 @@ sap.ui.define([
             // 12. Mensaje
             let sMsg = "✅ Filtros reiniciados y tabla limpia";
 
-            if (oLocked.bIsVendedor && !bVendedorTextilesLibre) {
+            if (oLocked.bIsVendedor && !bVendedorEditable) {
                 sMsg = "✅ Filtros reiniciados. Se mantiene el vendedor asignado por perfil.";
             } else if (oLocked.bIsVendedor && bVendedorTextilesLibre) {
                 sMsg = "✅ Filtros reiniciados. Puede buscar todos los clientes de Textiles sin vendedor seleccionado.";
+            } else if (oLocked.bIsVendedor && bVendedorEditable) {
+                sMsg = "✅ Filtros reiniciados. Seleccione al menos un vendedor para realizar la búsqueda.";
             } else if (oLocked.bIsCliente) {
                 sMsg = "✅ Filtros reiniciados. Se mantiene el cliente asignado por perfil.";
             }
