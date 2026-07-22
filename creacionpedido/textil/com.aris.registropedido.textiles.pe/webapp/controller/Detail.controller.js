@@ -3536,6 +3536,9 @@ sap.ui.define([
                 this.getRouter().navTo("Main");
             }
         },
+        _onFlpBackNavigation: function () {
+            this._onPressNavButtonDetail();
+        },
         _onPressEditDetail: function (oEvent) {
             const oView = this.getView();
             const oModel = oView.getModel("oModelProyect");

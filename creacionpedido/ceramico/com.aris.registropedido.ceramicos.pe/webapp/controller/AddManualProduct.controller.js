@@ -448,6 +448,11 @@ sap.ui.define([
 
             this.getOwnerComponent().getRouter().navTo("Detail", { app: sCustomer });
         },
+        _onFlpBackNavigation: function () {
+            this._resetAddManualState();
+            this._resetFiltersAndTable();
+            this._onPressClose();
+        },
         _updateCantidadM2TreeRow: function (oContext) {
             const oModel = oContext.getModel();
             const oRow   = oContext.getObject();

@@ -2369,6 +2369,9 @@ sap.ui.define([
 					const sHash = (oHashChanger && oHashChanger.getHash()) || "";
 
 					if (sHash.startsWith("Detail/")) {
+						if (typeof this._cleanupDetailState === "function") {
+							this._cleanupDetailState();
+						}
 						oRouter.navTo("View", {}, true);
 						return;
 					}

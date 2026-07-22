@@ -40,6 +40,11 @@ sap.ui.define([
             sap.ui.core.BusyIndicator.show(0);
             sNumPedido = this.oRouter.getHashChanger().hash.split("/")[1];
 
+            // La flecha del FLP puede volver al listado sin ejecutar el botón
+            // "Regresar" del detalle. Destruir aquí cualquier fragmento anterior
+            // evita conservar controles con los mismos IDs al abrir otro pedido.
+            this._destroyDetailFragment();
+
             this._getEstadoGeneral(sNumPedido).then((oEstadoResp) => {
                 if (oEstadoResp && Array.isArray(oEstadoResp.oResults) && oEstadoResp.oResults.length > 0) {
                     sEstado = oEstadoResp.oResults[0].EstadoGeneral || "";
@@ -148,9 +153,6 @@ sap.ui.define([
                 let sComponentDetailES = "DetailES";
 
                 let vbDetail = this._byId("vbViewDetail");
-                if (vbDetail) {
-                    vbDetail.removeAllItems();
-                }
 
                 if (sEstado === "Rechazado") {
                     that.fragmentTable = sap.ui.xmlfragment(this.frgIdDetailES, that.route + ".view.fragments." + sComponentDetailES, that);
@@ -183,12 +185,36 @@ sap.ui.define([
             });
         },
         _onPressNavButtonDetail: function () {
-            let jData = undefined;
-            that.getModel("oModelProyect").setProperty("/oCabecera", jData);
+            this._cleanupDetailState();
             this.oRouter.navTo("View");
-            that.fragmentTable.destroy();
+        },
+        _destroyDetailFragment: function () {
+            const oDetailContainer = this._byId("vbViewDetail");
+
+            if (oDetailContainer) {
+                // destroyItems elimina también los controles internos registrados
+                // por UI5; removeAllItems solo los separa del contenedor.
+                oDetailContainer.destroyItems();
+            } else if (this.fragmentTable) {
+                this.fragmentTable.destroy();
+            }
+
+            this.fragmentTable = null;
+        },
+        _cleanupDetailState: function () {
+            const oModelProyect = this.getModel("oModelProyect");
+
+            if (oModelProyect) {
+                oModelProyect.setProperty("/oCabecera", undefined);
+            }
+
+            this._destroyDetailFragment();
             sTipo = "";
+            sCliente = "";
+            sEstado = "";
+            tVar = "";
             vcontDet = false;
+            sNumPedido = "";
 
         },
         _getData: function (sNumPedido) {

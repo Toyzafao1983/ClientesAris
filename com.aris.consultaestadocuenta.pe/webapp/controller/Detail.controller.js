@@ -102,7 +102,21 @@ sap.ui.define([
 			});
 		},
 		_onPressNavButtonDetail: function () {
+			this._cleanupDetailState();
 			this.oRouter.navTo("Main");
+		},
+		_onFlpBackNavigation: function () {
+			this._onPressNavButtonDetail();
+		},
+		_cleanupDetailState: function () {
+			const oModelProyect = this.getModel("oModelProyect");
+
+			if (!oModelProyect) return;
+
+			oModelProyect.setProperty("/oDatClient", undefined);
+			oModelProyect.setProperty("/oDireccionCliente", undefined);
+			oModelProyect.setProperty("/oLoanedProducts", []);
+			oModelProyect.setProperty("/oDetalle", []);
 		},
 		DownloadPdf: async function () {
 			const oDetalle = this.getModel("oModelProyect").getProperty("/oDetalle");

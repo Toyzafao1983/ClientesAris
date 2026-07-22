@@ -45,14 +45,7 @@ sap.ui.define([
             sap.ui.core.BusyIndicator.show(0);
             sNumPedido = this.oRouter.getHashChanger().hash.split("/")[1];
             sHeader = this.oRouter.getHashChanger().hash.split("/")[2];
-            let oVBox = this._byId("vbViewDetail");
-            if (oVBox) {
-                oVBox.destroyItems(); // elimina fragmentos previos
-            }
-            if (that.fragmentTable) {
-                that.fragmentTable.destroy();
-                that.fragmentTable = null;
-            }
+            this._destroyDetailFragment();
 
             Promise.all([
                 this._getUsers()
@@ -126,18 +119,22 @@ sap.ui.define([
         _onPressNavButtonDetail: function () {
             let jData = undefined;
             that.getModel("oModelProyect").setProperty("/oCabecera", jData);
-
-            let oVBox = this._byId("vbViewDetail");
-            if (oVBox) {
-                oVBox.destroyItems();
-            }
-
-            if (that.fragmentTable) {
-                that.fragmentTable.destroy();
-                that.fragmentTable = null;
-            }
-
+            this._destroyDetailFragment();
             this.oRouter.navTo("View");
+        },
+        _onFlpBackNavigation: function () {
+            this._onPressNavButtonDetail();
+        },
+        _destroyDetailFragment: function () {
+            const oDetailContainer = this._byId("vbViewDetail");
+
+            if (oDetailContainer) {
+                oDetailContainer.destroyItems();
+            } else if (this.fragmentTable) {
+                this.fragmentTable.destroy();
+            }
+
+            this.fragmentTable = null;
         },
 
         _getStockVenByMaterialFisico: function (sMaterial, sSalesOrg) {

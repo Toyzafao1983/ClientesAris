@@ -3592,6 +3592,9 @@ sap.ui.define([
                 sap.m.MessageToast.show("No se encontró Customer para regresar");
             }
         },
+        _onFlpBackNavigation: function () {
+            this._onPressNavButtonDetail();
+        },
         _onPressEditDetail: function (oEvent) {
             const oContext = oEvent.getSource().getParent().getBindingContext("oModelProyect");
             if (!oContext) return;

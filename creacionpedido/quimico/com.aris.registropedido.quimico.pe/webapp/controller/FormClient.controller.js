@@ -665,6 +665,9 @@ sap.ui.define([
 
             this.oRouter.navTo("Main");
         },
+        _onFlpBackNavigation: function () {
+            this._onPressNavButtonForm();
+        },
         onSelectRadioComprobante: function (oEvent) {
             if (!oEvent.getParameter("selected")) return;
             const oModel = this.getView().getModel("oModelProyect");
