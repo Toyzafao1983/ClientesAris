@@ -2725,12 +2725,9 @@ sap.ui.define([
                     let sNumPedido = "";
                     const aMensajes = oResponse?.HeaderToReturn?.results || [];
                     aMensajes.forEach(m => {
-                        if (m.Message && m.Message.includes("se ha grabado")) {
-                            const match = m.Message.match(/\d{10}/);
-                            if (match) {
-                                sNumPedido = match[0];
-                            }
-                        }
+                        const sMessage = String(m.Message || m.message || "");
+                        const match = sMessage.match(/\d{10}/);
+                        if (match) sNumPedido = match[0];
                     });
                     const fnAfterOk = function () {
                         oModelProyect.setProperty("/oMaterial", []);
