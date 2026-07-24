@@ -2637,17 +2637,13 @@ sap.ui.define([
 
         _buildOCFileNameWithOrder: function (sOriginalName, sSalesDocument) {
             const sName = String(sOriginalName || "archivo").trim();
-            const sDoc = this._sanitizeSharePointFileNamePart(sSalesDocument);
+            const sOrderDigits = String(sSalesDocument || "").replace(/\D/g, "");
 
             const iDot = sName.lastIndexOf(".");
             const bHasExt = iDot > 0 && iDot < sName.length - 1;
-
-            const sBase = bHasExt ? sName.substring(0, iDot) : sName;
             const sExt = bHasExt ? sName.substring(iDot) : "";
 
-            const sBaseClean = this._sanitizeSharePointFileNamePart(sBase) || "archivo";
-
-            return sBaseClean + "-" + sDoc + sExt;
+            return (sOrderDigits || "archivo") + sExt;
         },
 
         _clearPendingOCFiles: function () {
