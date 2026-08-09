@@ -2555,6 +2555,27 @@ sap.ui.define([
 
 			return bValid;
 		},
+		_validateDeliveryDestination: function (bShowMessage) {
+			const oModel = this.getView().getModel("oModelProyect");
+			if (!oModel) {
+				return true;
+			}
+
+			const sDeliveryType = String(oModel.getProperty("/inputForm/tipoEntrega") || "").trim();
+			if (sDeliveryType === "2" && !this._validateDirectDispatchDestination(bShowMessage)) {
+				return false;
+			}
+
+			const sDestination = String(oModel.getProperty("/inputForm/destinoTextil") || "").trim();
+			if (!sDestination) {
+				if (bShowMessage) {
+					MessageBox.error("Debe ingresar el destino");
+				}
+				return false;
+			}
+
+			return true;
+		},
 		_applyDeliveryDestinationsForType: function (sDeliveryType, bShowValidationMessage) {
 			const oModel = this.getView().getModel("oModelProyect");
 			if (!oModel) {
@@ -2591,14 +2612,12 @@ sap.ui.define([
 			oModel.setProperty("/oDestinosCliente", aDestinations);
 
 			const sCurrentDestination = String(oModel.getProperty("/inputForm/destinoTextil") || "").trim();
-			let oSelectedDestination;
-			if (bDirectDispatch) {
+			let oSelectedDestination = aDestinations.find(function (oDestination) {
+				return oDestination.Destinationid === sCurrentDestination;
+			});
+			if (!oSelectedDestination && bDirectDispatch) {
 				oSelectedDestination = aDestinations.find(function (oDestination) {
 					return oDestination.IsDefaultDestination;
-				});
-			} else {
-				oSelectedDestination = aDestinations.find(function (oDestination) {
-					return oDestination.Destinationid === sCurrentDestination;
 				});
 			}
 			if (!oSelectedDestination && bValid) {

@@ -2092,7 +2092,7 @@ sap.ui.define([
             const oModelProyect = this.getView().getModel("oModelProyect");
             const oCantidades = oModelProyect.getProperty("/oCantidades") || {};
             const oData = oModelProyect.getData();
-            if (oData.inputForm?.tipoEntrega === "2" && !this._validateDirectDispatchDestination(true)) {
+            if (!this._validateDeliveryDestination(true)) {
                 return;
             }
             const sFechaActual = oModelProyect.getProperty("/fechaActual");
@@ -2704,7 +2704,7 @@ sap.ui.define([
             const oModelProyect = oView.getModel("oModelProyect");
             const oModelUser = oView.getModel("oModelUser");
             const oData = oModelProyect.getData();
-            if (oData.inputForm?.tipoEntrega === "2" && !this._validateDirectDispatchDestination(true)) {
+            if (!this._validateDeliveryDestination(true)) {
                 return;
             }
             const oCantidades = oModelProyect.getProperty("/oCantidades") || {};
@@ -4083,8 +4083,13 @@ sap.ui.define([
 
             if (bExteriorZPEF) {
                 this._enforceExternalZPEFDetailDefaults();
-            } else if (this._validateRequiredFields && !this._validateRequiredFields()) {
-                return;
+            } else {
+                if (!this._validateDeliveryDestination(true)) {
+                    return;
+                }
+                if (this._validateRequiredFields && !this._validateRequiredFields()) {
+                    return;
+                }
             }
 
             if (this._updateResumenEntrega) {
