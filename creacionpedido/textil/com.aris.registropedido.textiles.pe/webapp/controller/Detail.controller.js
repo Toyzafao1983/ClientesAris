@@ -224,14 +224,11 @@ sap.ui.define([
                 that.oModelProyect.getProperty("/oDetalle");
                 that.oModelProyect.getProperty("/oFormCliente");
                 that.oModelProyect.getProperty("/oSelectDetail");
-                let aAgencias = values[8].oResults;
-                if (aAgencias && aAgencias.length) {
-                    const aSoloAgencias = aAgencias.filter(item => item.Agencyname && item.Customer);
-                    const aSoloDestinos = aAgencias.filter(item => item.Destination && item.Destinationid);
-
-                    that.oModelProyect.setProperty("/oAgenciasCliente", aSoloAgencias);
-                    that.oModelProyect.setProperty("/oDestinosCliente", aSoloDestinos);
-                }
+                const aDireccionesEntrega = values[8]?.oResults || [];
+                that._setDeliveryAddressData(
+                    aDireccionesEntrega,
+                    that.oModelProyect.getProperty("/inputForm/tipoEntrega") || ""
+                );
                 that.oModelData.setProperty("/oConditionPay", values[9].oResults);
                 const aPortEmbarkationRaw = values[14]?.oResults || [];
                 const aPortEmbarkation = that._normalizePortEmbarkation(aPortEmbarkationRaw);
@@ -2095,6 +2092,9 @@ sap.ui.define([
             const oModelProyect = this.getView().getModel("oModelProyect");
             const oCantidades = oModelProyect.getProperty("/oCantidades") || {};
             const oData = oModelProyect.getData();
+            if (oData.inputForm?.tipoEntrega === "2" && !this._validateDirectDispatchDestination(true)) {
+                return;
+            }
             const sFechaActual = oModelProyect.getProperty("/fechaActual");
             const oPurchDate = this._formatDateForSAP(sFechaActual);
             const bValidaBolsas = this._shouldValidateBolsas();
@@ -2192,15 +2192,12 @@ sap.ui.define([
                 if (sSalesOrg !== "1110") return;
 
                 const sTipoEntrega = oData.inputForm?.tipoEntrega;
-                const sPartnNumber =
-                    (sTipoEntrega === "1")
-                        ? (oData.inputForm?.destinoTextil || "")
-                        : (oData.inputForm?.destinoTextil || "");
+                if (sTipoEntrega !== "1" && sTipoEntrega !== "3") return;
 
                 aPartnersBase.push({
                     ClientId: oData.oDatClient?.Customer || "",
                     PartnRole: "Z0",
-                    PartnNumber: sPartnNumber,
+                    PartnNumber: oData.inputForm?.destinoTextil || "",
                     ItmNumber: "000000"
                 });
             })();
@@ -2707,6 +2704,9 @@ sap.ui.define([
             const oModelProyect = oView.getModel("oModelProyect");
             const oModelUser = oView.getModel("oModelUser");
             const oData = oModelProyect.getData();
+            if (oData.inputForm?.tipoEntrega === "2" && !this._validateDirectDispatchDestination(true)) {
+                return;
+            }
             const oCantidades = oModelProyect.getProperty("/oCantidades") || {};
             const sFechaActual = oModelProyect.getProperty("/fechaActual");
             const oPurchDate = this._formatDateForSAP(sFechaActual);
@@ -2805,6 +2805,19 @@ sap.ui.define([
                     })()
                 }
             ];
+            (function () {
+                const sSalesOrgLoc = String(oData.oDatClient?.SalesOrganization || "");
+                const sTipoEntregaLoc = oData.inputForm?.tipoEntrega;
+                if (sSalesOrgLoc !== "1110" || (sTipoEntregaLoc !== "1" && sTipoEntregaLoc !== "3")) {
+                    return;
+                }
+
+                aPartnersBase.push({
+                    ClientId: oData.oDatClient?.Customer || "",
+                    PartnRole: "Z0",
+                    PartnNumber: oData.inputForm?.destinoTextil || ""
+                });
+            })();
             const aVendPartners = this._buildPartnersVendedor();
             if (Array.isArray(aVendPartners) && aVendPartners.length) {
                 aPartnersBase.push(...aVendPartners);
@@ -4051,6 +4064,7 @@ sap.ui.define([
             const oModel = this.getView().getModel("oModelProyect");
             const oBackup = oModel.getProperty("/inputFormBackup") || {};
             oModel.setProperty("/inputForm", JSON.parse(JSON.stringify(oBackup)));
+            this._applyDeliveryDestinationsForType(oBackup.tipoEntrega || "", false);
 
             oModel.setProperty("/isDetailEdit", false);
             oModel.setProperty("/isFormEnabled", false);
@@ -4109,6 +4123,7 @@ sap.ui.define([
             }
 
             oModel.setProperty("/inputForm/tipoEntrega", sValor);
+            this._applyDeliveryDestinationsForType(sValor, sValor === "2");
             if (sValor !== "2") {
                 oModel.setProperty("/inputForm/transporte", "");
             }

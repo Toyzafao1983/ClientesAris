@@ -1807,10 +1807,10 @@ sap.ui.define([
 				return new Promise(function (resolve, reject) {
 					let sUrl = "";
 					if (that.local) {
-						const sPath = "/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/DataCustomer?$filter=SalesOrganization eq '1110' and DistributionChannel eq 'C1' and Division eq 'S1' and (CustomerDni ne '' or CustomerRuc ne '')&$top=10000&$format=json&sap-language=es-ES";
+						const sPath = "/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/DataCustomer?$filter=SalesOrganization eq '1110' and (DistributionChannel eq 'C1' or DistributionChannel eq 'C2') and Division eq 'S1' and (CustomerDni ne '' or CustomerRuc ne '')&$top=10000&$format=json&sap-language=es-ES";
 						sUrl = that.getOwnerComponent().getManifestObject().resolveUri(sPath);
 					} else {
-						const sPath = jQuery.sap.getModulePath(that.route) + "/S4HANA/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/DataCustomer?$filter=SalesOrganization eq '1110' and DistributionChannel eq 'C1' and Division eq 'S1' and (CustomerDni ne '' or CustomerRuc ne '')&$top=10000&$format=json&sap-language=es-ES";
+						const sPath = jQuery.sap.getModulePath(that.route) + "/S4HANA/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/DataCustomer?$filter=SalesOrganization eq '1110' and (DistributionChannel eq 'C1' or DistributionChannel eq 'C2') and Division eq 'S1' and (CustomerDni ne '' or CustomerRuc ne '')&$top=10000&$format=json&sap-language=es-ES";
 						sUrl = sPath;
 					}
 					Services.getoDataERPSync(that, sUrl, function (result) {
@@ -2527,6 +2527,113 @@ sap.ui.define([
 				that.getMessageBox("error", that.getI18nText("sErrorTry"));
 			}
 		},
+		_hasDefaultFinalDestination: function (oAddress) {
+			const vDefpa = oAddress && (
+				oAddress.DEFPA !== undefined ? oAddress.DEFPA :
+					oAddress.Defpa !== undefined ? oAddress.Defpa :
+						oAddress.defpa
+			);
+			const sDefpa = String(vDefpa == null ? "" : vDefpa).trim().toUpperCase();
+			return !!sDefpa && sDefpa !== "0" && sDefpa !== "FALSE";
+		},
+		_validateDirectDispatchDestination: function (bShowMessage) {
+			const oModel = this.getView().getModel("oModelProyect");
+			if (!oModel) {
+				return true;
+			}
+
+			const aAddresses = oModel.getProperty("/oDireccionesEntregaCliente") || [];
+			const aDestinationRows = aAddresses.filter(function (oAddress) {
+				return !!String(oAddress && oAddress.Destinationid || "").trim();
+			});
+			const bValid = aDestinationRows.length <= 1 || aDestinationRows.some(this._hasDefaultFinalDestination.bind(this));
+
+			oModel.setProperty("/inputForm/directDispatchDestinationValid", bValid);
+			if (!bValid && bShowMessage) {
+				MessageBox.error("Revisar cliente, no tiene destino final por defecto");
+			}
+
+			return bValid;
+		},
+		_applyDeliveryDestinationsForType: function (sDeliveryType, bShowValidationMessage) {
+			const oModel = this.getView().getModel("oModelProyect");
+			if (!oModel) {
+				return true;
+			}
+
+			const aAddresses = oModel.getProperty("/oDireccionesEntregaCliente") || [];
+			const bDirectDispatch = String(sDeliveryType || "") === "2";
+			const bValid = !bDirectDispatch || this._validateDirectDispatchDestination(!!bShowValidationMessage);
+			const aDestinations = [];
+			const mDestinationIds = Object.create(null);
+
+			aAddresses.forEach(function (oAddress) {
+				const sDestinationId = String(
+					bDirectDispatch ? oAddress.Finaldestinationid || "" : oAddress.Destinationid || ""
+				).trim();
+				if (!sDestinationId || mDestinationIds[sDestinationId]) {
+					return;
+				}
+
+				mDestinationIds[sDestinationId] = true;
+				aDestinations.push(Object.assign({}, oAddress, {
+					Destinationid: sDestinationId,
+					Destination: bDirectDispatch
+						? (oAddress.Finaldestination || oAddress.Finaldestinationname || sDestinationId)
+						: (oAddress.Destination || oAddress.Destinationname || sDestinationId),
+					Destinationname: bDirectDispatch
+						? (oAddress.Finaldestinationname || oAddress.Finaldestination || sDestinationId)
+						: (oAddress.Destinationname || oAddress.Destination || sDestinationId),
+					IsDefaultDestination: this._hasDefaultFinalDestination(oAddress)
+				}));
+			}.bind(this));
+
+			oModel.setProperty("/oDestinosCliente", aDestinations);
+
+			const sCurrentDestination = String(oModel.getProperty("/inputForm/destinoTextil") || "").trim();
+			let oSelectedDestination;
+			if (bDirectDispatch) {
+				oSelectedDestination = aDestinations.find(function (oDestination) {
+					return oDestination.IsDefaultDestination;
+				});
+			} else {
+				oSelectedDestination = aDestinations.find(function (oDestination) {
+					return oDestination.Destinationid === sCurrentDestination;
+				});
+			}
+			if (!oSelectedDestination && bValid) {
+				oSelectedDestination = aDestinations[0];
+			}
+
+			oModel.setProperty("/inputForm/destinoTextil", oSelectedDestination ? oSelectedDestination.Destinationid : "");
+			oModel.setProperty("/inputForm/destinoTextilText", oSelectedDestination ? oSelectedDestination.Destination : "");
+			oModel.setProperty("/inputForm/destinoCeramicoText", oSelectedDestination ? oSelectedDestination.Destination : "");
+
+			return bValid;
+		},
+		_setDeliveryAddressData: function (aAddresses, sDeliveryType) {
+			const oModel = this.getView().getModel("oModelProyect");
+			if (!oModel) {
+				return;
+			}
+
+			const aResults = Array.isArray(aAddresses) ? aAddresses : [];
+			const aAgencies = aResults
+				.filter(function (oAddress) {
+					return oAddress.Customer && oAddress.Agencyaddress;
+				})
+				.map(function (oAddress) {
+					return {
+						Customer: oAddress.Customer,
+						Agencyaddress: oAddress.Agencyaddress || "",
+						Agencyname: oAddress.Agencyname || ""
+					};
+				});
+
+			oModel.setProperty("/oDireccionesEntregaCliente", aResults);
+			oModel.setProperty("/oAgenciasCliente", aAgencies);
+			this._applyDeliveryDestinationsForType(sDeliveryType, false);
+		},
 		_getAddresTravel: function (sCustomer) {
 			try {
 				var oResp = {
@@ -2555,23 +2662,9 @@ sap.ui.define([
 								oResp.sEstado = "S";
 								const aResults = oData.data || [];
 								oResp.oResults = aResults;
-								const aAgencias = aResults
-									.filter(r => r.Customer && r.Agencyaddress)
-									.map(r => ({
-										Customer: r.Customer,
-										Agencyaddress: r.Agencyaddress || "",
-										Agencyname: r.Agencyname || ""
-									}));
-								const aDestinos = aResults
-									.filter(r => r.Destinationid || r.Finaldestinationid)
-									.map(r => ({
-										Destinationid: r.Destinationid || r.Finaldestinationid,
-										Destination: r.Destination || r.Finaldestination,
-										Destinationname: r.Destinationname || r.Finaldestinationname || ""
-									}));
-								const oModel = that.getView().getModel("oModelProyect");
-								oModel.setProperty("/oAgenciasCliente", aAgencias);
-								oModel.setProperty("/oDestinosCliente", aDestinos);
+									const oModel = that.getView().getModel("oModelProyect");
+									const sDeliveryType = oModel ? oModel.getProperty("/inputForm/tipoEntrega") : "";
+									that._setDeliveryAddressData(aResults, sDeliveryType);
 								resolve(oResp);
 							},
 							error: function (message) {

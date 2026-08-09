@@ -190,10 +190,15 @@ sap.ui.define([
                     oModelProyect.setProperty("/oClientData", oClientDataCurrent);
                 }
 
-                const oSellerPrincipal = this._resolveSellerPrincipal(
-                    oClientDataCurrent,
-                    oPrincipalSeller
-                );
+                /*
+                 * El vendedor asignado por CustSalesPartnertNerFunc tiene prioridad.
+                 * DataCustomer queda como respaldo cuando la asociación no devuelve BP.
+                 */
+                const oSellerAssigned = this._resolveSellerPrincipal({}, oPrincipalSeller);
+                const oSellerFromCustomer = this._resolveSellerPrincipal(oClientDataCurrent, {});
+                const oSellerPrincipal = oSellerAssigned.kunn2
+                    ? oSellerAssigned
+                    : oSellerFromCustomer;
 
                 void 0;
 
@@ -214,15 +219,21 @@ sap.ui.define([
                     return item.kunn2 && item.Seller;
                 });
 
-                if (oClientDataCurrent.kunn2) {
-                    const bExiste = aSellerOptions.some(function (item) {
-                        return item.kunn2 === oClientDataCurrent.kunn2;
+                const sSellerPrincipalBP = String(oSellerPrincipal.kunn2 || "").trim();
+
+                if (sSellerPrincipalBP) {
+                    const oSellerExisting = aSellerOptions.find(function (item) {
+                        return String(item.kunn2 || "").trim() === sSellerPrincipalBP;
                     });
 
-                    if (!bExiste) {
+                    if (oSellerExisting) {
+                        if (!oSellerPrincipal.Seller) {
+                            oSellerPrincipal.Seller = oSellerExisting.Seller || "";
+                        }
+                    } else {
                         aSellerOptions.unshift({
-                            kunn2: oClientDataCurrent.kunn2,
-                            Seller: oClientDataCurrent.Seller || ""
+                            kunn2: sSellerPrincipalBP,
+                            Seller: oSellerPrincipal.Seller || ""
                         });
                     }
                 }
@@ -261,16 +272,11 @@ sap.ui.define([
 
                 void 0;
 
-                const aAgencias = values[10]?.oResults || [];
-                if (aAgencias.length) {
-                    const aSoloAgencias = aAgencias.filter(item => item.Agencyname && item.Customer);
-                    const aSoloDestinos = aAgencias.filter(item => item.Destination && item.Destinationid);
-
-                    oModelProyect.setProperty("/oAgenciasCliente", aSoloAgencias);
-                    oModelProyect.setProperty("/oDestinosCliente", aSoloDestinos);
-
-                    that._setDefaultDestinoTextil();
-                }
+                const aDireccionesEntrega = values[10]?.oResults || [];
+                that._setDeliveryAddressData(
+                    aDireccionesEntrega,
+                    oModelProyect.getProperty("/inputForm/tipoEntrega") || ""
+                );
 
                 oModelData.setProperty("/oConditionPay", values[11]?.oResults || []);
 
@@ -1120,12 +1126,14 @@ sap.ui.define([
                     }
                     break;
             }
+            oModel.setProperty("/inputForm/tipoEntrega", sValor);
+            this._applyDeliveryDestinationsForType(sValor, sValor === "2");
+
             const oComboDestino = this.byId("DestinationTextandCeramicos");
             const oItemDestino = oComboDestino ? oComboDestino.getSelectedItem() : null;
             if (oItemDestino) {
                 sDetalle.push(oItemDestino.getText());
             }
-            oModel.setProperty("/inputForm/tipoEntrega", sValor);
             oModel.setProperty("/inputForm/resumenEntrega", sDescripcion);
             oModel.setProperty("/inputForm/detalleEntrega", sDetalle.join(" | "));
             if (sValor !== "2") {
@@ -1368,6 +1376,10 @@ sap.ui.define([
 
             if (!oData.tipoEntrega) {
                 aErrors.push("Debe seleccionar una condición de entrega");
+            }
+
+            if (oData.tipoEntrega === "2" && !this._validateDirectDispatchDestination(false)) {
+                aErrors.push("Revisar cliente, no tiene destino final por defecto");
             }
 
             if (!bExteriorZPEF && !oData.reasonOrd) {
@@ -2703,6 +2715,7 @@ sap.ui.define([
                 }
 
                 if (sCodigoFinal) {
+                    this._applyDeliveryDestinationsForType(sTipoEntrega, false);
                     let aDestinos = oModel.getProperty("/oDestinosCliente") || [];
 
                     let oDestino = aDestinos.find(function (item) {
