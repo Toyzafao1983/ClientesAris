@@ -2583,7 +2583,16 @@ sap.ui.define([
 			}
 
 			const aAddresses = oModel.getProperty("/oDireccionesEntregaCliente") || [];
-			const bDirectDispatch = String(sDeliveryType || "") === "2";
+			const sNormalizedDeliveryType = String(sDeliveryType || "").trim();
+			if (!sNormalizedDeliveryType) {
+				oModel.setProperty("/oDestinosCliente", []);
+				oModel.setProperty("/inputForm/destinoTextil", "");
+				oModel.setProperty("/inputForm/destinoTextilText", "");
+				oModel.setProperty("/inputForm/destinoCeramicoText", "");
+				return true;
+			}
+
+			const bDirectDispatch = sNormalizedDeliveryType === "2";
 			const bValid = !bDirectDispatch || this._validateDirectDispatchDestination(!!bShowValidationMessage);
 			const aDestinations = [];
 			const mDestinationIds = Object.create(null);

@@ -2714,7 +2714,7 @@ sap.ui.define([
                     bMostrarAgencia = true;
                 }
 
-                if (sCodigoFinal) {
+                if (sCodigoFinal && sTipoEntrega) {
                     this._applyDeliveryDestinationsForType(sTipoEntrega, false);
                     let aDestinos = oModel.getProperty("/oDestinosCliente") || [];
 
