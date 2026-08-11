@@ -1617,12 +1617,14 @@ sap.ui.define([
 
             switch (sTipoEntrega) {
                 case "1":
-                    // Cliente recoge: WE = Z0 = destino
-                    sWE = sDestino || sCliente;
+                    // En guardado se conserva la estructura histórica del servicio MP.
+                    // En simulación se aplica WE = cliente según la lógica nueva.
+                    sWE = bIncluirEntregaInicial ? (sDestino || sCliente) : sCliente;
                     break;
 
                 case "2":
-                    // Despacho directo: WE = Z0 = destino
+                    // Despacho directo: WE = destino final; la simulación omite Z0.
+                    // El guardado conserva los partners históricos del servicio MP.
                     sWE = sDestino || sCliente;
                     break;
 
@@ -1651,7 +1653,8 @@ sap.ui.define([
                 }
             ];
 
-            if (sDestino) {
+            const bEnviarZ0Actual = bIncluirEntregaInicial || sTipoEntrega === "1" || sTipoEntrega === "3";
+            if (sDestino && bEnviarZ0Actual) {
                 aPartners.push({
                     ClientId: sCliente,
                     PartnRole: "Z0",
@@ -5160,6 +5163,21 @@ sap.ui.define([
             oModelProyect.setProperty("/inputForm/txtCondPago", oMatch.DesCondition || "");
         },
 
+        _resolveDeliveryTypeTextil: function (sDeliveryCondition, sCustomerGroup) {
+            const sCondition = String(sDeliveryCondition || "").trim();
+            const sGroup = String(sCustomerGroup || "").trim();
+
+            if (sCondition === "02") {
+                return "1";
+            }
+
+            if (sCondition === "01") {
+                return sGroup === "18" ? "3" : "2";
+            }
+
+            return "2";
+        },
+
         _aplicarRecomendacionesDestinoYAgenciaTextil: function (oDocHeader) {
             const oModel = this.getView().getModel("oModelProyect");
 
@@ -5203,27 +5221,29 @@ sap.ui.define([
                 "ClientId"
             );
 
+            const sCustomerGroup = this._getDocHeaderValue(
+                oDocHeader,
+                "CUSTOMERGROUP",
+                "CustomerGroup"
+            );
+
             const sShipTo = fnNorm(sShippingDestination);
             const sFinal = fnNorm(sFinalDestination);
             const sCliente = fnNorm(sCustomer);
 
-            let sTipoEntrega = "2";
-            let bMostrarAgencia = false;
+            const sTipoEntrega = this._resolveDeliveryTypeTextil(
+                sDeliveryCondition,
+                sCustomerGroup
+            );
+            const bMostrarAgencia = sTipoEntrega === "3";
 
-            if (sDeliveryCondition === "02") {
-                sTipoEntrega = "1";
-                bMostrarAgencia = false;
-            } else if (sDeliveryCondition === "01") {
-                if (sShipTo && sFinal && sShipTo !== sFinal) {
-                    sTipoEntrega = "3";
-                    bMostrarAgencia = true;
-                } else {
-                    sTipoEntrega = "2";
-                    bMostrarAgencia = false;
-                }
-            }
+            oModel.setProperty("/inputForm/tipoEntrega", sTipoEntrega);
+            this._applyDeliveryDestinationsForType(sTipoEntrega, false);
 
-            const sCodigoDestino = sFinal || sShipTo || sCliente;
+            const sDestinoDirecto = fnNorm(oModel.getProperty("/inputForm/destinoTextil"));
+            const sCodigoDestino = sTipoEntrega === "2"
+                ? sDestinoDirecto
+                : (sFinal || sShipTo || sCliente);
             const sCodigoAgencia = bMostrarAgencia ? sShipTo : "";
 
             const aAgencias = oModel.getProperty("/oAgenciasCliente") || [];
@@ -5266,8 +5286,6 @@ sap.ui.define([
                 )
                 : "";
 
-            oModel.setProperty("/inputForm/tipoEntrega", sTipoEntrega);
-
             oModel.setProperty(
                 "/inputForm/resumenEntrega",
                 sTipoEntrega === "1"
@@ -5277,12 +5295,13 @@ sap.ui.define([
                         : "Despacho directo"
             );
 
-            // Z0 = FinalDestination
+            // Directo conserva Finaldestinationid desde FullAddressSet/DEFPA.
+            // Recojo y agencia utilizan Destinationid/FinalDestination.
             oModel.setProperty("/inputForm/destinoTextil", sCodigoDestino);
             oModel.setProperty("/inputForm/destinoCeramicoText", sTextoDestino);
             oModel.setProperty("/inputForm/detalleEntrega", sTextoDestino);
 
-            // WE = ShippingDestination solo si ShippingDestination != FinalDestination
+            // ShippingDestination representa la agencia únicamente para CustomerGroup 18.
             oModel.setProperty("/inputForm/direccionAgencia", sCodigoAgencia);
             oModel.setProperty("/inputForm/direccionAgenciaText", bMostrarAgencia ? sTextoAgencia : "");
 
@@ -5600,6 +5619,8 @@ sap.ui.define([
 
             const sShipCond = fnGet("DeliveryCondition", "ShippingCondition", "ShipCond");
 
+            const sCustomerGroup = fnGet("CustomerGroup", "CUSTOMERGROUP");
+
             const sShippingDestination = fnGet(
                 "ShippingDestination",
                 "SHIPPINGDESTINATION",
@@ -5628,21 +5649,8 @@ sap.ui.define([
             const sCodigoShipTo = String(sShippingDestination || "").trim();
             const sCodigoFinal = String(sFinalDestination || sShippingDestination || sCustomer || "").trim();
 
-            let sTipoEntrega = "2";
-            let bMostrarAgencia = false;
-
-            if (sShipCond === "02") {
-                sTipoEntrega = "1";
-                bMostrarAgencia = false;
-            } else if (sShipCond === "01") {
-                if (sCodigoShipTo && sCodigoFinal && sCodigoShipTo !== sCodigoFinal) {
-                    sTipoEntrega = "3";
-                    bMostrarAgencia = true;
-                } else {
-                    sTipoEntrega = "2";
-                    bMostrarAgencia = false;
-                }
-            }
+            const sTipoEntrega = this._resolveDeliveryTypeTextil(sShipCond, sCustomerGroup);
+            const bMostrarAgencia = sTipoEntrega === "3";
 
             const sCodigoWE = bMostrarAgencia ? sCodigoShipTo : sCodigoFinal;
             const sCodigoZ0 = sCodigoFinal;
@@ -5664,7 +5672,8 @@ sap.ui.define([
                 SalesDocumentType: sDocType,
                 Currency: sCurrency,
                 PaymentCondition: sCondPago,
-                DeliveryCondition: sShipCond
+                DeliveryCondition: sShipCond,
+                CustomerGroup: sCustomerGroup
             }));
 
             oModel.setProperty("/docModificarItems", aItems);
@@ -5856,12 +5865,13 @@ sap.ui.define([
                 tipoEntrega: sTipoEntrega,
                 resumenEntrega: sResumenEntrega,
 
-                // Z0 = FinalDestination
-                destinoTextil: sCodigoZ0,
-                destinoCeramicoText: sFinalDestinationName || sCodigoZ0,
-                detalleEntrega: sFinalDestinationName || sCodigoZ0,
+                // En directo se completa después desde FullAddressSet/DEFPA.
+                // En recojo/agencia se conserva Destinationid/FinalDestination.
+                destinoTextil: sTipoEntrega === "2" ? "" : sCodigoZ0,
+                destinoCeramicoText: sTipoEntrega === "2" ? "" : (sFinalDestinationName || sCodigoZ0),
+                detalleEntrega: sTipoEntrega === "2" ? "" : (sFinalDestinationName || sCodigoZ0),
 
-                // WE = ShippingDestination solo cuando ShippingDestination != FinalDestination
+                // ShippingDestination se restaura como agencia únicamente para CustomerGroup 18.
                 direccionAgencia: bMostrarAgencia ? sCodigoWE : "",
                 direccionAgenciaText: bMostrarAgencia ? (sShippingDestinationName || sCodigoWE) : "",
 
