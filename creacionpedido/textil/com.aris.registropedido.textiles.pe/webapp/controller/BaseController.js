@@ -2827,7 +2827,7 @@ sap.ui.define([
 
 					const aFilters = [
 						"SalesOrganization eq '1110'",
-						"DistributionChannel eq 'C1'",
+						"(DistributionChannel eq 'C1' or DistributionChannel eq 'C2')",
 						"Division eq 'S1'"
 					];
 
@@ -2838,7 +2838,13 @@ sap.ui.define([
 						aFilters.push("(CustomerDni ne '' or CustomerRuc ne '')");
 					}
 
-					const sQuery = "$filter=" + aFilters.join(" and ") + "&$top=10000&$format=json&sap-language=es-ES";
+					/*
+					 * En el flujo de pedidos textiles el cliente puede pertenecer a C1 o C2.
+					 * Cuando se recibe su código sólo necesitamos ese registro, no el bloque
+					 * completo de DataCustomer.
+					 */
+					const sTop = sCustomerSafe ? "1" : "10000";
+					const sQuery = "$filter=" + aFilters.join(" and ") + "&$top=" + sTop + "&$format=json&sap-language=es-ES";
 
 					if (that.local) {
 						const sPath = "/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/DataCustomer?" + sQuery;

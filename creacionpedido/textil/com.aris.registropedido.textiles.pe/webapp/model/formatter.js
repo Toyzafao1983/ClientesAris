@@ -317,19 +317,8 @@ sap.ui.define([
 			if (!oContext) return "";
 
 			return (
-				oContext.TaxNumber1 ||
-				oContext.TaxNumber2 ||
-				oContext.TaxNumber3 ||
-				oContext.TaxNumber4 ||
-				oContext.TaxNumber5 ||
-				oContext.TaxNumber6 ||
-				""
-			);
-		},
-		getDocumento: function (oContext) {
-			if (!oContext) return "";
-
-			return (
+				oContext.CustomerRuc ||
+				oContext.CustomerDni ||
 				oContext.TaxNumber1 ||
 				oContext.TaxNumber2 ||
 				oContext.TaxNumber3 ||
@@ -341,10 +330,14 @@ sap.ui.define([
 		},
 		getFirstTaxNumber: function (oCliente) {
 			if (!oCliente) return "";
+			const sDocumento = oCliente.CustomerRuc || oCliente.CustomerDni;
+			if (sDocumento && String(sDocumento).trim() !== "") {
+				return String(sDocumento).trim();
+			}
 			for (let i = 1; i <= 6; i++) {
 				const tax = oCliente["TaxNumber" + i];
-				if (tax && tax.trim() !== "") {
-					return tax.trim();
+				if (tax && String(tax).trim() !== "") {
+					return String(tax).trim();
 				}
 			}
 			return "";

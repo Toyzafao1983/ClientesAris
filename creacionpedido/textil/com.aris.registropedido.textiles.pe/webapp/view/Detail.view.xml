@@ -59,7 +59,7 @@
 						</m:VBox>
 						<m:VBox justifyContent="Center" class="sapUiSmallMarginEnd">
 							<m:Label text="{i18n>txtRucDNI}"/>
-							<m:Text text="{path: 'oModelProyect>/oDatClient', formatter: '.formatter.getFirstTaxNumber'}"/>
+							<m:Text text="{path: 'oModelProyect>/oClientData', formatter: '.formatter.getFirstTaxNumber'}"/>
 						</m:VBox>
                         </m:VBox>
                         <m:VBox justifyContent="End" class="sapUiSmallMarginEnd sapUiSmallMarginBegin">

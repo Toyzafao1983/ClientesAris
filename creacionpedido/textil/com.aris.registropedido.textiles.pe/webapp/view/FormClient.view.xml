@@ -54,7 +54,7 @@
                 <Text text="{path: 'oModelProyect>/oDatClient/CustomerFullName', formatter: '.formatter.cleanCustomerFullName'}"/>
 
                 <Label text="{i18n>txtRucDNI}"/>
-                <Text text="{path: 'oModelProyect>/oDatClient', formatter: '.formatter.getDocumento'}"/>
+                <Text text="{path: 'oModelProyect>/oClientData', formatter: '.formatter.getDocumento'}"/>
 
                 <Label text="{i18n>textAddress}"/>
                 <Text text="{oModelProyect>/oDireccionCliente/FullAddress}"/>

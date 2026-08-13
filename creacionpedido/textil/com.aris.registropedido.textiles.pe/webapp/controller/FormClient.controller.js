@@ -53,9 +53,8 @@ sap.ui.define([
                 that._getCOnditionPay(),           // 11
                 that._getUsers(),                  // 12
                 that._getBPVendedor(),             // 13
-                that._getDatClient(),               // 14
-                that._getTypeShipment(),           // 15
-                that._getPortEmbarkation()         // 16
+                that._getTypeShipment(),           // 14
+                that._getPortEmbarkation()         // 15
             ]).then(async (values) => {
                 const oModelProyect = that.getModel("oModelProyect");
                 const oModelData = that.getModel("oModelData");
@@ -202,7 +201,9 @@ sap.ui.define([
 
                 void 0;
 
-                const aSellerRaw = values[14]?.oResults || [];
+                // Reutilizar la consulta puntual de DataCustomer; evita descargar
+                // nuevamente todos los clientes sólo para construir el vendedor.
+                const aSellerRaw = aDatClient;
                 const mSeller = new Map();
 
                 aSellerRaw.forEach(function (r) {
@@ -280,7 +281,7 @@ sap.ui.define([
 
                 oModelData.setProperty("/oConditionPay", values[11]?.oResults || []);
 
-                const aTypeShipmentRaw = values[15]?.oResults || [];
+                const aTypeShipmentRaw = values[14]?.oResults || [];
                 const aTypeShipment = aTypeShipmentRaw.map(function (row) {
                     return Object.assign({}, row, {
                         sKey: String(row.Code || row.sKey || row.Key || row.Value || row.Valpos || "").trim(),
@@ -291,7 +292,7 @@ sap.ui.define([
                 void 0;
 
                 oModelData.setProperty("/oTypeShipment", aTypeShipment);
-                const aPortEmbarkationRaw = values[16]?.oResults || [];
+                const aPortEmbarkationRaw = values[15]?.oResults || [];
                 const aPortEmbarkation = this._normalizePortEmbarkation(aPortEmbarkationRaw);
 
                 oModelData.setProperty("/oPortEmbarkation", aPortEmbarkation);

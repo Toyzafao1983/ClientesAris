@@ -1612,6 +1612,12 @@ sap.ui.define([
             const sTipoEntrega = String(oInputForm.tipoEntrega || "").trim();
             const sDestino = String(oInputForm.destinoTextil || "").trim();
             const sAgencia = String(oInputForm.direccionAgencia || "").trim();
+            const oResolucionZ0Directo = sTipoEntrega === "2" && bIncluirEntregaInicial
+                ? this._resolveDirectDispatchZ0()
+                : null;
+            const sZ0Actual = sTipoEntrega === "2"
+                ? String(oResolucionZ0Directo && oResolucionZ0Directo.destinationId || "").trim()
+                : sDestino;
 
             let sWE = "";
 
@@ -1624,7 +1630,7 @@ sap.ui.define([
 
                 case "2":
                     // Despacho directo: WE = destino final; la simulación omite Z0.
-                    // El guardado conserva los partners históricos del servicio MP.
+                    // Al guardar, Z0 se obtiene por separado desde Destinationid/DEFPA.
                     sWE = sDestino || sCliente;
                     break;
 
@@ -1653,12 +1659,14 @@ sap.ui.define([
                 }
             ];
 
-            const bEnviarZ0Actual = bIncluirEntregaInicial || sTipoEntrega === "1" || sTipoEntrega === "3";
-            if (sDestino && bEnviarZ0Actual) {
+            const bEnviarZ0Actual = sTipoEntrega === "2"
+                ? bIncluirEntregaInicial && !!sZ0Actual
+                : bIncluirEntregaInicial || sTipoEntrega === "1" || sTipoEntrega === "3";
+            if (sZ0Actual && bEnviarZ0Actual) {
                 aPartners.push({
                     ClientId: sCliente,
                     PartnRole: "Z0",
-                    PartnNumber: sDestino,
+                    PartnNumber: sZ0Actual,
                     ItmNumber: "000000"
                 });
             }
@@ -1685,7 +1693,7 @@ sap.ui.define([
                     });
                 }
 
-                if (sZ0Inicial) {
+                if (sZ0Inicial && sTipoEntrega !== "2") {
                     aPartners.push({
                         ClientId: sCliente,
                         PartnRole: "Z0",
@@ -1710,19 +1718,61 @@ sap.ui.define([
             return !!sDefpa && sDefpa !== "0" && sDefpa !== "FALSE";
         },
 
+        _resolveDirectDispatchZ0: function () {
+            const oModel = this.getView().getModel("oModelProyect");
+            const aAddresses = oModel
+                ? (oModel.getProperty("/oDireccionesEntregaCliente") || [])
+                : [];
+            const mDestinations = Object.create(null);
+            const aDestinationIds = [];
+
+            aAddresses.forEach(function (oAddress) {
+                const sDestinationId = String(oAddress && oAddress.Destinationid || "").trim();
+                if (!sDestinationId) {
+                    return;
+                }
+
+                if (!mDestinations[sDestinationId]) {
+                    mDestinations[sDestinationId] = {
+                        destinationId: sDestinationId,
+                        isDefault: false
+                    };
+                    aDestinationIds.push(sDestinationId);
+                }
+
+                if (this._hasDefaultFinalDestination(oAddress)) {
+                    mDestinations[sDestinationId].isDefault = true;
+                }
+            }.bind(this));
+
+            const oDefaultDestination = aDestinationIds
+                .map(function (sDestinationId) {
+                    return mDestinations[sDestinationId];
+                })
+                .find(function (oDestination) {
+                    return oDestination.isDefault;
+                });
+
+            const bValid = aDestinationIds.length <= 1 || !!oDefaultDestination;
+            const sDestinationId = aDestinationIds.length === 1
+                ? aDestinationIds[0]
+                : (oDefaultDestination ? oDefaultDestination.destinationId : "");
+
+            return {
+                valid: bValid,
+                destinationId: sDestinationId,
+                count: aDestinationIds.length
+            };
+        },
+
         _validateDirectDispatchDestination: function (bShowMessage) {
             const oModel = this.getView().getModel("oModelProyect");
             if (!oModel) {
                 return true;
             }
 
-            const aAddresses = oModel.getProperty("/oDireccionesEntregaCliente") || [];
-            const aDestinationRows = aAddresses.filter(function (oAddress) {
-                return !!String(oAddress && oAddress.Destinationid || "").trim();
-            });
-            const bValid = aDestinationRows.length <= 1 || aDestinationRows.some(
-                this._hasDefaultFinalDestination.bind(this)
-            );
+            const oResolution = this._resolveDirectDispatchZ0();
+            const bValid = oResolution.valid;
 
             oModel.setProperty("/inputForm/directDispatchDestinationValid", bValid);
             if (!bValid && bShowMessage) {
@@ -5241,13 +5291,27 @@ sap.ui.define([
             this._applyDeliveryDestinationsForType(sTipoEntrega, false);
 
             const sDestinoDirecto = fnNorm(oModel.getProperty("/inputForm/destinoTextil"));
-            const sCodigoDestino = sTipoEntrega === "2"
-                ? sDestinoDirecto
-                : (sFinal || sShipTo || sCliente);
             const sCodigoAgencia = bMostrarAgencia ? sShipTo : "";
 
             const aAgencias = oModel.getProperty("/oAgenciasCliente") || [];
             const aDestinos = oModel.getProperty("/oDestinosCliente") || [];
+
+            // El Word funcional exige que Despacho Directo muestre únicamente
+            // finaldestinationid. Al modificar, se restaura el WE histórico si
+            // todavía pertenece a esa lista; de lo contrario se conserva DEFPA.
+            const oDestinoDirectoPedido = sTipoEntrega === "2" && sShipTo
+                ? aDestinos.find(function (item) {
+                    return fnNorm(item.Destinationid) === sShipTo;
+                })
+                : null;
+
+            const sCodigoDestino = sTipoEntrega === "2"
+                ? (
+                    oDestinoDirectoPedido
+                        ? oDestinoDirectoPedido.Destinationid
+                        : sDestinoDirecto
+                )
+                : (sFinal || sShipTo || sCliente);
 
             const oDestino = aDestinos.find(function (item) {
                 return [
@@ -5295,7 +5359,7 @@ sap.ui.define([
                         : "Despacho directo"
             );
 
-            // Directo conserva Finaldestinationid desde FullAddressSet/DEFPA.
+            // Directo conserva el WE del pedido si es un finaldestinationid válido.
             // Recojo y agencia utilizan Destinationid/FinalDestination.
             oModel.setProperty("/inputForm/destinoTextil", sCodigoDestino);
             oModel.setProperty("/inputForm/destinoCeramicoText", sTextoDestino);
