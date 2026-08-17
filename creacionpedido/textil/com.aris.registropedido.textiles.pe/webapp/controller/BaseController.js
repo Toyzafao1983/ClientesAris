@@ -2576,6 +2576,16 @@ sap.ui.define([
 
 			return true;
 		},
+		_isZPEFCourier: function (sDeliveryType) {
+			const oModel = this.getView().getModel("oModelProyect");
+			const oInputForm = oModel ? (oModel.getProperty("/inputForm") || {}) : {};
+			const sCurrentDeliveryType = sDeliveryType === undefined
+				? oInputForm.tipoEntrega
+				: sDeliveryType;
+
+			return String(oInputForm.tipDocument || "").trim().toUpperCase() === "ZPEF" &&
+				String(sCurrentDeliveryType || "").trim() === "10";
+		},
 		_applyDeliveryDestinationsForType: function (sDeliveryType, bShowValidationMessage) {
 			const oModel = this.getView().getModel("oModelProyect");
 			if (!oModel) {
@@ -2593,13 +2603,15 @@ sap.ui.define([
 			}
 
 			const bDirectDispatch = sNormalizedDeliveryType === "2";
+			const bZPEFCourier = this._isZPEFCourier(sNormalizedDeliveryType);
+			const bUseFinalDestination = bDirectDispatch || bZPEFCourier;
 			const bValid = !bDirectDispatch || this._validateDirectDispatchDestination(!!bShowValidationMessage);
 			const aDestinations = [];
 			const mDestinationIds = Object.create(null);
 
 			aAddresses.forEach(function (oAddress) {
 				const sDestinationId = String(
-					bDirectDispatch ? oAddress.Finaldestinationid || "" : oAddress.Destinationid || ""
+					bUseFinalDestination ? oAddress.Finaldestinationid || "" : oAddress.Destinationid || ""
 				).trim();
 				if (!sDestinationId || mDestinationIds[sDestinationId]) {
 					return;
@@ -2608,10 +2620,10 @@ sap.ui.define([
 				mDestinationIds[sDestinationId] = true;
 				aDestinations.push(Object.assign({}, oAddress, {
 					Destinationid: sDestinationId,
-					Destination: bDirectDispatch
+					Destination: bUseFinalDestination
 						? (oAddress.Finaldestination || oAddress.Finaldestinationname || sDestinationId)
 						: (oAddress.Destination || oAddress.Destinationname || sDestinationId),
-					Destinationname: bDirectDispatch
+					Destinationname: bUseFinalDestination
 						? (oAddress.Finaldestinationname || oAddress.Finaldestination || sDestinationId)
 						: (oAddress.Destinationname || oAddress.Destination || sDestinationId),
 					IsDefaultDestination: this._hasDefaultFinalDestination(oAddress)

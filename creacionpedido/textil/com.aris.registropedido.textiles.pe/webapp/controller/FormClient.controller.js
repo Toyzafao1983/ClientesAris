@@ -831,6 +831,11 @@ sap.ui.define([
             oModelProyect.setProperty("/inputForm/courier", "10");
             oModelProyect.setProperty("/inputForm/courierText", "Courier");
 
+            // El tipo Courier se asigna por código, por lo que no se dispara el
+            // evento del radio que normalmente carga los destinos. Reconstruirlos
+            // aquí con las direcciones ya obtenidas para el cliente exterior.
+            this._applyDeliveryDestinationsForType("10", false);
+
             // Se limpia agencia porque Courier reemplaza las 3 opciones normales
             oModelProyect.setProperty("/inputForm/direccionAgencia", "");
             oModelProyect.setProperty("/inputForm/direccionAgenciaText", "");

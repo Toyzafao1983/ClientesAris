@@ -2187,6 +2187,14 @@ sap.ui.define([
                     ItmNumber: "000000"
                 }
             ];
+            if (this._isZPEFCourier()) {
+                aPartnersBase.push({
+                    ClientId: oData.oDatClient?.Customer || "",
+                    PartnRole: "Z0",
+                    PartnNumber: oData.oDatClient?.Customer || "",
+                    ItmNumber: "000000"
+                });
+            }
             (function () {
                 const sSalesOrg = (oData.oDatClient?.SalesOrganization || "").toString();
                 if (sSalesOrg !== "1110") return;
@@ -2805,6 +2813,13 @@ sap.ui.define([
                     })()
                 }
             ];
+            if (this._isZPEFCourier()) {
+                aPartnersBase.push({
+                    ClientId: oData.oDatClient?.Customer || "",
+                    PartnRole: "Z0",
+                    PartnNumber: oData.oDatClient?.Customer || ""
+                });
+            }
             (function () {
                 const sSalesOrgLoc = String(oData.oDatClient?.SalesOrganization || "");
                 const sTipoEntregaLoc = oData.inputForm?.tipoEntrega;
