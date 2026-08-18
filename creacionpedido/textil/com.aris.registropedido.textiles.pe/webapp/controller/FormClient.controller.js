@@ -53,8 +53,9 @@ sap.ui.define([
                 that._getCOnditionPay(),           // 11
                 that._getUsers(),                  // 12
                 that._getBPVendedor(),             // 13
-                that._getTypeShipment(),           // 14
-                that._getPortEmbarkation()         // 15
+                that._getDatClient(),               // 14: catalogo completo para la lista de vendedores
+                that._getTypeShipment(),           // 15
+                that._getPortEmbarkation()         // 16
             ]).then(async (values) => {
                 const oModelProyect = that.getModel("oModelProyect");
                 const oModelData = that.getModel("oModelData");
@@ -201,9 +202,9 @@ sap.ui.define([
 
                 void 0;
 
-                // Reutilizar la consulta puntual de DataCustomer; evita descargar
-                // nuevamente todos los clientes sólo para construir el vendedor.
-                const aSellerRaw = aDatClient;
+                // La consulta puntual identifica al vendedor asignado al cliente.
+                // La consulta general alimenta todas las opciones del selector.
+                const aSellerRaw = values[14]?.oResults || [];
                 const mSeller = new Map();
 
                 aSellerRaw.forEach(function (r) {
@@ -223,20 +224,27 @@ sap.ui.define([
                 const sSellerPrincipalBP = String(oSellerPrincipal.kunn2 || "").trim();
 
                 if (sSellerPrincipalBP) {
-                    const oSellerExisting = aSellerOptions.find(function (item) {
+                    const iSellerExisting = aSellerOptions.findIndex(function (item) {
                         return String(item.kunn2 || "").trim() === sSellerPrincipalBP;
                     });
+                    let oSellerDefault;
 
-                    if (oSellerExisting) {
+                    if (iSellerExisting >= 0) {
+                        oSellerDefault = aSellerOptions.splice(iSellerExisting, 1)[0];
                         if (!oSellerPrincipal.Seller) {
-                            oSellerPrincipal.Seller = oSellerExisting.Seller || "";
+                            oSellerPrincipal.Seller = oSellerDefault.Seller || "";
                         }
                     } else {
-                        aSellerOptions.unshift({
+                        oSellerDefault = {
                             kunn2: sSellerPrincipalBP,
                             Seller: oSellerPrincipal.Seller || ""
-                        });
+                        };
                     }
+
+                    // forceSelection toma inicialmente el primer item del Select.
+                    // Mantener primero al vendedor asignado evita que otro vendedor
+                    // reemplace la selección mientras termina el binding de items.
+                    aSellerOptions.unshift(oSellerDefault);
                 }
 
                 let oSellerPrincipalFinal = {
@@ -281,7 +289,7 @@ sap.ui.define([
 
                 oModelData.setProperty("/oConditionPay", values[11]?.oResults || []);
 
-                const aTypeShipmentRaw = values[14]?.oResults || [];
+                const aTypeShipmentRaw = values[15]?.oResults || [];
                 const aTypeShipment = aTypeShipmentRaw.map(function (row) {
                     return Object.assign({}, row, {
                         sKey: String(row.Code || row.sKey || row.Key || row.Value || row.Valpos || "").trim(),
@@ -292,7 +300,7 @@ sap.ui.define([
                 void 0;
 
                 oModelData.setProperty("/oTypeShipment", aTypeShipment);
-                const aPortEmbarkationRaw = values[15]?.oResults || [];
+                const aPortEmbarkationRaw = values[16]?.oResults || [];
                 const aPortEmbarkation = this._normalizePortEmbarkation(aPortEmbarkationRaw);
 
                 oModelData.setProperty("/oPortEmbarkation", aPortEmbarkation);
@@ -1882,11 +1890,19 @@ sap.ui.define([
 
                     const aRaw = oResp.oResults || [];
                     const aMap = aRaw.map(function (row) {
+                        const bEsSeparacion = sTipoRef === "ZPSE" || row.DocumentType === "G";
+                        const dFechaInicio = bEsSeparacion
+                            ? (row.GValidFrom || row.BValidFrom)
+                            : row.BValidFrom;
+                        const dFechaFin = bEsSeparacion
+                            ? (row.GValidto || row.GValidTo || row.BValidTo)
+                            : row.BValidTo;
+
                         return {
                             DocComercial: row.SalesDocument,
                             ClDocum: row.SalesDocumentType + " - " + row.DscType,
-                            FechaInicio: Formatter.formatODataDateNoTZ(row.BValidFrom),
-                            FechaFin: Formatter.formatODataDateNoTZ(row.BValidTo),
+                            FechaInicio: Formatter.formatODataDateNoTZ(dFechaInicio),
+                            FechaFin: Formatter.formatODataDateNoTZ(dFechaFin),
                             PriceDate: row.PriceDate,        // "/Date(...) /"
                             DocumentType: row.DocumentType,    // "B" o "G"
                             SalesDocument: row.SalesDocument,
