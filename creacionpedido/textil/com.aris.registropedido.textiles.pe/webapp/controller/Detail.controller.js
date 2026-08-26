@@ -123,6 +123,13 @@ sap.ui.define([
                 const oCacheFormClient = that._getFormClientCacheForDetail(sCustomer) || {};
                 const oInputCache = oCacheFormClient.inputForm || {};
 
+                if (Array.isArray(oCacheFormClient.oSellerPrincipalOptions) && oCacheFormClient.oSellerPrincipalOptions.length) {
+                    that.oModelProyect.setProperty(
+                        "/oSellerPrincipalOptions",
+                        oCacheFormClient.oSellerPrincipalOptions
+                    );
+                }
+
                 if (oInputCache.tipoEmbarque || oInputCache.tipoEmbarqueText) {
                     that.oModelProyect.setProperty(
                         "/inputForm/tipoEmbarque",
@@ -147,26 +154,28 @@ sap.ui.define([
                     );
                 }
 
-                let oSellerPrincipal = that._resolveSellerPrincipal(
-                    oClientDataCurrent,
-                    oPrincipalSeller
-                );
+                // La selección hecha en FormClient tiene prioridad. El vendedor asignado
+                // al cliente solo se usa cuando se entra al detalle sin esa selección.
+                let oSellerPrincipal = {
+                    kunn2:
+                        oCacheFormClient.sellerPrincipalKunn2 ||
+                        oCacheFormClient.oSellerPrincipalSelected?.kunn2 ||
+                        oCacheFormClient.inputForm?.sellerPrincipalKunn2 ||
+                        oCacheFormClient.oClientData?.kunn2 ||
+                        "",
+                    Seller:
+                        oCacheFormClient.sellerPrincipalName ||
+                        oCacheFormClient.oSellerPrincipalSelected?.Seller ||
+                        oCacheFormClient.inputForm?.sellerPrincipalName ||
+                        oCacheFormClient.oClientData?.Seller ||
+                        ""
+                };
 
                 if (!oSellerPrincipal.kunn2 && !oSellerPrincipal.Seller) {
-                    oSellerPrincipal = {
-                        kunn2:
-                            oCacheFormClient.sellerPrincipalKunn2 ||
-                            oCacheFormClient.oSellerPrincipalSelected?.kunn2 ||
-                            oCacheFormClient.inputForm?.sellerPrincipalKunn2 ||
-                            oCacheFormClient.oClientData?.kunn2 ||
-                            "",
-                        Seller:
-                            oCacheFormClient.sellerPrincipalName ||
-                            oCacheFormClient.oSellerPrincipalSelected?.Seller ||
-                            oCacheFormClient.inputForm?.sellerPrincipalName ||
-                            oCacheFormClient.oClientData?.Seller ||
-                            ""
-                    };
+                    oSellerPrincipal = that._resolveSellerPrincipal(
+                        oClientDataCurrent,
+                        oPrincipalSeller
+                    );
                 }
 
                 if (!oSellerPrincipal.kunn2 && !oSellerPrincipal.Seller) {
@@ -4079,6 +4088,10 @@ sap.ui.define([
             const oModel = this.getView().getModel("oModelProyect");
             const oBackup = oModel.getProperty("/inputFormBackup") || {};
             oModel.setProperty("/inputForm", JSON.parse(JSON.stringify(oBackup)));
+            this._setSellerPrincipalSelection({
+                kunn2: oBackup.sellerPrincipalKunn2 || "",
+                Seller: oBackup.sellerPrincipalName || ""
+            });
             this._applyDeliveryDestinationsForType(oBackup.tipoEntrega || "", false);
 
             oModel.setProperty("/isDetailEdit", false);
@@ -4122,6 +4135,32 @@ sap.ui.define([
             oModel.setProperty("/isExternalZPEFEdit", false);
 
             sap.m.MessageToast.show("Condiciones comerciales actualizadas.");
+        },
+        onChangeSellerPrincipal: function (oEvent) {
+            const sKey = String(oEvent.getSource().getSelectedKey() || "").trim();
+            const oModel = this.getView().getModel("oModelProyect");
+            const aOptions = oModel.getProperty("/oSellerPrincipalOptions") || [];
+            const oSelected = aOptions.find(function (oItem) {
+                return String(oItem.kunn2 || "").trim() === sKey;
+            }) || { kunn2: "", Seller: "" };
+
+            this._setSellerPrincipalSelection(oSelected);
+            oModel.refresh(true);
+        },
+
+        _setSellerPrincipalSelection: function (oSeller) {
+            const oModel = this.getView().getModel("oModelProyect");
+            const sKunn2 = String(oSeller?.kunn2 || "").trim();
+            const sSeller = String(oSeller?.Seller || "").trim();
+
+            oModel.setProperty("/oSellerPrincipalSelected", {
+                kunn2: sKunn2,
+                Seller: sSeller
+            });
+            oModel.setProperty("/inputForm/sellerPrincipalKunn2", sKunn2);
+            oModel.setProperty("/inputForm/sellerPrincipalName", sSeller);
+            oModel.setProperty("/oClientData/kunn2", sKunn2);
+            oModel.setProperty("/oClientData/Seller", sSeller);
         },
         onSelectRadioComprobante: function (oEvent) {
             if (!oEvent.getParameter("selected")) return;

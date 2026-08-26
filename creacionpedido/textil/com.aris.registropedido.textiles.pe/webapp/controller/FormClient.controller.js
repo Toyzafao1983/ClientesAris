@@ -1062,6 +1062,7 @@ sap.ui.define([
                     Customer: sCustomer,
                     sellerPrincipalKunn2: oSellerPrincipal.kunn2 || "",
                     sellerPrincipalName: oSellerPrincipal.Seller || "",
+                    oSellerPrincipalOptions: oModel.getProperty("/oSellerPrincipalOptions") || [],
                     oSellerPrincipalSelected: {
                         kunn2: oSellerPrincipal.kunn2 || "",
                         Seller: oSellerPrincipal.Seller || ""

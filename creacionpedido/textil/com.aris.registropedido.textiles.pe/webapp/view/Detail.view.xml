@@ -311,19 +311,33 @@
                             width="100%" editable="false"
                             />
                             <Label text="{i18n>txtSellerPrincipal}" visible="{= !${oModelUser>/bIsCliente}}"/>
-
-                            <Input
-                                value="{
-                                    parts: [
-                                        { path: 'oModelProyect>/inputForm/sellerPrincipalKunn2' },
-                                        { path: 'oModelProyect>/inputForm/sellerPrincipalName' },
-                                        { path: 'oModelProyect>/oClientData/kunn2' },
-                                        { path: 'oModelProyect>/oClientData/Seller' }
-                                    ],
-                                    formatter: '.formatSellerPrincipalDisplay'
-                                }"
-                                editable="false"
-                                visible="{= !${oModelUser>/bIsCliente}}"/>
+                            <VBox width="100%" visible="{= !${oModelUser>/bIsCliente}}">
+                                <Input
+                                    value="{
+                                        parts: [
+                                            { path: 'oModelProyect>/inputForm/sellerPrincipalKunn2' },
+                                            { path: 'oModelProyect>/inputForm/sellerPrincipalName' },
+                                            { path: 'oModelProyect>/oClientData/kunn2' },
+                                            { path: 'oModelProyect>/oClientData/Seller' }
+                                        ],
+                                        formatter: '.formatSellerPrincipalDisplay'
+                                    }"
+                                    width="100%"
+                                    editable="false"
+                                    visible="{= !${oModelProyect>/isDetailEdit} || ${oModelProyect>/isExternalZPEFDetailLocked}}"/>
+                                <Select
+                                    id="selectSellerPrincipalDetail"
+                                    selectedKey="{oModelProyect>/inputForm/sellerPrincipalKunn2}"
+                                    change=".onChangeSellerPrincipal"
+                                    items="{path: 'oModelProyect>/oSellerPrincipalOptions'}"
+                                    forceSelection="true"
+                                    width="100%"
+                                    visible="{= ${oModelProyect>/isDetailEdit} &amp;&amp; !${oModelProyect>/isExternalZPEFDetailLocked}}">
+                                    <core:Item
+                                        key="{oModelProyect>kunn2}"
+                                        text="{= ${oModelProyect>kunn2} + ' - ' + ${oModelProyect>Seller} }" />
+                                </Select>
+                            </VBox>
                             <Label text="{i18n>txtSellerSupport}" visible="{= !${oModelUser>/bIsCliente}}"/>
                             <Input 
                                 value="{= ${oModelUser>/bBPFinal} + ' - ' + ${oModelUser>/bUserName} }"
