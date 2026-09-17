@@ -1549,6 +1549,34 @@ sap.ui.define([
                 (aMaterialUI || []).some(fnTieneReferencia);
         },
 
+        _buildCantidadM2FromReturnCeramicos: function (aReturns) {
+            const mCantidadM2 = {};
+
+            (aReturns || []).forEach(function (oReturn) {
+                const sMessage = String(oReturn?.Message || "").trim();
+                const aParts = sMessage.split("-").map(function (sPart) {
+                    return String(sPart || "").trim();
+                });
+
+                if (aParts.length < 3) {
+                    return;
+                }
+
+                const nItm = parseInt(aParts[0], 10);
+                const nCantidadM2 = parseFloat(
+                    String(aParts[aParts.length - 1] || "0").replace(",", ".")
+                );
+
+                if (isNaN(nItm) || isNaN(nCantidadM2) || nCantidadM2 <= 0) {
+                    return;
+                }
+
+                mCantidadM2[String(nItm).padStart(6, "0")] = nCantidadM2;
+            });
+
+            return mCantidadM2;
+        },
+
         _buildScheduleDefaultCeramicos: function (aItemsTech, aMaterialUI, oCantByItm, sClientId) {
             const toNumber = function (v) {
                 const n = parseFloat(String(v ?? "0").replace(",", "."));
@@ -1793,7 +1821,7 @@ sap.ui.define([
             return aSchedule;
         },
 
-        _buildCantidadM2FrontMapCeramicos: async function (aItemsTech, aMaterialUI, oCantByItm) {
+        _buildCantidadM2FrontMapCeramicos: async function (aItemsTech, aMaterialUI, oCantByItm, mCantidadM2Sap) {
             const toNumber = function (v) {
                 const n = parseFloat(String(v ?? "0").replace(",", "."));
                 return isNaN(n) ? 0 : n;
@@ -1812,6 +1840,12 @@ sap.ui.define([
             for (const mat of (aMaterialUI || [])) {
                 const sItm = String(mat.ItmNumber || "").padStart(6, "0");
                 if (!sItm) {
+                    continue;
+                }
+
+                const nM2Sap = toNumber(mCantidadM2Sap?.[sItm]);
+                if (nM2Sap > 0) {
+                    mResult[sItm] = nM2Sap;
                     continue;
                 }
 
@@ -2096,10 +2130,22 @@ sap.ui.define([
                         mCond[key].push(c);
                     });
 
+                    const mCantidadM2Sap = this._buildCantidadM2FromReturnCeramicos(aReturns);
                     const mCantidadM2Front = await this._buildCantidadM2FrontMapCeramicos(
                         aItemsTech,
                         aMaterialUI,
-                        oCantByItm
+                        oCantByItm,
+                        mCantidadM2Sap
+                    );
+
+                    /*
+                     * La simulación ya devuelve el metraje real por posición en
+                     * HeaderToReturn. Es más confiable que volver a convertir PAL/CJ
+                     * con MaterialPesoSet, que puede no tener todos los materiales.
+                     */
+                    Object.assign(
+                        mCantidadM2Front,
+                        mCantidadM2Sap
                     );
 
                     const aReporte = aMaterialUI.map(mat => {
@@ -2423,10 +2469,22 @@ sap.ui.define([
                         mCond[key].push(c);
                     });
 
+                    const mCantidadM2Sap = this._buildCantidadM2FromReturnCeramicos(aReturns);
                     const mCantidadM2Front = await this._buildCantidadM2FrontMapCeramicos(
                         aItemsTech,
                         aMaterialUI,
-                        oCantByItm
+                        oCantByItm,
+                        mCantidadM2Sap
+                    );
+
+                    /*
+                     * Priorizar el M2 calculado por la propia simulación SAP.
+                     * MaterialPesoSet queda como respaldo cuando HeaderToReturn no
+                     * incluye el metraje de una posición.
+                     */
+                    Object.assign(
+                        mCantidadM2Front,
+                        mCantidadM2Sap
                     );
 
                     const aReporte = aMaterialUI.map(mat => {
