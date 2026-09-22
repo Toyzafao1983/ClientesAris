@@ -671,8 +671,8 @@ sap.ui.define([
             const that = this;
 
             Promise.all([
-                that._getClientPet(tUniNeg),
-                that._getDatClient(tUniNeg)   // ajusta firma si la cambiaste
+                that._getClientPet(),
+                that._getDatClient()
             ]).then((values) => {
 
                 const aClientes = values[0].oResults || [];

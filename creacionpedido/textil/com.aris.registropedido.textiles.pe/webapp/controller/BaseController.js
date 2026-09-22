@@ -1765,19 +1765,23 @@ sap.ui.define([
 				that.getMessageBox("error", that.getI18nText("sErrorTry"));
 			}
 		},
-		_getClientPet: function () {
+		_getClientPet: function (sCustomer) {
 			try {
 				var oResp = {
 					"sEstado": "E",
 					"oResults": []
 				};
 				return new Promise(function (resolve, reject) {
+					let sFilter = "SalesOrganization eq '1110'";
+					if (sCustomer) {
+						sFilter += " and Customer eq '" + String(sCustomer).replace(/'/g, "''") + "'";
+					}
 					let sUrl = "";
 					if (that.local) {
-						const sPath = "/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/Customer?$filter=SalesOrganization eq '1110'&$top=10000&$format=json&sap-language=es-ES";
+						const sPath = "/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/Customer?$filter=" + encodeURIComponent(sFilter) + "&$top=10000&$format=json&sap-language=es-ES";
 						sUrl = that.getOwnerComponent().getManifestObject().resolveUri(sPath);
 					} else {
-						const sPath = jQuery.sap.getModulePath(that.route) + "/S4HANA/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/Customer?$filter=SalesOrganization eq '1110'&$top=10000&$format=json&sap-language=es-ES";
+						const sPath = jQuery.sap.getModulePath(that.route) + "/S4HANA/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/Customer?$filter=" + encodeURIComponent(sFilter) + "&$top=10000&$format=json&sap-language=es-ES";
 						sUrl = sPath;
 					}
 					Services.getoDataERPSync(that, sUrl, function (result) {
@@ -1805,12 +1809,16 @@ sap.ui.define([
 					"oResults": []
 				};
 				return new Promise(function (resolve, reject) {
+					let sFilter = "SalesOrganization eq '1110' and (DistributionChannel eq 'C1' or DistributionChannel eq 'C2') and Division eq 'S1' and (CustomerDni ne '' or CustomerRuc ne '')";
+					if (sCustomer) {
+						sFilter += " and Customer eq '" + String(sCustomer).replace(/'/g, "''") + "'";
+					}
 					let sUrl = "";
 					if (that.local) {
-						const sPath = "/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/DataCustomer?$filter=SalesOrganization eq '1110' and (DistributionChannel eq 'C1' or DistributionChannel eq 'C2') and Division eq 'S1' and (CustomerDni ne '' or CustomerRuc ne '')&$top=10000&$format=json&sap-language=es-ES";
+						const sPath = "/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/DataCustomer?$filter=" + encodeURIComponent(sFilter) + "&$top=10000&$format=json&sap-language=es-ES";
 						sUrl = that.getOwnerComponent().getManifestObject().resolveUri(sPath);
 					} else {
-						const sPath = jQuery.sap.getModulePath(that.route) + "/S4HANA/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/DataCustomer?$filter=SalesOrganization eq '1110' and (DistributionChannel eq 'C1' or DistributionChannel eq 'C2') and Division eq 'S1' and (CustomerDni ne '' or CustomerRuc ne '')&$top=10000&$format=json&sap-language=es-ES";
+						const sPath = jQuery.sap.getModulePath(that.route) + "/S4HANA/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/DataCustomer?$filter=" + encodeURIComponent(sFilter) + "&$top=10000&$format=json&sap-language=es-ES";
 						sUrl = sPath;
 					}
 					Services.getoDataERPSync(that, sUrl, function (result) {
