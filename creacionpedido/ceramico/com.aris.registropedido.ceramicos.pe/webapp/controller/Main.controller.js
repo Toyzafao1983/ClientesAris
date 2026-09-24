@@ -46,6 +46,7 @@ sap.ui.define([
             });
         },
         handleRouteMatched: function (bInit) {
+            that._initialCustomerData = null;
             sap.ui.core.BusyIndicator.show(0);
 
             Promise.all([
@@ -57,6 +58,11 @@ sap.ui.define([
                 that._getClientPet(),      // 5  Customer (lista base clientes para filtros)
                 that._getBPVendedor()      // 6  Sellers (vendedores)
             ]).then((values) => {
+                // Conservar las respuestas originales para buscar sin repetir OData.
+                that._initialCustomerData = {
+                    customers: values[5],
+                    customerData: values[4]
+                };
 
                 that._setLanguageModel("esp");
                 that._onClearDataFilter();
@@ -447,7 +453,26 @@ sap.ui.define([
                 });
             });
         },
+        _syncSearchFiltersFromTokens: function () {
+            // Al buscar, los tokens visibles son la fuente de los filtros vigentes.
+            // tokenUpdate puede leer la agregación antes de completar un alta o baja.
+            const aFields = [
+                ["multiInputSeller", "fSeller", false],
+                ["multiInputCodClient", "fCodClient", false],
+                ["multiInputRazonSocial", "fRazSocial", true],
+                ["multiInputDocument", "fDocument", false]
+            ];
+            aFields.forEach(([sId, sProperty, bUseText]) => {
+                const oInput = this.byId(sId);
+                if (!oInput) return;
+                const aValues = oInput.getTokens().map(oToken =>
+                    String((bUseText ? oToken.getText() : oToken.getKey()) || oToken.getText() || "").trim()
+                ).filter(Boolean);
+                this.oModelProyect.setProperty("/Main/filter/" + sProperty, Array.from(new Set(aValues)));
+            });
+        },
         _onPressExecute: function () {
+            this._syncSearchFiltersFromTokens();
             const oUser = this.getModel("oModelUser");
             const bIsVendedor = !!oUser?.getProperty("/bIsVendedor");
             const bIsCoord = !!oUser?.getProperty("/bIsCoord");
@@ -470,20 +495,16 @@ sap.ui.define([
             let jFilter = this.oModelProyect.getProperty("/Main/filter") || {};
             sap.ui.core.BusyIndicator.show();
 
-            Promise.all([that._getData(jFilter), that._getClientPet(), that._getDatClient()])
-                .then((values) => {
-                    let oData = values[0];
-                    let oDataPet = values[1];
-                    let oDataVend = values[2];
-
-                    if (oData.sEstado === "E") {
+            Promise.resolve().then(() => {
+                    const oInitial = this._initialCustomerData;
+                    if (!oInitial || oInitial.customers?.sEstado !== "S" ||
+                        oInitial.customerData?.sEstado !== "S") {
                         this.getMessageBox("error", this.getI18nText("errorData"));
                         sap.ui.core.BusyIndicator.hide();
                         return;
                     }
-
-                    let aClientes = oDataPet.oResults || [];
-                    let aVend = oDataVend.oResults || [];
+                    const aClientes = oInitial.customers.oResults || [];
+                    const aVend = oInitial.customerData.oResults || [];
 
                     let aReporte = aClientes.map(oCliente => {
                         let oVend = aVend.find(oExt => oExt.Customer === oCliente.Customer);

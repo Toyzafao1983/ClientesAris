@@ -40,12 +40,18 @@ sap.ui.define([
 
         },
          handleRouteMatched: function (bInit) {
+            that._initialCustomerData = null;
 
             sap.ui.core.BusyIndicator.show(0)
              Promise.all([that._getUsers(), that._getPrueba(),
             that._getTipChangeData(),that._getDatClient(),
             that._getClientPet(),that._getBPVendedor()
             ]).then(async (values) => {
+                // Conservar las respuestas originales para buscar sin repetir OData.
+                that._initialCustomerData = {
+                    customers: values[4],
+                    customerData: values[3]
+                };
                 try {
                     that._setLanguageModel("esp");
                     that.oModelProyect = that.getModel("oModelProyect");
@@ -410,7 +416,26 @@ sap.ui.define([
                 });
             });
         },
-         _onPressExecute: function () {
+         _syncSearchFiltersFromTokens: function () {
+            // Al buscar, los tokens visibles son la fuente de los filtros vigentes.
+            // tokenUpdate puede leer la agregación antes de completar un alta o baja.
+            const aFields = [
+                ["multiInputSeller", "fSeller", false],
+                ["multiInputCodClient", "fCodClient", false],
+                ["multiInputRazonSocial", "fRazSocial", true],
+                ["multiInputDocument", "fDocument", false]
+            ];
+            aFields.forEach(([sId, sProperty, bUseText]) => {
+                const oInput = this.byId(sId);
+                if (!oInput) return;
+                const aValues = oInput.getTokens().map(oToken =>
+                    String((bUseText ? oToken.getText() : oToken.getKey()) || oToken.getText() || "").trim()
+                ).filter(Boolean);
+                this.oModelProyect.setProperty("/Main/filter/" + sProperty, Array.from(new Set(aValues)));
+            });
+        },
+        _onPressExecute: function () {
+            this._syncSearchFiltersFromTokens();
             let jFilter = this.oModelProyect.getProperty("/Main/filter") || {},
                 bFilter = false;
             if (jFilter.fSeller && jFilter.fSeller.length > 0) bFilter = true;
@@ -418,18 +443,17 @@ sap.ui.define([
             if (jFilter.fRazSocial && jFilter.fRazSocial.length > 0) bFilter = true;
             if (jFilter.fDocument && jFilter.fDocument.length > 0) bFilter = true;
             sap.ui.core.BusyIndicator.show();
-            Promise.all([that._getData(jFilter), that._getClientPet(),that._getDatClient()])
-                .then((values) => {
-                    let oData = values[0];
-                    let oDataPet = values[1];
-                     let oDataVend = values[2];
-                    if (oData.sEstado === "E") {
+            Promise.resolve().then(() => {
+                    const oInitial = this._initialCustomerData;
+                    if (!oInitial || oInitial.customers?.sEstado !== "S" ||
+                        oInitial.customerData?.sEstado !== "S") {
                         this.getMessageBox("error", this.getI18nText("errorData"));
                         sap.ui.core.BusyIndicator.hide();
                         return;
                     }
-                    let aClientes = oDataPet.oResults || [];
-                    let aVend     = oDataVend.oResults || [];
+                    const aClientes = oInitial.customers.oResults || [];
+                    const aVend = oInitial.customerData.oResults || [];
+
                     let aReporte = aClientes.map(oCliente => {
                         let oVend = aVend.find(oExt => oExt.Customer === oCliente.Customer);
                         return {
