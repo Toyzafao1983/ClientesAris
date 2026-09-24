@@ -53,10 +53,9 @@ sap.ui.define([
                 that._getPrueba(),         // 1
                 that._getTipDocument(that),// 2  (si tu firma lo requiere)
                 that._getTipChangeData(),  // 3
-                that._getCreditDispo(),    // 4
-                that._getDatClient(),      // 5  DataCustomer (Customer, CustomerFullName, TaxNumber*, kunn2)
-                that._getClientPet(),      // 6  Customer (lista base clientes para filtros)
-                that._getBPVendedor()      // 7  Sellers (vendedores)
+                that._getDatClient(),      // 4  DataCustomer (Customer, CustomerFullName, TaxNumber*, kunn2)
+                that._getClientPet(),      // 5  Customer (lista base clientes para filtros)
+                that._getBPVendedor()      // 6  Sellers (vendedores)
             ]).then((values) => {
 
                 that._setLanguageModel("esp");
@@ -76,8 +75,8 @@ sap.ui.define([
                 that._validateAccessToPortal(values);
 
                 // ✅ 1) DATA ALL (para scope) - usando tUniNeg real
-                const oClientesResp = values[6]; // si mantienes _getClientPet en Promise.all
-                const oDatResp = values[5]; // _getDatClient
+                const oClientesResp = values[5]; // si mantienes _getClientPet en Promise.all
+                const oDatResp = values[4]; // _getDatClient
 
                 const aClientesAll = oClientesResp?.oResults || [];
                 const aDatClientAll = oDatResp?.oResults || [];
@@ -205,7 +204,7 @@ sap.ui.define([
                 localStorage.setItem("oUserCache", JSON.stringify(oUserCache));
                 // El atributo 2 tiene prioridad; un interno rechazado no pasa a cliente.
                 if (sBPCliente && !sBPVendedor) {
-                    let aClientes = values[6]?.oResults || [];
+                    let aClientes = values[5]?.oResults || [];
                     let oCliente = aClientes.find(item => item.Customer === sBPCliente);
                     const aSalesOrgs = await this._getSalesOrgByBP(sBPCliente);
                     if (!Array.isArray(aSalesOrgs) || !aSalesOrgs.includes(tSalesOrg)) {
@@ -231,7 +230,7 @@ sap.ui.define([
                 }
                 if (sBPInterno) {
                     const sUsuarioIAS = sBPInterno;
-                    let oVendResp = values[7]?.oResults;
+                    let oVendResp = values[6]?.oResults;
                     let aVendedores = [];
                     if (oVendResp) {
                         if (oVendResp.d && Array.isArray(oVendResp.d.results)) {

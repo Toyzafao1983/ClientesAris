@@ -37,7 +37,7 @@ sap.ui.define([
             sap.ui.core.BusyIndicator.show(0)
              Promise.all([that._getUsers(), that._getPrueba(),
             that._getTipDocument(that),that._getTipChangeData(),
-            that._getCreditDispo(),that._getDatClient(),that._getClientPet(),that._getBPVendedor()
+            that._getDatClient(),that._getClientPet(),that._getBPVendedor()
             ]).then(async (values) => {
                     try {
                         that._setLanguageModel("esp");
@@ -51,9 +51,9 @@ sap.ui.define([
                         let sIdioma = that.oModelProyect.getProperty("/sIdioma");
                         that.oModelProyect.setSizeLimit(99999999);
                         that.oModelData.setSizeLimit(99999999);
-                        that.oModelProyect.setProperty("/oClienteFilter", values[6].oResults);
-                        that.oModelProyect.setProperty("/oSeller",        values[5].oResults);
-                        const aSellerRaw = values[5].oResults || [];
+                        that.oModelProyect.setProperty("/oClienteFilter", values[5].oResults);
+                        that.oModelProyect.setProperty("/oSeller",        values[4].oResults);
+                        const aSellerRaw = values[4].oResults || [];
                         const m = new Map();
 
                         aSellerRaw.forEach(r => {
@@ -193,7 +193,7 @@ sap.ui.define([
                 localStorage.setItem("oUserCache", JSON.stringify(oUserCache));
                 // El atributo 2 tiene prioridad; un interno rechazado no pasa a cliente.
                 if (sBPCliente && !sBPVendedor) {
-                    let aClientes = values[6]?.oResults || [];
+                    let aClientes = values[5]?.oResults || [];
                     let oCliente  = aClientes.find(item => item.Customer === sBPCliente);
 
                     const aSalesOrgs = await this._getSalesOrgByBP(sBPCliente);
@@ -222,7 +222,7 @@ sap.ui.define([
                 }
                 if (sBPInterno) {
                     const sUsuarioIAS = sBPInterno;
-                    let oVendResp   = values[7]?.oResults;
+                    let oVendResp   = values[6]?.oResults;
                     let aVendedores = [];
                     if (oVendResp) {
                         if (oVendResp.d && Array.isArray(oVendResp.d.results)) {

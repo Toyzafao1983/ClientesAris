@@ -43,7 +43,7 @@ sap.ui.define([
 
             sap.ui.core.BusyIndicator.show(0)
              Promise.all([that._getUsers(), that._getPrueba(),
-            that._getTipChangeData(),that._getCreditDispo(),that._getDatClient(),
+            that._getTipChangeData(),that._getDatClient(),
             that._getClientPet(),that._getBPVendedor()
             ]).then(async (values) => {
                 try {
@@ -62,8 +62,8 @@ sap.ui.define([
                         return;
                     }
 
-                    that.oModelProyect.setProperty("/oSeller", values[6].oResults);
-                    that.oModelProyect.setProperty("/oClienteFilter", values[5].oResults);
+                    that.oModelProyect.setProperty("/oSeller", values[5].oResults);
+                    that.oModelProyect.setProperty("/oClienteFilter", values[4].oResults);
                     that.onClearFilters();
 
                     let oData = values[2].oResults;
@@ -163,7 +163,7 @@ sap.ui.define([
         // ========================================================
         // El atributo 2 tiene prioridad; un interno rechazado no pasa a cliente.
         if (sBPCliente && !sBPVendedor) {
-            let aClientes = values[5]?.oResults || [];
+            let aClientes = values[4]?.oResults || [];
             let oCliente  = aClientes.find(item => item.Customer === sBPCliente);
 
             const aSalesOrgs = await this._getSalesOrgByBP(sBPCliente);
@@ -197,8 +197,8 @@ sap.ui.define([
         // ========================================================
         if (sBPInterno) {
             const sUsuarioIAS = sBPInterno;
-            // values[7] debe traer tu OData de vendedores/coordinadores
-            let oVendResp   = values[6]?.oResults;
+            // values[5] contiene el OData de vendedores/coordinadores
+            let oVendResp   = values[5]?.oResults;
             let aVendedores = [];
 
             if (oVendResp) {
