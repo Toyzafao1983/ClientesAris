@@ -349,13 +349,14 @@ sap.ui.define([
                 let oAttr2 = aAttr.find(a => a.name === "customAttribute2");
                 let oAttr3 = aAttr.find(a => a.name === "customAttribute3");
 
-                let sBPCliente = oAttr1?.value || "";
-                let sBPVendedor = oAttr2?.value || "";
-                let sBPCoord = oAttr3?.value || "";
+                let sBPCliente = String(oAttr1?.value || "").trim();
+                let sBPVendedor = String(oAttr2?.value || "").trim();
+                let sBPCoord = String(oAttr3?.value || "").trim();
 
                 const oModelUser = that.getModel("oModelUser");
 
-                if (sBPCliente) {
+                // El atributo 2 tiene prioridad; un interno rechazado no pasa a cliente.
+                if (sBPCliente && !sBPVendedor) {
                     const vSalesOrgsRaw = await that._getSalesOrgByBP(sBPCliente);
 
                     const aSalesOrgs = Array.isArray(vSalesOrgsRaw)
@@ -460,8 +461,16 @@ sap.ui.define([
                     const sPerfil = (oMatch.DscPerfil || oMatch.perfil || oMatch.Perfil || "")
                         .toString().toUpperCase().trim();
 
-                    const bIsVendedor = sPerfil.includes("VENDEDOR");
-                    const bIsCoord = sPerfil.includes("COORDINADOR");
+                    const bIsVendedor = (sPerfil === "VD" || sPerfil === "VENDEDOR");
+                    const bIsCoord = (sPerfil === "CD" || sPerfil === "COORDINADOR");
+
+                    if (!bIsVendedor && !bIsCoord) {
+                        sap.ui.core.BusyIndicator.hide(0);
+                        sap.m.MessageBox.error("Su perfil no está autorizado para acceder a esta aplicación.", {
+                            onClose: () => (window.location.href = "/")
+                        });
+                        return false;
+                    }
 
                     oModelUser.setProperty("/bIsVendedor", bIsVendedor && !bIsCoord);
                     oModelUser.setProperty("/bPerfil", oMatch.DscPerfil || sPerfil);
@@ -502,7 +511,7 @@ sap.ui.define([
                     }
 
                     oModelUser.setProperty("/bUniNeg", tUniNeg);
-                    oModelUser.setProperty("/customAttribute", sBPCoord ? "customAttribute3" : "customAttribute2");
+                    oModelUser.setProperty("/customAttribute", sBPVendedor ? "customAttribute2" : "customAttribute3");
                     oModelUser.setProperty("/bIsCliente", false);
                     oModelUser.setProperty("/bIsInterno", true);
 

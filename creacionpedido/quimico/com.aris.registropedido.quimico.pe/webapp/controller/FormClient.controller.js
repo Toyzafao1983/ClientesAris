@@ -314,7 +314,8 @@ sap.ui.define([
                 // ========================
                 // 3) CASO CLIENTE
                 // ========================
-                if (sBPCliente) {
+                // El atributo 2 tiene prioridad; un interno rechazado no pasa a cliente.
+                if (sBPCliente && !sBPVendedor) {
                     void 0;
 
                     const aSalesOrgs = await that._getSalesOrgByBP(sBPCliente);
@@ -399,6 +400,12 @@ sap.ui.define([
 
                     const bIsVendedor = (sPerfilCode === "VD");
                     const bIsCoord = (sPerfilCode === "CD");
+
+                    if (!bIsVendedor && !bIsCoord) {
+                        sap.ui.core.BusyIndicator.hide(0);
+                        oRouter.navTo("AccessDenied");
+                        return false;
+                    }
 
                     void 0;
                     void 0;

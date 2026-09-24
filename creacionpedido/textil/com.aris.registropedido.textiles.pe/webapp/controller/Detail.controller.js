@@ -308,9 +308,9 @@ sap.ui.define([
                 let oAttr1 = aAttr.find(a => a.name === "customAttribute1"); // Cliente
                 let oAttr2 = aAttr.find(a => a.name === "customAttribute2"); // Vendedor / Coord
                 let oAttr3 = aAttr.find(a => a.name === "customAttribute3"); // Adicional
-                let sBPCliente = oAttr1 ? oAttr1.value : "";
-                let sBPVendedor = oAttr2 ? oAttr2.value : "";
-                let sBPCoord = oAttr3 ? oAttr3.value : "";
+                let sBPCliente = String(oAttr1?.value || "").trim();
+                let sBPVendedor = String(oAttr2?.value || "").trim();
+                let sBPCoord = String(oAttr3?.value || "").trim();
                 let sBPFinal = sBPVendedor || sBPCoord || "";
                 oModelUser.setProperty("/bBPFinal", sBPFinal);
                 if (sBPFinal) {
@@ -329,7 +329,8 @@ sap.ui.define([
                     SalesOrg: tSalesOrg
                 };
                 localStorage.setItem("oUserCache", JSON.stringify(oUserCache));
-                if (sBPCliente) {
+                // El atributo 2 tiene prioridad; un interno rechazado no pasa a cliente.
+                if (sBPCliente && !sBPVendedor) {
                     const aClientes = values[3]?.oResults || [];
                     const oCliente = aClientes.find(item => item.Customer === sBPCliente);
                     const aSalesOrgs = await that._getSalesOrgByBP(sBPCliente);
@@ -362,7 +363,10 @@ sap.ui.define([
                             aVendedores = oVendResp;
                         }
                     }
-                    const oMatch = aVendedores.find(item => item.usuario === sUsuarioIAS);
+                    const oMatch = aVendedores.find(item =>
+                        String(item.usuario || "").trim() === sUsuarioIAS &&
+                        String(item.orgventas || "").trim() === String(tSalesOrg).trim()
+                    );
                     if (!oMatch) {
                         sap.ui.core.BusyIndicator.hide(0);
                         oRouter.navTo("AccessDenied");
@@ -379,6 +383,12 @@ sap.ui.define([
                     }
                     const bIsVendedor = (oMatch.DscPerfil === "Vendedor");
                     const bIsCoord = (oMatch.DscPerfil === "Coordinador");
+
+                    if (!bIsVendedor && !bIsCoord) {
+                        sap.ui.core.BusyIndicator.hide(0);
+                        oRouter.navTo("AccessDenied");
+                        return false;
+                    }
 
                     oModelUser.setProperty("/bPerfil", oMatch.DscPerfil);
                     oModelUser.setProperty("/bUniNeg", tUniNeg);

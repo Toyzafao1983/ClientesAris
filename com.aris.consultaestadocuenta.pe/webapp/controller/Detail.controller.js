@@ -51,21 +51,10 @@ sap.ui.define([
 				tRol = oModelUser.getProperty("/bRol") || tRol || "";
 
 				if (!tRol) {
-					const oUser = values?.[4]?.Resources?.[0];
-					const oAttrIAS = oUser?.["urn:sap:cloud:scim:schemas:extension:custom:2.0:User"];
-					const aAttr = oAttrIAS?.attributes || [];
-
-					const oAttr1 = aAttr.find(a => a.name === "customAttribute1");
-					const oAttr2 = aAttr.find(a => a.name === "customAttribute2");
-					const oAttr3 = aAttr.find(a => a.name === "customAttribute3");
-
-					if (oAttr1?.value) {
-						tRol = "CLIENTES";
-					} else if (oAttr3?.value) {
-						tRol = "COORDINADOR";
-					} else if (oAttr2?.value) {
-						tRol = "VENDEDOR";
-					}
+					// Resolver atributos y autorización SAP en Main antes de mostrar el detalle.
+					sap.ui.core.BusyIndicator.hide(0);
+					this.oRouter.navTo("Main");
+					return;
 				}
 
 				oModelUser.setProperty("/bRol", tRol);

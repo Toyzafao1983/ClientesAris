@@ -99,12 +99,12 @@ sap.ui.define([
                     const attr2 = oAttr.attributes.find(a => a.name === "customAttribute2");
                     const attr3 = oAttr.attributes.find(a => a.name === "customAttribute3");
 
-                    if (attr1 && attr1.value) {
-                        oBPUser = attr1.value.trim();
-                        tipoBP = "CLIENTE";
-                    } else if (attr2 && attr2.value) {
+                    if (String(attr2?.value || "").trim()) {
                         oBPUser = attr2.value.trim();
                         tipoBP = "VENDEDOR";
+                    } else if (String(attr1?.value || "").trim()) {
+                        oBPUser = attr1.value.trim();
+                        tipoBP = "CLIENTE";
                     }
                 }
 

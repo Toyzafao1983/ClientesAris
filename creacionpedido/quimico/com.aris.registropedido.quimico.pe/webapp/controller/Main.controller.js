@@ -135,9 +135,9 @@ sap.ui.define([
         // customAttribute3 podrías dejarlo de backup si quieres:
         let oAttr3 = aAttr.find(a => a.name === "customAttribute3"); // opcional / legacy
 
-        let sBPCliente  = oAttr1?.value || "";
-        let sBPInterno2 = oAttr2?.value || "";
-        let sBPInterno3 = oAttr3?.value || "";
+        let sBPCliente  = String(oAttr1?.value || "").trim();
+        let sBPInterno2 = String(oAttr2?.value || "").trim();
+        let sBPInterno3 = String(oAttr3?.value || "").trim();
         // Por compatibilidad: si antes usabas 2 para vendedor y 3 para coordinador,
         // ahora tomamos el que venga:
         let sBPInterno = sBPInterno2 || sBPInterno3;
@@ -161,7 +161,8 @@ sap.ui.define([
         // ========================================================
         // 1️⃣ CASO CLIENTE (customAttribute1)
         // ========================================================
-        if (sBPCliente) {
+        // El atributo 2 tiene prioridad; un interno rechazado no pasa a cliente.
+        if (sBPCliente && !sBPVendedor) {
             let aClientes = values[5]?.oResults || [];
             let oCliente  = aClientes.find(item => item.Customer === sBPCliente);
 
@@ -208,7 +209,10 @@ sap.ui.define([
                 }
             }
 
-            let oMatch = aVendedores.find(item => item.usuario === sUsuarioIAS);
+            let oMatch = aVendedores.find(item =>
+                String(item.usuario || "").trim() === sUsuarioIAS &&
+                String(item.orgventas || "").trim() === String(tSalesOrg).trim()
+            );
             if (!oMatch) {
                 sap.ui.core.BusyIndicator.hide(0);
                 oRouter.navTo("AccessDenied");
@@ -246,6 +250,12 @@ sap.ui.define([
 
             const bIsVendedor = (sPerfilCode === "VD") || sPerfilDesc.includes("VENDEDOR");
             const bIsCoord    = (sPerfilCode === "CD") || sPerfilDesc.includes("COORDINADOR");
+
+            if (!bIsVendedor && !bIsCoord) {
+                sap.ui.core.BusyIndicator.hide(0);
+                oRouter.navTo("AccessDenied");
+                return false;
+            }
 
             // Guardamos en modelo para usar en filtros (ej. stock Linea con/ sin *)
             oModelUser.setProperty("/bPerfil", oMatch.DscPerfil);  // "Vendedor" / "Coordinador"

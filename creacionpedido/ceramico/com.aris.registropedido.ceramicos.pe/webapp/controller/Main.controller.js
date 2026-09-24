@@ -186,9 +186,9 @@ sap.ui.define([
                 let oAttr1 = aAttr.find(a => a.name === "customAttribute1"); // Cliente
                 let oAttr2 = aAttr.find(a => a.name === "customAttribute2"); // Interno (Vendedor / Coordinador)
                 let oAttr3 = aAttr.find(a => a.name === "customAttribute3"); // opcional / legacy
-                let sBPCliente = oAttr1?.value || "";
-                let sBPInterno2 = oAttr2?.value || "";
-                let sBPInterno3 = oAttr3?.value || "";
+                let sBPCliente = String(oAttr1?.value || "").trim();
+                let sBPInterno2 = String(oAttr2?.value || "").trim();
+                let sBPInterno3 = String(oAttr3?.value || "").trim();
                 let sBPInterno = sBPInterno2 || sBPInterno3;
                 let sBPVendedor = sBPInterno2;
                 let sBPCoord = sBPInterno3;
@@ -203,7 +203,8 @@ sap.ui.define([
                     SalesOrg: tSalesOrg
                 };
                 localStorage.setItem("oUserCache", JSON.stringify(oUserCache));
-                if (sBPCliente) {
+                // El atributo 2 tiene prioridad; un interno rechazado no pasa a cliente.
+                if (sBPCliente && !sBPVendedor) {
                     let aClientes = values[6]?.oResults || [];
                     let oCliente = aClientes.find(item => item.Customer === sBPCliente);
                     const aSalesOrgs = await this._getSalesOrgByBP(sBPCliente);
@@ -239,7 +240,10 @@ sap.ui.define([
                             aVendedores = oVendResp;
                         }
                     }
-                    let oMatch = aVendedores.find(item => item.usuario === sUsuarioIAS);
+                    let oMatch = aVendedores.find(item =>
+                        String(item.usuario || "").trim() === sUsuarioIAS &&
+                        String(item.orgventas || "").trim() === String(tSalesOrg).trim()
+                    );
                     if (!oMatch) {
                         sap.ui.core.BusyIndicator.hide(0);
                         oRouter.navTo("AccessDenied");
@@ -271,6 +275,12 @@ sap.ui.define([
                     const sPerfilDesc = (oMatch.DscPerfil || "").toUpperCase();  // "VENDEDOR" o "COORDINADOR"
                     const bIsVendedor = (sPerfilCode === "VD") || sPerfilDesc.includes("VENDEDOR");
                     const bIsCoord = (sPerfilCode === "CD") || sPerfilDesc.includes("COORDINADOR");
+
+                    if (!bIsVendedor && !bIsCoord) {
+                        sap.ui.core.BusyIndicator.hide(0);
+                        oRouter.navTo("AccessDenied");
+                        return false;
+                    }
                     if (bIsVendedor && !bIsCoord) {
                         const sBP = (oMatch.kunn2 || oMatch.bp || oMatch.BP || oMatch.Seller || oMatch.txt13 || "")
                             .toString().trim() || sUsuarioIAS;
