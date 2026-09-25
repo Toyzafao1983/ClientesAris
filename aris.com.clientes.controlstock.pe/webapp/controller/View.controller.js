@@ -117,22 +117,17 @@ sap.ui.define([
                 that.tMetTextil = false;
 
                 if (oAttr && Array.isArray(oAttr.attributes)) {
-                    const attr1 = oAttr.attributes.find(a => a.name === "customAttribute1"); // Cliente
-                    const attr2 = oAttr.attributes.find(a => a.name === "customAttribute2"); // Vendedor
-                    const attr3 = oAttr.attributes.find(a => a.name === "customAttribute3"); // Coordinador / Supervisor
+                    const attr6 = oAttr.attributes.find(a => a.name === "customAttribute6"); // Cliente
+                    const attr7 = oAttr.attributes.find(a => a.name === "customAttribute7"); // Vendedor
 
-                    if (String(attr2?.value || "").trim()) {
-                        oBPUser = attr2.value.trim();
+                    if (String(attr7?.value || "").trim()) {
+                        oBPUser = attr7.value.trim();
                         tipoBP = "VENDEDOR";
-                        sCustomAttribute = "customAttribute2";
-                    } else if (String(attr1?.value || "").trim()) {
-                        oBPUser = attr1.value.trim();
+                        sCustomAttribute = "customAttribute7";
+                    } else if (String(attr6?.value || "").trim()) {
+                        oBPUser = attr6.value.trim();
                         tipoBP = "CLIENTE";
-                        sCustomAttribute = "customAttribute1";
-                    } else if (attr3 && attr3.value) {
-                        oBPUser = attr3.value.trim();
-                        tipoBP = "VENDEDOR";
-                        sCustomAttribute = "customAttribute3";
+                        sCustomAttribute = "customAttribute6";
                     }
                 }
 

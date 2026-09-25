@@ -345,17 +345,15 @@ sap.ui.define([
 
                 let oAttrIAS = oUser["urn:sap:cloud:scim:schemas:extension:custom:2.0:User"];
                 let aAttr = oAttrIAS?.attributes || [];
-                let oAttr1 = aAttr.find(a => a.name === "customAttribute1");
-                let oAttr2 = aAttr.find(a => a.name === "customAttribute2");
-                let oAttr3 = aAttr.find(a => a.name === "customAttribute3");
+                let oAttr6 = aAttr.find(a => a.name === "customAttribute6");
+                let oAttr7 = aAttr.find(a => a.name === "customAttribute7");
 
-                let sBPCliente = String(oAttr1?.value || "").trim();
-                let sBPVendedor = String(oAttr2?.value || "").trim();
-                let sBPCoord = String(oAttr3?.value || "").trim();
+                let sBPCliente = String(oAttr6?.value || "").trim();
+                let sBPVendedor = String(oAttr7?.value || "").trim();
 
                 const oModelUser = that.getModel("oModelUser");
 
-                // El atributo 2 tiene prioridad; un interno rechazado no pasa a cliente.
+                // El atributo 7 tiene prioridad; un interno rechazado no pasa a cliente.
                 if (sBPCliente && !sBPVendedor) {
                     const vSalesOrgsRaw = await that._getSalesOrgByBP(sBPCliente);
 
@@ -412,7 +410,7 @@ sap.ui.define([
                     oModelUser.setProperty("/bRol", "CLIENTES");
                     oModelUser.setProperty("/bBP", sBPCliente);
                     oModelUser.setProperty("/bUniNeg", tUniNeg);
-                    oModelUser.setProperty("/customAttribute", "customAttribute1");
+                    oModelUser.setProperty("/customAttribute", "customAttribute6");
                     oModelUser.setProperty("/oSalesOrgIAS", aSalesOrgs);
                     oModelUser.setProperty("/bIsCliente", true);
                     oModelUser.setProperty("/bIsInterno", false);
@@ -430,8 +428,8 @@ sap.ui.define([
                     return false;
                 }
 
-                if (sBPVendedor || sBPCoord) {
-                    let sUsuarioIAS = sBPVendedor || sBPCoord;
+                if (sBPVendedor) {
+                    let sUsuarioIAS = sBPVendedor;
 
                     let oVendResp = values?.[5]?.oResults;
                     let aVendedores = [];
@@ -511,7 +509,7 @@ sap.ui.define([
                     }
 
                     oModelUser.setProperty("/bUniNeg", tUniNeg);
-                    oModelUser.setProperty("/customAttribute", sBPVendedor ? "customAttribute2" : "customAttribute3");
+                    oModelUser.setProperty("/customAttribute", "customAttribute7");
                     oModelUser.setProperty("/bIsCliente", false);
                     oModelUser.setProperty("/bIsInterno", true);
 

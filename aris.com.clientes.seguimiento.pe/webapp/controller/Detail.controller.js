@@ -133,14 +133,13 @@ sap.ui.define([
                 let oBPUser = "";
 
                 if (oAttr && Array.isArray(oAttr.attributes)) {
-                    const attr1 = oAttr.attributes.find(a => a.name === "customAttribute1");
-                    const attr2 = oAttr.attributes.find(a => a.name === "customAttribute2");
-                    const attr3 = oAttr.attributes.find(a => a.name === "customAttribute3");
+                    const attr6 = oAttr.attributes.find(a => a.name === "customAttribute6");
+                    const attr7 = oAttr.attributes.find(a => a.name === "customAttribute7");
 
-                    if (String(attr2?.value || "").trim()) {
-                        oBPUser = attr2.value.trim();
-                    } else if (String(attr1?.value || "").trim()) {
-                        oBPUser = attr1.value.trim();
+                    if (String(attr7?.value || "").trim()) {
+                        oBPUser = attr7.value.trim();
+                    } else if (String(attr6?.value || "").trim()) {
+                        oBPUser = attr6.value.trim();
                     }
                 }
 

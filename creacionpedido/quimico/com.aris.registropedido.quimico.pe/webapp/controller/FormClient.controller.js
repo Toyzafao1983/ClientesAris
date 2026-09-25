@@ -294,19 +294,17 @@ sap.ui.define([
 
                 void 0;
 
-                let oAttr1 = aAttr.find(a => a.name === "customAttribute1");
-                let oAttr2 = aAttr.find(a => a.name === "customAttribute2");
-                let oAttr3 = aAttr.find(a => a.name === "customAttribute3");
+                let oAttr6 = aAttr.find(a => a.name === "customAttribute6");
+                let oAttr7 = aAttr.find(a => a.name === "customAttribute7");
 
-                let sBPCliente = oAttr1 ? String(oAttr1.value || "").trim() : "";
-                let sBPVendedor = oAttr2 ? String(oAttr2.value || "").trim() : "";
-                let sBPCoord = oAttr3 ? String(oAttr3.value || "").trim() : "";
+                let sBPCliente = oAttr6 ? String(oAttr6.value || "").trim() : "";
+                let sBPVendedor = oAttr7 ? String(oAttr7.value || "").trim() : "";
 
                 void 0;
                 void 0;
                 void 0;
 
-                let sBPFinal = sBPVendedor || sBPCoord || "";
+                let sBPFinal = sBPVendedor;
                 oModelUser.setProperty("/bBPFinal", sBPFinal);
 
                 void 0;
@@ -314,7 +312,7 @@ sap.ui.define([
                 // ========================
                 // 3) CASO CLIENTE
                 // ========================
-                // El atributo 2 tiene prioridad; un interno rechazado no pasa a cliente.
+                // El atributo 7 tiene prioridad; un interno rechazado no pasa a cliente.
                 if (sBPCliente && !sBPVendedor) {
                     void 0;
 
@@ -340,10 +338,10 @@ sap.ui.define([
                 // ========================
                 // 4) CASO INTERNO
                 // ========================
-                if (sBPVendedor || sBPCoord) {
+                if (sBPVendedor) {
                     void 0;
 
-                    const sUsuarioIAS = String(sBPVendedor || sBPCoord).trim();
+                    const sUsuarioIAS = String(sBPVendedor).trim();
                     const sOrgActual = String(tSalesOrg);
 
                     void 0;

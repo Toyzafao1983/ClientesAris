@@ -445,13 +445,11 @@ sap.ui.define([
                 // Atributos IAS
                 let oAttrIAS = oUser["urn:sap:cloud:scim:schemas:extension:custom:2.0:User"];
                 let aAttr = (oAttrIAS && oAttrIAS.attributes) ? oAttrIAS.attributes : [];
-                let oAttr1 = aAttr.find(a => a.name === "customAttribute1"); // Cliente
-                let oAttr2 = aAttr.find(a => a.name === "customAttribute2"); // Vendedor / Coord
-                let oAttr3 = aAttr.find(a => a.name === "customAttribute3"); // Adicional
-                let sBPCliente = String(oAttr1?.value || "").trim();
-                let sBPVendedor = String(oAttr2?.value || "").trim();
-                let sBPCoord = String(oAttr3?.value || "").trim();
-                let sBPFinal = sBPVendedor || sBPCoord || "";
+                let oAttr6 = aAttr.find(a => a.name === "customAttribute6"); // Cliente
+                let oAttr7 = aAttr.find(a => a.name === "customAttribute7"); // Vendedor / Coord
+                let sBPCliente = String(oAttr6?.value || "").trim();
+                let sBPVendedor = String(oAttr7?.value || "").trim();
+                let sBPFinal = sBPVendedor;
                 oModelUser.setProperty("/bBPFinal", sBPFinal);
                 if (sBPFinal) {
                     const oModelProyect = that.getModel("oModelProyect");
@@ -464,14 +462,13 @@ sap.ui.define([
                     fullName: sFullName,
                     BPCliente: sBPCliente,
                     BPVendedor: sBPVendedor,
-                    BPCoord: sBPCoord,
                     UniNeg: tUniNeg,
                     SalesOrg: tSalesOrg
                 };
                 localStorage.setItem("oUserCache", JSON.stringify(oUserCache));
 
                 //CASO CLIENTE
-                // El atributo 2 tiene prioridad; un interno rechazado no pasa a cliente.
+                // El atributo 7 tiene prioridad; un interno rechazado no pasa a cliente.
                 if (sBPCliente && !sBPVendedor) {
                     const aClientes = values[3]?.oResults || [];
                     const oCliente = aClientes.find(item => item.Customer === sBPCliente);
@@ -484,7 +481,7 @@ sap.ui.define([
                     oModelUser.setProperty("/bRol", "CLIENTES");
                     oModelUser.setProperty("/bBP", sBPCliente);
                     oModelUser.setProperty("/bUniNeg", tUniNeg);
-                    oModelUser.setProperty("/customAttribute", "customAttribute1");
+                    oModelUser.setProperty("/customAttribute", "customAttribute6");
                     oModelUser.setProperty("/oSalesOrgIAS", aSalesOrgs);
                     oModelUser.setProperty("/bIsCliente", true);
                     oModelUser.setProperty("/bIsInterno", false);
@@ -496,8 +493,8 @@ sap.ui.define([
                 }
 
                 //CASO VENDEDOR / COORDINADOR
-                if (sBPVendedor || sBPCoord) {
-                    const sUsuarioIAS = sBPVendedor || sBPCoord;
+                if (sBPVendedor) {
+                    const sUsuarioIAS = sBPVendedor;
                     const oVendResp = values[6]?.oResults;
                     let aVendedores = [];
                     if (oVendResp) {
@@ -534,7 +531,7 @@ sap.ui.define([
                     }
                     oModelUser.setProperty("/bPerfil", oMatch.DscPerfil);
                     oModelUser.setProperty("/bUniNeg", tUniNeg);
-                    const sAttr = sBPVendedor ? "customAttribute2" : "customAttribute3";
+                    const sAttr = "customAttribute7";
                     oModelUser.setProperty("/customAttribute", sAttr);
                     oModelUser.setProperty("/bBP", sUsuarioIAS);
                     oModelUser.setProperty("/bBPFinal", sUsuarioIAS);
@@ -3850,7 +3847,7 @@ sap.ui.define([
             }
 
             const isClienteIAS =
-                oModelUser?.getProperty("/customAttribute") === "customAttribute1" ||
+                oModelUser?.getProperty("/customAttribute") === "customAttribute6" ||
                 oModelUser?.getProperty("/bIsCliente") === true;
 
             const sVendorPrincipal = oData.oClientData?.kunn2 || "";
@@ -4897,7 +4894,7 @@ sap.ui.define([
 
             const bIsCliente =
                 !!oModelUser?.getProperty("/bIsCliente") ||
-                oModelUser?.getProperty("/customAttribute") === "customAttribute1" ||
+                oModelUser?.getProperty("/customAttribute") === "customAttribute6" ||
                 oModelUser?.getProperty("/bRol") === "CLIENTES";
 
             const oModelProyect = oView.getModel("oModelProyect");
@@ -6105,7 +6102,7 @@ sap.ui.define([
 
             const bIsCliente =
                 !!oUser?.getProperty("/bIsCliente") ||
-                oUser?.getProperty("/customAttribute") === "customAttribute1" ||
+                oUser?.getProperty("/customAttribute") === "customAttribute6" ||
                 oUser?.getProperty("/bRol") === "CLIENTES";
 
             if (bIsCliente && typeof this.onSimulateOrderCliente === "function") {
@@ -8867,7 +8864,7 @@ sap.ui.define([
 
             const bIsCliente =
                 !!oModelUser?.getProperty("/bIsCliente") ||
-                oModelUser?.getProperty("/customAttribute") === "customAttribute1" ||
+                oModelUser?.getProperty("/customAttribute") === "customAttribute6" ||
                 oModelUser?.getProperty("/bRol") === "CLIENTES";
 
             const bIsCoord = !!oModelUser?.getProperty("/bIsCoord");

@@ -188,27 +188,23 @@ sap.ui.define([
                 localStorage.setItem("userFullName", sFullName);
                 let oAttrIAS = oUser["urn:sap:cloud:scim:schemas:extension:custom:2.0:User"];
                 let aAttr = oAttrIAS?.attributes || [];
-                let oAttr1 = aAttr.find(a => a.name === "customAttribute1"); // Cliente
-                let oAttr2 = aAttr.find(a => a.name === "customAttribute2"); // Interno (Vendedor / Coordinador)
-                let oAttr3 = aAttr.find(a => a.name === "customAttribute3"); // opcional / legacy
-                let sBPCliente = String(oAttr1?.value || "").trim();
-                let sBPInterno2 = String(oAttr2?.value || "").trim();
-                let sBPInterno3 = String(oAttr3?.value || "").trim();
-                let sBPInterno = sBPInterno2 || sBPInterno3;
-                let sBPVendedor = sBPInterno2;
-                let sBPCoord = sBPInterno3;
+                let oAttr6 = aAttr.find(a => a.name === "customAttribute6"); // Cliente
+                let oAttr7 = aAttr.find(a => a.name === "customAttribute7"); // Interno (Vendedor / Coordinador)
+                let sBPCliente = String(oAttr6?.value || "").trim();
+                let sBPInterno7 = String(oAttr7?.value || "").trim();
+                let sBPInterno = sBPInterno7;
+                let sBPVendedor = sBPInterno7;
                 // Cache simple
                 const oUserCache = {
                     fullName: sFullName,
                     BPCliente: sBPCliente,
                     BPInterno: sBPInterno,
                     BPVendedor: sBPVendedor,
-                    BPCoord: sBPCoord,
                     UniNeg: tUniNeg,
                     SalesOrg: tSalesOrg
                 };
                 localStorage.setItem("oUserCache", JSON.stringify(oUserCache));
-                // El atributo 2 tiene prioridad; un interno rechazado no pasa a cliente.
+                // El atributo 7 tiene prioridad; un interno rechazado no pasa a cliente.
                 if (sBPCliente && !sBPVendedor) {
                     let aClientes = values[5]?.oResults || [];
                     let oCliente = aClientes.find(item => item.Customer === sBPCliente);
@@ -221,7 +217,7 @@ sap.ui.define([
                     oModelUser.setProperty("/bRol", "CLIENTES");
                     oModelUser.setProperty("/bBP", sBPCliente);
                     oModelUser.setProperty("/bUniNeg", tUniNeg);
-                    oModelUser.setProperty("/customAttribute", "customAttribute1");
+                    oModelUser.setProperty("/customAttribute", "customAttribute6");
                     oModelUser.setProperty("/oSalesOrgIAS", aSalesOrgs);
                     oModelUser.setProperty("/bIsCliente", true);
                     oModelUser.setProperty("/bIsInterno", false);
@@ -302,7 +298,7 @@ sap.ui.define([
                     oModelUser.setProperty("/bIsCoord", bIsCoord);
                     oModelUser.setProperty("/oSalesOrgIAS", aSalesOrgs);
                     oModelUser.setProperty("/bBP", sBPInterno);
-                    oModelUser.setProperty("/customAttribute", "customAttribute2");
+                    oModelUser.setProperty("/customAttribute", "customAttribute7");
                     sap.ui.core.BusyIndicator.hide(0);
                     oRouter.navTo("Main");
                     return;

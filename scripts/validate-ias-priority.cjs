@@ -24,12 +24,12 @@ function blockEnd(source, start) {
     assert.equal(authorizers.length, 12);
     for (const file of authorizers) {
         const source = fs.readFileSync(file, 'utf8');
-        const start = source.indexOf('let oAttr1 =');
+        const start = source.indexOf('let oAttr6 =');
         const branch = source.indexOf('if (sBPInterno) {', start) >= 0
             ? source.indexOf('if (sBPInterno) {', start)
-            : source.indexOf('if (sBPVendedor || sBPCoord) {', start);
+            : source.indexOf('if (sBPVendedor) {', start);
         const code = source.slice(start, blockEnd(source, branch));
-        for (const scenario of ['seller', 'coordinator', 'missing', 'wrongOrg', 'wrongProfile', 'client', 'blank2', 'only2', 'none', 'allAttributes']) {
+        for (const scenario of ['seller', 'coordinator', 'missing', 'wrongOrg', 'wrongProfile', 'client', 'blank7', 'only7', 'none', 'allAttributes', 'legacyOnly']) {
             const props = {}, routes = [], clientCalls = [];
             const model = { setProperty: (k,v) => { props[k] = v; }, getData: () => props };
             const denied = () => routes.push('AccessDenied');
@@ -39,9 +39,10 @@ function blockEnd(source, start) {
                 { usuario: 'INTERNAL', orgventas: '1130', perfil: 'CD', DscPerfil: 'Coordinador' }, row
             ];
             const aAttr = [
-                { name: 'customAttribute1', value: ['only2', 'none'].includes(scenario) ? '' : 'CLIENT' },
-                { name: 'customAttribute2', value: ['client','none'].includes(scenario) ? '' : scenario === 'blank2' ? '  ' : ' INTERNAL ' },
-                { name: 'customAttribute3', value: scenario === 'allAttributes' ? 'LEGACY' : '' }
+                { name: 'customAttribute6', value: ['only7', 'none', 'legacyOnly'].includes(scenario) ? '' : 'CLIENT' },
+                { name: 'customAttribute7', value: ['client','none','legacyOnly'].includes(scenario) ? '' : scenario === 'blank7' ? '  ' : ' INTERNAL ' },
+                // Obsolete attributes must never authorize a user, even with a valid SAP code.
+                ...[1, 2, 3].map(n => ({ name: 'customAttribute' + n, value: 'INTERNAL' }))
             ];
             const that = {
                 getModel: () => model,
@@ -65,10 +66,10 @@ function blockEnd(source, start) {
                 assert.ok(routes.includes('AccessDenied'), label);
                 assert.notEqual(props['/bIsInterno'], true, label);
                 assert.equal(clientCalls.length, 0, label + ': no client fallback');
-            } else if (['client','blank2'].includes(scenario)) {
+            } else if (['client','blank7'].includes(scenario)) {
                 assert.equal(props['/bIsCliente'], true, label);
                 assert.deepEqual(clientCalls, ['CLIENT'], label);
-            } else if (scenario === 'none') {
+            } else if (['none', 'legacyOnly'].includes(scenario)) {
                 assert.notEqual(props['/bIsCliente'], true, label);
                 assert.notEqual(props['/bIsInterno'], true, label);
             } else {
@@ -76,7 +77,7 @@ function blockEnd(source, start) {
                 assert.equal(props['/bIsCliente'], false, label);
                 assert.equal(props['/bIsVendedor'], scenario !== 'coordinator', label);
                 assert.equal(clientCalls.length, 0, label);
-                if (props['/customAttribute']) assert.equal(props['/customAttribute'], 'customAttribute2', label);
+                if (props['/customAttribute']) assert.equal(props['/customAttribute'], 'customAttribute7', label);
             }
             count++;
         }
@@ -88,7 +89,7 @@ function blockEnd(source, start) {
         const code = source.slice(start, blockEnd(source, start));
         for (const [one,two,expected] of [['CLIENT','INTERNAL','INTERNAL'],['CLIENT','','CLIENT'],['CLIENT','  ','CLIENT'],['','INTERNAL','INTERNAL'],['','','']]) {
             const result = vm.runInNewContext('let oBPUser="", tipoBP="", sCustomAttribute="";' + code + ';oBPUser', {
-                oAttr: { attributes: [{name:'customAttribute1',value:one},{name:'customAttribute2',value:two}] }
+                oAttr: { attributes: [{name:'customAttribute6',value:one},{name:'customAttribute7',value:two}, ...[1,2,3].map(n => ({name:'customAttribute'+n,value:'INTERNAL'}))] }
             });
             assert.equal(result, expected, file);
             count++;
@@ -113,7 +114,7 @@ function blockEnd(source, start) {
             };
             const context = {
                 that, tUniNeg: 'CERAMICOS', tRol: '', oUser: {},
-                oAttr: { attributes: [{name:'customAttribute1', value:'CLIENT'}, {name:'customAttribute2', value:'INTERNAL'}] },
+                oAttr: { attributes: [{name:'customAttribute6', value:'CLIENT'}, {name:'customAttribute7', value:'INTERNAL'}] },
                 sap: { ui: { core: { BusyIndicator: { hide() {} } } }, m: { MessageBox: { error: msg => errors.push(msg) } } },
                 window: { location: {} }
             };
