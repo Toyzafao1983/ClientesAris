@@ -46,10 +46,11 @@ sap.ui.define([
             });
         },
         handleRouteMatched: function (bInit) {
+            this.getView().setVisible(false);
             that._initialCustomerData = null;
             sap.ui.core.BusyIndicator.show(0);
 
-            Promise.all([
+            return Promise.all([
                 that._getUsers(),          // 0
                 that._getPrueba(),         // 1
                 that._getTipDocument(that),// 2  (si tu firma lo requiere)
@@ -57,7 +58,7 @@ sap.ui.define([
                 that._getDatClient(),      // 4  DataCustomer (Customer, CustomerFullName, TaxNumber*, kunn2)
                 that._getClientPet(),      // 5  Customer (lista base clientes para filtros)
                 that._getBPVendedor()      // 6  Sellers (vendedores)
-            ]).then((values) => {
+            ]).then(async (values) => {
                 // Conservar las respuestas originales para buscar sin repetir OData.
                 that._initialCustomerData = {
                     customers: values[5],
@@ -78,7 +79,11 @@ sap.ui.define([
                 that.oModelData.setSizeLimit(99999999);
 
                 that.onClearFilters();
-                that._validateAccessToPortal(values);
+                const bAccessOk = await that._validateAccessToPortal(values);
+                if (!bAccessOk) {
+                    return;
+                }
+                that.getView().setVisible(true);
 
                 // ✅ 1) DATA ALL (para scope) - usando tUniNeg real
                 const oClientesResp = values[5]; // si mantienes _getClientPet en Promise.all
@@ -161,9 +166,18 @@ sap.ui.define([
                 sap.ui.core.BusyIndicator.hide(0);
 
             }).catch(function (oError) {
-                that.getMessageBox("error", that.getI18nText("errorUserData"));
+                that._denyAccess("No se pudo validar su acceso. Será redirigido a la página principal.");
                 sap.ui.core.BusyIndicator.hide(0);
             });
+        },
+        _denyAccess: function (sMessage) {
+            this.getView().setVisible(false);
+            sap.ui.core.BusyIndicator.hide(0);
+            sap.m.MessageBox.error(
+                sMessage || "No tiene permisos para acceder a esta aplicación o unidad de negocio. Será redirigido a la página principal.",
+                { onClose: () => (window.location.href = "/") }
+            );
+            return false;
         },
         _validateAccessToPortal: async function (values) {
             try {
@@ -177,9 +191,7 @@ sap.ui.define([
                 if (sURL.includes("site-ceramicos")) { tUniNeg = "CERAMICOS"; tSalesOrg = "1130"; }
                 let oUser = values[0]?.Resources?.[0];
                 if (!oUser) {
-                    sap.ui.core.BusyIndicator.hide(0);
-                    oRouter.navTo("AccessDenied");
-                    return;
+                    return this._denyAccess();
                 }
                 let sFirstName = oUser?.name?.givenName || "";
                 let sLastName = oUser?.name?.familyName || "";
@@ -210,9 +222,7 @@ sap.ui.define([
                     let oCliente = aClientes.find(item => item.Customer === sBPCliente);
                     const aSalesOrgs = await this._getSalesOrgByBP(sBPCliente);
                     if (!Array.isArray(aSalesOrgs) || !aSalesOrgs.includes(tSalesOrg)) {
-                        sap.ui.core.BusyIndicator.hide(0);
-                        oRouter.navTo("AccessDenied");
-                        return;
+                        return this._denyAccess();
                     }
                     oModelUser.setProperty("/bRol", "CLIENTES");
                     oModelUser.setProperty("/bBP", sBPCliente);
@@ -228,7 +238,7 @@ sap.ui.define([
                     await this._loadClientData(sBPCliente);
                     sap.ui.core.BusyIndicator.hide(0);
                     oRouter.navTo("FormClient", { app: sBPCliente });
-                    return;
+                    return false;
                 }
                 if (sBPInterno) {
                     const sUsuarioIAS = sBPInterno;
@@ -246,9 +256,7 @@ sap.ui.define([
                         String(item.orgventas || "").trim() === String(tSalesOrg).trim()
                     );
                     if (!oMatch) {
-                        sap.ui.core.BusyIndicator.hide(0);
-                        oRouter.navTo("AccessDenied");
-                        return;
+                        return this._denyAccess();
                     }
                     const aSalesOrgsRaw = await that._getBPVendedor(sUsuarioIAS);
                     let aSalesOrgs = [];
@@ -268,9 +276,7 @@ sap.ui.define([
                         }
                     }
                     if (!Array.isArray(aSalesOrgs) || !aSalesOrgs.includes(oMatch.orgventas)) {
-                        sap.ui.core.BusyIndicator.hide(0);
-                        oRouter.navTo("AccessDenied");
-                        return;
+                        return this._denyAccess();
                     }
                     const sPerfilCode = (oMatch.perfil || "").toUpperCase();   // "VD" o "CD"
                     const sPerfilDesc = (oMatch.DscPerfil || "").toUpperCase();  // "VENDEDOR" o "COORDINADOR"
@@ -278,9 +284,7 @@ sap.ui.define([
                     const bIsCoord = (sPerfilCode === "CD") || sPerfilDesc.includes("COORDINADOR");
 
                     if (!bIsVendedor && !bIsCoord) {
-                        sap.ui.core.BusyIndicator.hide(0);
-                        oRouter.navTo("AccessDenied");
-                        return false;
+                        return this._denyAccess();
                     }
                     if (bIsVendedor && !bIsCoord) {
                         const sBP = (oMatch.kunn2 || oMatch.bp || oMatch.BP || oMatch.Seller || oMatch.txt13 || "")
@@ -300,16 +304,11 @@ sap.ui.define([
                     oModelUser.setProperty("/bBP", sBPInterno);
                     oModelUser.setProperty("/customAttribute", "customAttribute7");
                     sap.ui.core.BusyIndicator.hide(0);
-                    oRouter.navTo("Main");
-                    return;
+                    return true;
                 }
-                sap.ui.core.BusyIndicator.hide(0);
-                oRouter.navTo("AccessDenied");
-
+                return this._denyAccess();
             } catch (oError) {
-                sap.ui.core.BusyIndicator.hide(0);
-                const oRouter = sap.ui.core.UIComponent.getRouterFor(this);
-                oRouter.navTo("AccessDenied");
+                return this._denyAccess();
             }
         },
         _loadClientData: async function (sCustomer) {

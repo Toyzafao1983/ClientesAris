@@ -46,6 +46,7 @@ function blockEnd(source, start) {
             ];
             const that = {
                 getModel: () => model,
+                _denyAccess: () => { denied(); return false; },
                 _getSalesOrgByBP: async bp => { clientCalls.push(bp); return ['1110']; },
                 _getBPVendedor: async () => ({ oResults: rows }),
                 _loadClientData: async () => {},

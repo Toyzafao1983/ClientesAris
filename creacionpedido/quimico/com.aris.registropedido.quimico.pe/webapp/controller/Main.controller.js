@@ -40,10 +40,11 @@ sap.ui.define([
 
         },
          handleRouteMatched: function (bInit) {
+            this.getView().setVisible(false);
             that._initialCustomerData = null;
 
             sap.ui.core.BusyIndicator.show(0)
-             Promise.all([that._getUsers(), that._getPrueba(),
+             return Promise.all([that._getUsers(), that._getPrueba(),
             that._getTipChangeData(),that._getDatClient(),
             that._getClientPet(),that._getBPVendedor()
             ]).then(async (values) => {
@@ -68,6 +69,7 @@ sap.ui.define([
                         return;
                     }
 
+                    that.getView().setVisible(true);
                     that.oModelProyect.setProperty("/oSeller", values[5].oResults);
                     that.oModelProyect.setProperty("/oClienteFilter", values[4].oResults);
                     that.onClearFilters();
@@ -102,15 +104,24 @@ sap.ui.define([
                     that.getModel("oModelUser").setProperty("/bPerfil", tPerfil);
                     sap.ui.core.BusyIndicator.hide(0);
                 } catch (oError) {
-                    that.getMessageBox("error", that.getI18nText("errorUserData"));
+                    that._denyAccess("No se pudo validar su acceso. Será redirigido a la página principal.");
                     sap.ui.core.BusyIndicator.hide(0);
                 }
             }).catch(function (oError) {
-                that.getMessageBox("error", that.getI18nText("errorUserData"));
+                that._denyAccess("No se pudo validar su acceso. Será redirigido a la página principal.");
                 sap.ui.core.BusyIndicator.hide(0);
             });
         },
-          _validateAccessToPortal: async function (values) {
+          _denyAccess: function (sMessage) {
+            this.getView().setVisible(false);
+            sap.ui.core.BusyIndicator.hide(0);
+            sap.m.MessageBox.error(
+                sMessage || "No tiene permisos para acceder a esta aplicación o unidad de negocio. Será redirigido a la página principal.",
+                { onClose: () => (window.location.href = "/") }
+            );
+            return false;
+        },
+        _validateAccessToPortal: async function (values) {
     try {
         const oRouter    = sap.ui.core.UIComponent.getRouterFor(this);
         const oModelUser = this.getModel("oModelUser");
@@ -119,9 +130,7 @@ sap.ui.define([
         // 👤 Usuario IAS (SCIM)
         let oUser = values[0]?.Resources?.[0];
         if (!oUser) {
-            sap.ui.core.BusyIndicator.hide(0);
-            oRouter.navTo("AccessDenied");
-            return false;
+            return this._denyAccess();
         }
 
         // 🧩 Nombre
@@ -169,9 +178,7 @@ sap.ui.define([
 
             const aSalesOrgs = await this._getSalesOrgByBP(sBPCliente);
             if (!Array.isArray(aSalesOrgs) || !aSalesOrgs.includes(tSalesOrg)) {
-                sap.ui.core.BusyIndicator.hide(0);
-                oRouter.navTo("AccessDenied");
-                return false;
+                return this._denyAccess();
             }
 
             oModelUser.setProperty("/bRol", "CLIENTES");
@@ -215,9 +222,7 @@ sap.ui.define([
                 String(item.orgventas || "").trim() === String(tSalesOrg).trim()
             );
             if (!oMatch) {
-                sap.ui.core.BusyIndicator.hide(0);
-                oRouter.navTo("AccessDenied");
-                return false;
+                return this._denyAccess();
             }
 
             // 📌 Determinar organizaciones de venta permitidas desde _getBPVendedor
@@ -240,9 +245,7 @@ sap.ui.define([
             }
 
             if (!Array.isArray(aSalesOrgs) || !aSalesOrgs.includes(oMatch.orgventas)) {
-                sap.ui.core.BusyIndicator.hide(0);
-                oRouter.navTo("AccessDenied");
-                return false;
+                return this._denyAccess();
             }
 
             // 🔍 Ahora diferenciamos por PERFIL
@@ -253,9 +256,7 @@ sap.ui.define([
             const bIsCoord    = (sPerfilCode === "CD") || sPerfilDesc.includes("COORDINADOR");
 
             if (!bIsVendedor && !bIsCoord) {
-                sap.ui.core.BusyIndicator.hide(0);
-                oRouter.navTo("AccessDenied");
-                return false;
+                return this._denyAccess();
             }
 
             // Guardamos en modelo para usar en filtros (ej. stock Linea con/ sin *)
@@ -276,15 +277,10 @@ sap.ui.define([
         // ========================================================
         // 3️⃣ SIN ATRIBUTOS VÁLIDOS
         // ========================================================
-        sap.ui.core.BusyIndicator.hide(0);
-        oRouter.navTo("AccessDenied");
-        return false;
+        return this._denyAccess();
 
     } catch (oError) {
-        sap.ui.core.BusyIndicator.hide(0);
-        const oRouter = sap.ui.core.UIComponent.getRouterFor(this);
-        oRouter.navTo("AccessDenied");
-        return false;
+        return this._denyAccess();
     }
 },
 
