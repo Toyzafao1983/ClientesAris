@@ -1601,7 +1601,16 @@ sap.ui.define([
                     }
 
                     let aCondSim = [];
-                    if (fleteIngresado) {
+                    const oFreightHeader = {};
+                    if (sSalesOrg === "1120") {
+                        const bIncluded = oData.inputForm?.fleteIncluido;
+                        if (parseFloat(sFleteUSD3) > 0 && (bIncluded === true || bIncluded === false)) {
+                            const sSlot = bIncluded ? "1" : "2";
+                            oFreightHeader["CdType" + sSlot] = bIncluded ? "ZRF0" : "ZRFM";
+                            oFreightHeader["CdValue" + sSlot] = sFleteUSD3;
+                            oFreightHeader["CdCurr" + sSlot] = "USD";
+                        }
+                    } else if (fleteIngresado) {
                         aCondSim.push({
                             ItmNumber: "000000",
                             CondType: fleteIncluidoUI ? "ZRF0" : "ZRFM",
@@ -1693,6 +1702,7 @@ sap.ui.define([
                         PoMethod: "Z001",
                         ...extraPoSupplem,
                         Currency: sMonedaKey,
+                        ...oFreightHeader,
                         HeaderToItem: aHeaderToItem,
                         HeaderToPartners: aPartners,
                         HeaderToSchedule: aSchedule,
@@ -1842,7 +1852,7 @@ sap.ui.define([
 
                                 let aMaterialUI = oModelProyect.getProperty("/oMaterialUI") || [];
 
-                                if (fleteIngresado) {
+                                if (fleteIngresado && sSalesOrg !== "1120") {
                                     const sTipoFlete = fleteIncluidoUI ? "ZRF0" : "ZRFM";
 
                                     const bFleteSeleccionado = oData.inputForm?.fleteIncluido === true ||
@@ -2047,7 +2057,9 @@ sap.ui.define([
                                             break;
 
                                         case "ZRF0":
-                                            oItemUI.fleteIncluido = (oItemUI.fleteIncluido || 0) + nValor;
+                                            if (fleteIncluidoUI) {
+                                                oItemUI.fleteIncluido = (oItemUI.fleteIncluido || 0) + nValor;
+                                            }
                                             break;
                                     }
                                 });
@@ -2059,19 +2071,7 @@ sap.ui.define([
                                 const fleteNoIncluidoValorBatch = bFleteSeleccionado
                                     ? this._getFreightAmount(aConditions, "ZRFM") : getSum(aConditions, "ZRFM");
 
-                                aMaterialUI.forEach(it => it.fleteIncluido = 0);
-
-                                if (fleteIncluidoUI && fleteIncluidoValorBatch > 0) {
-                                    const aLines = aMaterialUI.filter(it => !it.isExtraFromSAP);
-                                    const baseTotal = aLines.reduce((acc, it) => acc + _n(it.precioBase), 0);
-
-                                    if (baseTotal > 0) {
-                                        aLines.forEach(it => {
-                                            const share = (_n(it.precioBase) / baseTotal) * fleteIncluidoValorBatch;
-                                            it.fleteIncluido = share;
-                                        });
-                                    }
-                                }
+                                // Conservar el flete por posición calculado por SAP, sin redistribuirlo.
 
                                 const fleteMostrar = fleteIncluidoUI ? fleteIncluidoValorBatch : fleteNoIncluidoValorBatch;
                                 oModelProyect.setProperty("/inputForm/fleteUSD", (fleteMostrar || 0).toFixed(2));
