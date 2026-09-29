@@ -93,6 +93,7 @@ sap.ui.define([
             });
         },
         _resetAddManualState: function () {
+            this._manualQuantities = new Map();
             const oProj = this.getView().getModel("oModelProyect");
             oProj.setProperty("/oAddManual", {
                 Cantidades: {},
@@ -259,6 +260,7 @@ sap.ui.define([
             }
         },
         _resetFiltersAndTableTree: function () {
+            this._manualQuantities = new Map();
             const oView = this.getView();
             const oProj = oView.getModel("oModelProyect");
             oProj.setProperty("/oSelectDetail", {
@@ -311,6 +313,7 @@ sap.ui.define([
             this._resetFiltersAndTableTree();
         },
         _resetFiltersAndTable: function () {
+            this._manualQuantities = new Map();
             const oView  = this.getView();
             const oProj  = oView.getModel("oModelProyect");
 
@@ -479,7 +482,7 @@ sap.ui.define([
             if (nCaj > 0) aPromises.push(this._getCantidadM2FromService(sMatnr, "CJ",  nCaj));
 
             Promise.all(aPromises).then((aVals) => {
-                if ((oRow.__qtyReqId || 0) !== iReqId) return;
+                if ((oRow.__qtyReqId || 0) !== iReqId || oModel.getProperty(oContext.getPath()) !== oRow) return;
 
                 const fTotalM2 = aVals.reduce((acc, v) => acc + (parseFloat(v) || 0), 0);
                 oModel.setProperty(oContext.getPath() + "/Cantidad", fTotalM2.toFixed(3));
@@ -488,7 +491,7 @@ sap.ui.define([
                     this._recalcularCantidadGrupo(oContext);
                 }
             }).catch((err) => {
-                if ((oRow.__qtyReqId || 0) !== iReqId) return;
+                if ((oRow.__qtyReqId || 0) !== iReqId || oModel.getProperty(oContext.getPath()) !== oRow) return;
             });
         },
         _recalcularCantidadGrupo: function (oContext) {
@@ -930,13 +933,44 @@ sap.ui.define([
                 return acc;
             }, []);
         },
+        _manualQuantityKey: function (oRow) {
+            return JSON.stringify([
+                oRow.isGroup ? "GROUP" : "DETAIL",
+                String(oRow.Matnr || ""),
+                oRow.isGroup ? "" : String(oRow.Calibre || ""),
+                oRow.isGroup ? "" : String(oRow.Tono || "")
+            ]);
+        },
+        _rememberManualQuantities: function () {
+            this._manualQuantities ||= new Map();
+            const aTree = this.getView().getModel("oModelProyect").getProperty("/oTreeCer") || [];
+            const remember = row => {
+                this._manualQuantities.set(this._manualQuantityKey(row), {
+                    cantidadPallets: row.cantidadPallets || 0,
+                    cantidadCajas: row.cantidadCajas || 0,
+                    Cantidad: row.Cantidad || 0
+                });
+                (row.children || []).forEach(remember);
+            };
+            aTree.forEach(remember);
+        },
+        _restoreManualQuantities: function (aTree) {
+            const restore = row => {
+                const saved = this._manualQuantities?.get(this._manualQuantityKey(row));
+                if (saved) Object.assign(row, saved);
+                (row.children || []).forEach(restore);
+            };
+            aTree.forEach(restore);
+            return aTree;
+        },
         _applyTipoFromTreeBase: function () {
+            this._rememberManualQuantities();
             const oModelProyect = this.getView().getModel("oModelProyect");
             const sTipo = this._getTipoSeleccionado();
             const aBase = oModelProyect.getProperty("/oTreeCerBase") || [];
             oModelProyect.setProperty("/tipoStockSeleccionado", sTipo);
-            oModelProyect.setProperty("/oTreeCer", this._filterTreeByTipo(aBase, sTipo));
-            this._clearTreeSelectionDeferred();
+            oModelProyect.setProperty("/oTreeCer", this._filterTreeByTipo(this._restoreManualQuantities(aBase), sTipo));
+            this._restoreSelectionByCantidad();
         },
         onTipoRadioSelect: function (oEvent) {
             if (oEvent && oEvent.getParameter && oEvent.getParameter("selected") === false) return;
@@ -958,6 +992,7 @@ sap.ui.define([
             return aSettledAll;
         },
         onBuscarPress: function () {
+            this._rememberManualQuantities();
             const oModelProyect = this.getView().getModel("oModelProyect");
             const oSelectDetail = oModelProyect.getProperty("/oSelectDetail") || {};
             const aFilters = [];
@@ -1114,13 +1149,13 @@ sap.ui.define([
                 oProjModel.setProperty("/oMaterialSelect", aFiltradoBase);
 
                 const aTreeData = await that._prepareDataForCeramicos(aFiltradoBase);
-                const aTreeAdj  = that._applyReservedToTree(aTreeData);
+                const aTreeAdj  = that._restoreManualQuantities(that._applyReservedToTree(aTreeData));
                 oProjModel.setProperty("/oTreeCerBase", aTreeAdj);
                 oProjModel.setProperty("/showTipoFilter", true);
                 oProjModel.setProperty("/tipoStockSeleccionado", that._getTipoSeleccionado());
                 oProjModel.setProperty("/oTreeCer", that._filterTreeByTipo(aTreeAdj, that._getTipoSeleccionado()));
 
-                that._clearTreeSelectionDeferred();
+                that._restoreSelectionByCantidad();
 
             } catch (e) {
                 // OData read error o error paralelo

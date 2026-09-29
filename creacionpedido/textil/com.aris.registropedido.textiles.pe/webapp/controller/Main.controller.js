@@ -14,7 +14,7 @@ sap.ui.define([
     "sap/m/MessageToast",
     "sap/ui/model/json/JSONModel",
     "sap/m/BusyDialog"
-], (BaseController, Controller, ResourceModel, models, Formatter, Services, util, utilUI, Filter, FilterOperator, Fragment, MessageToast, JSONModel,BusyDialog) => {
+], (BaseController, Controller, ResourceModel, models, Formatter, Services, util, utilUI, Fragment, Filter, FilterOperator, MessageToast, JSONModel,BusyDialog) => {
     "use strict";
     var that;
     var tUniNeg="", tRol="", tPerfil = "";
@@ -461,13 +461,11 @@ sap.ui.define([
 
             sap.ui.core.BusyIndicator.show();
 
-            Promise.resolve().then(() => {
+            return Promise.resolve().then(() => {
                 const oInitial = this._initialCustomerData;
                 if (!oInitial || oInitial.customers?.sEstado !== "S" ||
                     oInitial.customerData?.sEstado !== "S") {
-                    this.getMessageBox("error", this.getI18nText("errorData"));
-                    sap.ui.core.BusyIndicator.hide();
-                    return;
+                    throw new Error("Customer o DataCustomer no se cargaron correctamente; vuelva a cargar la página.");
                 }
                 const aClientes = oInitial.customers.oResults || [];
                 const aVend = oInitial.customerData.oResults || [];
@@ -477,7 +475,9 @@ sap.ui.define([
                     const oVend = aVend.find(oExt => oExt.Customer === oCliente.Customer);
                     return {
                         ...oCliente,
-                        Seller: oVend ? oVend.Seller : ""
+                        Seller: oVend ? oVend.Seller : "",
+                        SellerCodes: aVend.filter(oExt => oExt.Customer === oCliente.Customer)
+                            .map(oExt => String(oExt.kunn2 || "").trim()).filter(Boolean)
                     };
                 });
 
@@ -486,23 +486,16 @@ sap.ui.define([
 
                 // Aplicar filtros a la tabla
                 const oTable = this.byId("TableClient");
-                if (oTable) {
-                    setTimeout(() => {
-                        const oBinding = oTable.getBinding("items");
-                        if (oBinding) {
-                            const aFilters = this._buildTableFilters(jFilter);
-                            oBinding.filter(aFilters);
-                        }
-                        sap.ui.core.BusyIndicator.hide();
-                    }, 100);
-                } else {
-                    sap.ui.core.BusyIndicator.hide();
+                const oBinding = oTable && oTable.getBinding("items");
+                if (oBinding) {
+                    oBinding.filter(this._buildTableFilters(jFilter));
                 }
             })
             .catch((oError) => {
-                this.getMessageBox("error", this.getI18nText("errorData"));
-                sap.ui.core.BusyIndicator.hide();
-            });
+                console.error("[Textil] Error al buscar clientes", oError);
+                this.getMessageBox("error", "No se pudo completar la búsqueda de clientes. Recargue la página y vuelva a intentarlo.");
+            })
+            .finally(() => sap.ui.core.BusyIndicator.hide());
         },
             _getData: function () {
                 try {
@@ -714,51 +707,6 @@ sap.ui.define([
             const keys = this._getTokenKeys(this.byId("multiInputDocument"));
             this._setArray("/Main/filter/fDocument", keys);
             },
-            _buildTableFilters: function (jFilter) {
-            const F = sap.ui.model.Filter, FO = sap.ui.model.FilterOperator;
-            const a = [];
-
-            if (jFilter.fSeller?.length) {
-                a.push(new F({
-                filters: jFilter.fSeller.map(k =>
-                    new F({ filters: [ new F("Seller", FO.EQ, k), new F("txt13", FO.EQ, k) ], and: false })
-                ),
-                and: false
-                }));
-            }
-
-            if (jFilter.fCodClient?.length) {
-                a.push(new F({ filters: jFilter.fCodClient.map(k => new F("Customer", FO.EQ, k)), and: false }));
-            }
-
-            if (jFilter.fRazSocial?.length) {
-                a.push(new F({
-                filters: jFilter.fRazSocial.map(k =>
-                    new F({ filters: [ new F("CustomerFullName", FO.Contains, k) ], and: false })
-                ),
-                and: false
-                }));
-            }
-
-            if (jFilter.fRazSocial?.length) {
-                a.push(new F({
-                    filters: jFilter.fRazSocial.map(k =>
-                        new F({ filters: [
-                            new F("CustomerFullName", FO.Contains, k),
-                            new F("TaxNumber1", FO.Contains, k),
-                            new F("TaxNumber2", FO.Contains, k),
-                            new F("TaxNumber3", FO.Contains, k),
-                            new F("TaxNumber4", FO.Contains, k),
-                            new F("TaxNumber5", FO.Contains, k),
-                            new F("TaxNumber6", FO.Contains, k)
-                        ], and: false })
-                    ),
-                    and: false
-                }));
-            }
-
-        return a;
-        },
         // para cambiar el idioma
             FilterSelling: function () {
                 const that = this;
@@ -1068,6 +1016,7 @@ sap.ui.define([
                 .filter(k => k && k.trim() !== "")
                 .map(k => new F({
                     filters: [
+                        new F({ path: "SellerCodes", test: aCodes => Array.isArray(aCodes) && aCodes.includes(String(k).trim()) }),
                         new F("Seller", FO.EQ, k),
                         new F("txt13", FO.EQ, k)
                     ],

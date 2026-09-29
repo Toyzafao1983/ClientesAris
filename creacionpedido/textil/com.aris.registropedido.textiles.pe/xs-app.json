@@ -17,6 +17,13 @@
       "csrfProtection": false
     },
     {
+      "source": "^/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/(.*)$",
+      "target": "/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/$1",
+      "destination": "S4H_DEV_110_CLIENTE",
+      "authenticationType": "none",
+      "csrfProtection": false
+    },
+    {
       "source": "^/S4HANA_Materials/(.*)$",
       "target": "$1",
       "destination": "S4H_DEV_110_CLIENTE",

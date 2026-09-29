@@ -1087,10 +1087,18 @@ sap.ui.define([
                 totalGeneral += item.total || 0;
             });
             const oDatCalculo = oModel.getProperty("/oDatCalculo") || {};
-            const igvPorcentaje = oDatCalculo.igvPorcentaje ? parseFloat(oDatCalculo.igvPorcentaje) : 18;
+            const igvPorcentaje = oDatCalculo.igvPorcentaje != null ? parseFloat(oDatCalculo.igvPorcentaje) : 18;
+            const oTotalesFlete = this._calculateFreightTotals(
+                oModel.getProperty("/inputForm/fleteIncluido"), subtotalGeneral,
+                aMaterialUI.length ? oDatCalculo.embalaje : 0, igvPorcentaje
+            );
+            if (oTotalesFlete) {
+                totalImpuesto = oTotalesFlete.igv;
+                totalGeneral = oModel.getProperty("/inputForm/tipDocument") === "ZGNA" ? 0 : oTotalesFlete.total;
+            }
             oModel.setProperty("/oDatCalculo", {
                 subtotalGeneral: subtotalGeneral.toFixed(2),
-                embalaje: oDatCalculo.embalaje || "0.00",
+                embalaje: oTotalesFlete ? oTotalesFlete.flete.toFixed(2) : (oDatCalculo.embalaje || "0.00"),
                 totalImpuesto: totalImpuesto.toFixed(2),
                 totalGeneral: totalGeneral.toFixed(2),
                 igvPorcentaje: igvPorcentaje.toFixed(2)
@@ -1837,8 +1845,11 @@ sap.ui.define([
                                 if (fleteIngresado) {
                                     const sTipoFlete = fleteIncluidoUI ? "ZRF0" : "ZRFM";
 
+                                    const bFleteSeleccionado = oData.inputForm?.fleteIncluido === true ||
+                                        oData.inputForm?.fleteIncluido === false;
                                     const yaVino = aConditions.some(c =>
-                                        c.ItmNumber === "000000" && c.CondType === sTipoFlete
+                                        c.CondType === sTipoFlete &&
+                                        (bFleteSeleccionado || c.ItmNumber === "000000")
                                     );
 
                                     if (!yaVino) {
@@ -2000,6 +2011,11 @@ sap.ui.define([
                                         return;
                                     }
 
+                                    // ZRF1 informa el flete en PEN; no es un descuento de posición.
+                                    if (cond.CondType === "ZRF1" &&
+                                        (oData.inputForm?.fleteIncluido === true || oData.inputForm?.fleteIncluido === false)) {
+                                        return;
+                                    }
                                     if (this._isActiveDiscountCondition(cond, mPriceConditionTypes)) {
                                         oItemUI.descuentos -= Math.abs(nValor);
                                         return;
@@ -2036,8 +2052,12 @@ sap.ui.define([
                                     }
                                 });
 
-                                const fleteIncluidoValorBatch = getSum(aConditions, "ZRF0");
-                                const fleteNoIncluidoValorBatch = getSum(aConditions, "ZRFM");
+                                const bFleteSeleccionado = oData.inputForm?.fleteIncluido === true ||
+                                    oData.inputForm?.fleteIncluido === false;
+                                const fleteIncluidoValorBatch = bFleteSeleccionado
+                                    ? this._getFreightAmount(aConditions, "ZRF0") : getSum(aConditions, "ZRF0");
+                                const fleteNoIncluidoValorBatch = bFleteSeleccionado
+                                    ? this._getFreightAmount(aConditions, "ZRFM") : getSum(aConditions, "ZRFM");
 
                                 aMaterialUI.forEach(it => it.fleteIncluido = 0);
 
@@ -2257,14 +2277,23 @@ sap.ui.define([
                                     bonusItem.prlist = parent.prlist;
                                 });
 
-                                const embalajeUI = (!fleteIncluidoUI) ? fleteNoIncluidoValorBatch : 0;
+                                let embalajeUI = (!fleteIncluidoUI) ? fleteNoIncluidoValorBatch : 0;
                                 totalGeneral += embalajeUI;
+
+                                const oDatCalculoActual = oModelProyect.getProperty("/oDatCalculo") || {};
+                                const oTotalesFlete = this._calculateFreightTotals(
+                                    oData.inputForm?.fleteIncluido, subtotalGeneral, fleteMostrar,
+                                    oDatCalculoActual.igvPorcentaje
+                                );
+                                if (oTotalesFlete) {
+                                    embalajeUI = oTotalesFlete.flete;
+                                    totalImpuesto = oTotalesFlete.igv;
+                                    totalGeneral = oTotalesFlete.total;
+                                }
 
                                 if (sTipDocUI === "ZGNA") {
                                     totalGeneral = 0;
                                 }
-
-                                const oDatCalculoActual = oModelProyect.getProperty("/oDatCalculo") || {};
 
                                 oModelProyect.setProperty("/oDatCalculo", {
                                     ...oDatCalculoActual,
@@ -4608,6 +4637,25 @@ sap.ui.define([
             ]) || "").trim().toUpperCase();
 
             return sCondisacti === "";
+        },
+
+        _getFreightAmount: function (aConditions, sType) {
+            const aFreight = aConditions.filter(c => c.CondType === sType);
+            const aHeader = aFreight.filter(c => c.ItmNumber === "000000");
+            // La cabecera contiene el total; las posiciones pueden repetir su reparto.
+            return (aHeader.length ? aHeader : aFreight)
+                .reduce((sum, c) => sum + this._getConditionAmount(c), 0);
+        },
+
+        _calculateFreightTotals: function (bIncluded, nSubtotal, nFreight, vTaxRate) {
+            if (bIncluded !== true && bIncluded !== false) {
+                return null; // Sin selección se mantiene el cálculo recibido de SAP.
+            }
+            const nRate = vTaxRate == null || vTaxRate === "" ? 18 : Number(vTaxRate);
+            const nBase = Number(nSubtotal) || 0;
+            const nFlete = Number(nFreight) || 0;
+            const nIgv = Number(((nBase + nFlete) * (Number.isFinite(nRate) ? nRate : 18) / 100).toFixed(2));
+            return { flete: nFlete, igv: nIgv, total: Number((nBase + nFlete + nIgv).toFixed(2)) };
         },
 
         _getConditionAmount: function (oCond) {

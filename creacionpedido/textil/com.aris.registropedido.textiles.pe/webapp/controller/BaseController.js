@@ -1792,6 +1792,7 @@ sap.ui.define([
 								resolve(oResp);
 							},
 							error: function (message) {
+								console.error("[Textil] Falló Customer", message);
 								oResp.oResults = [];
 								resolve(oResp);
 							}
@@ -1829,6 +1830,7 @@ sap.ui.define([
 								resolve(oResp);
 							},
 							error: function (message) {
+								console.error("[Textil] Falló DataCustomer", message);
 								oResp.oResults = [];
 								resolve(oResp);
 							}
