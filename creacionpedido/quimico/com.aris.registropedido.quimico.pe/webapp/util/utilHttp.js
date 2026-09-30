@@ -449,7 +449,8 @@ sap.ui.define([
 						c: "suc",
 						u: url,
 						m: "Exito HTTP - GET",
-						data: dataResponse          
+						data: dataResponse,
+						next: result.d.__next || null
 					};
 					return callback(respuestaService);
 				},

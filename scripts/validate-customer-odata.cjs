@@ -25,7 +25,9 @@ process.chdir(path.join(__dirname, '..'));
                     const expectedRows = [{ Customer: customer }];
                     const context = {
                         that: { local, route: 'test', getOwnerComponent: () => ({
-                            getManifestObject: () => ({ resolveUri: p => p })
+                            getManifestObject: () => ({ resolveUri: p => p }),
+                            getCustomerQuery: (_, load) => load(),
+                            getCustomerCatalog: (url, catalog, customer, load) => load(url)
                         }) },
                         jQuery: { sap: { getModulePath: () => '/app' } },
                         Services: { getoDataERPSync: (_, path, callback) => {
@@ -35,7 +37,7 @@ process.chdir(path.join(__dirname, '..'));
                         util: { response: { validateAjaxGetERPNotMessage: (result, callbacks) => callbacks.success(result) } }
                     };
                     const call = vm.runInNewContext('(function' + fn + ')', context);
-                    const result = await call(customer);
+                    const result = await call.call(context.that, customer);
                     const query = new URL(url, 'https://example.test').searchParams;
                     const filter = query.get('$filter');
                     assert.match(filter, /SalesOrganization eq '11[123]0'/);

@@ -1,7 +1,8 @@
 sap.ui.define([
     "sap/ui/core/UIComponent",
-    "com/aris/registropedido/quimico/pe/model/models"
-], (UIComponent, models) => {
+    "com/aris/registropedido/quimico/pe/model/models",
+    "com/aris/registropedido/quimico/pe/services/CustomerQueryCache"
+], (UIComponent, models, CustomerQueryCache) => {
     "use strict";
 
     return UIComponent.extend("com.aris.registropedido.quimico.pe.Component", {
@@ -19,10 +20,35 @@ sap.ui.define([
             // set the device model
             this.setModel(models.createDeviceModel(), "oModelDevice");
 
+            this._customerQueryCache = new CustomerQueryCache();
+
             // enable routing
             this.getRouter().initialize();
 
             this._initFlpBackNavigation();
+        },
+
+        getCustomerQuery(sUrl, fnLoad) {
+            return this._customerQueryCache.read(sUrl, fnLoad);
+        },
+
+        getCustomerCatalog(sUrl, sCatalogUrl, sCustomer, fnLoadPage) {
+            return this._customerQueryCache.readCatalog(sUrl, sCatalogUrl, sCustomer, fnLoadPage);
+        },
+
+        getOrderQueryDate() {
+            if (!this._orderQueryDate) this._orderQueryDate = new Date();
+            return new Date(this._orderQueryDate.getTime());
+        },
+
+        clearCustomerQueries() {
+            this._customerQueryCache.clear();
+            this._orderQueryDate = null;
+        },
+
+        destroy() {
+            this.clearCustomerQueries();
+            UIComponent.prototype.destroy.apply(this, arguments);
         },
 
         _initFlpBackNavigation() {

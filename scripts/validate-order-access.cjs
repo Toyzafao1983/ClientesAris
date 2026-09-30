@@ -27,6 +27,7 @@ const root = path.join(__dirname, '..', 'creacionpedido');
             vm.runInNewContext(source, { sap, window, localStorage: { setItem() {} }, jQuery: { proxy: f => f }, setTimeout });
             Object.assign(controller, {
                 getView: () => view, getModel: () => model,
+                getOwnerComponent: () => ({ clearCustomerQueries() {} }),
                 _setLanguageModel() {}, _onClearDataFilter() {}, onClearFilters() {},
                 _loadClientData: async () => {},
                 _getSalesOrgByBP: async () => [org]

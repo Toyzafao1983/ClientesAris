@@ -1835,31 +1835,31 @@ sap.ui.define([
 			}
 		},
 		_getClientPet: function (sCustomer) {
+			const that = this;
 			try {
-				var oResp = {
-					"sEstado": "E",
-					"oResults": []
-				};
-				return new Promise(function (resolve, reject) {
-
-					let sFilter = `SalesOrganization eq '1120' and (DistributionChannel eq 'C1' or DistributionChannel eq 'C2') and Division eq 'S1'`;
-					if (sCustomer) {
-						sFilter += " and Customer eq '" + String(sCustomer).replace(/'/g, "''") + "'";
-					}
-					const sQuery = `Customer?$filter=${encodeURIComponent(sFilter)}&$top=10000&$format=json&sap-language=ES`;
-					let sUrl = "";
-					if (that.local) {
-						const sPath = `/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/${sQuery}`;
-						sUrl = that.getOwnerComponent().getManifestObject().resolveUri(sPath);
-					} else {
-						const sPath = jQuery.sap.getModulePath(that.route) + `/S4HANA/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/${sQuery}`;
-						sUrl = sPath;
-					}
-					Services.getoDataERPSync(that, sUrl, function (result) {
+				let sFilter = `SalesOrganization eq '1120' and (DistributionChannel eq 'C1' or DistributionChannel eq 'C2') and Division eq 'S1'`;
+				const sCatalogFilter = sFilter;
+				if (sCustomer) {
+					sFilter += " and Customer eq '" + String(sCustomer).replace(/'/g, "''") + "'";
+				}
+				const sQuery = `Customer?$filter=${encodeURIComponent(sFilter)}&$top=100000&$format=json&sap-language=ES`;
+				let sUrl = "";
+				if (that.local) {
+					const sPath = `/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/${sQuery}`;
+					sUrl = that.getOwnerComponent().getManifestObject().resolveUri(sPath);
+				} else {
+					const sPath = jQuery.sap.getModulePath(that.route) + `/S4HANA/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/${sQuery}`;
+					sUrl = sPath;
+				}
+				const sCatalogUrl = sUrl.replace(encodeURIComponent(sFilter), encodeURIComponent(sCatalogFilter));
+				return that.getOwnerComponent().getCustomerCatalog(sUrl, sCatalogUrl, sCustomer, sPageUrl => new Promise(function (resolve, reject) {
+					const oResp = { sEstado: "E", oResults: [] };
+					Services.getoDataERPSync(that, sPageUrl, function (result) {
 						util.response.validateAjaxGetERPNotMessage(result, {
 							success: function (oData, message) {
 								oResp.sEstado = "S";
 								oResp.oResults = oData.data;
+								oResp.next = oData.next || null;
 								resolve(oResp);
 							},
 							error: function (message) {
@@ -1868,35 +1868,36 @@ sap.ui.define([
 							}
 						});
 					});
-				});
+				}));
 			} catch (oError) {
 				that.getMessageBox("error", that.getI18nText("sErrorTry"));
 			}
 		},
 		_getDatClient: function (sCustomer) {
+			const that = this;
 			try {
-				var oResp = {
-					"sEstado": "E",
-					"oResults": []
-				};
-				return new Promise(function (resolve, reject) {
-					let sFilter = "SalesOrganization eq '1120' and DistributionChannel eq 'C1' and Division eq 'S1' and (CustomerDni ne '' or CustomerRuc ne '')";
-					if (sCustomer) {
-						sFilter += " and Customer eq '" + String(sCustomer).replace(/'/g, "''") + "'";
-					}
-					let sUrl = "";
-					if (that.local) {
-						const sPath = "/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/DataCustomer?$filter=" + encodeURIComponent(sFilter) + "&$top=10000&$format=json&sap-language=ES";
-						sUrl = that.getOwnerComponent().getManifestObject().resolveUri(sPath);
-					} else {
-						const sPath = jQuery.sap.getModulePath(that.route) + "/S4HANA/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/DataCustomer?$filter=" + encodeURIComponent(sFilter) + "&$top=10000&$format=json&sap-language=ES";
-						sUrl = sPath;
-					}
-					Services.getoDataERPSync(that, sUrl, function (result) {
+				let sFilter = "SalesOrganization eq '1120' and DistributionChannel eq 'C1' and Division eq 'S1' and (CustomerDni ne '' or CustomerRuc ne '')";
+				const sCatalogFilter = sFilter;
+				if (sCustomer) {
+					sFilter += " and Customer eq '" + String(sCustomer).replace(/'/g, "''") + "'";
+				}
+				let sUrl = "";
+				if (that.local) {
+					const sPath = "/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/DataCustomer?$filter=" + encodeURIComponent(sFilter) + "&$top=100000&$format=json&sap-language=ES";
+					sUrl = that.getOwnerComponent().getManifestObject().resolveUri(sPath);
+				} else {
+					const sPath = jQuery.sap.getModulePath(that.route) + "/S4HANA/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/DataCustomer?$filter=" + encodeURIComponent(sFilter) + "&$top=100000&$format=json&sap-language=ES";
+					sUrl = sPath;
+				}
+				const sCatalogUrl = sUrl.replace(encodeURIComponent(sFilter), encodeURIComponent(sCatalogFilter));
+				return that.getOwnerComponent().getCustomerCatalog(sUrl, sCatalogUrl, sCustomer, sPageUrl => new Promise(function (resolve, reject) {
+					const oResp = { sEstado: "E", oResults: [] };
+					Services.getoDataERPSync(that, sPageUrl, function (result) {
 						util.response.validateAjaxGetERPNotMessage(result, {
 							success: function (oData, message) {
 								oResp.sEstado = "S";
 								oResp.oResults = oData.data;
+								oResp.next = oData.next || null;
 								resolve(oResp);
 							},
 							error: function (message) {
@@ -1905,7 +1906,7 @@ sap.ui.define([
 							}
 						});
 					});
-				});
+				}));
 			} catch (oError) {
 				that.getMessageBox("error", that.getI18nText("sErrorTry"));
 			}
@@ -1984,26 +1985,27 @@ sap.ui.define([
 			}
 		},
 		_getTipChangeData: function () {
+			const that = this;
 			try {
 				var oResp = {
 					"sEstado": "E",
 					"oResults": []
 				};
-				return new Promise(function (resolve, reject) {
-					let sUrl = "";
-					const oToday = new Date();
-					const sYear = oToday.getFullYear();
-					const sMonth = String(oToday.getMonth() + 1).padStart(2, "0");
-					const sDay = String(oToday.getDate()).padStart(2, "0");
-					const sFechaHoy = `${sYear}-${sMonth}-${sDay}T00:00:00`;
-					if (that.local) {
-						const sPath = `/sap/opu/odata/sap/ZSDWS_PORTAL_CLIENTES_SRV/iTipoCambioSet(RateType='M',FromCurr='USD',ToCurrncy='PEN',Date=datetime'${sFechaHoy}')`;
-						sUrl = that.getOwnerComponent().getManifestObject().resolveUri(sPath);
-					} else {
-						const sPath = jQuery.sap.getModulePath(that.route) +
-							`/S4HANA/sap/opu/odata/sap/ZSDWS_PORTAL_CLIENTES_SRV/iTipoCambioSet(RateType='M',FromCurr='USD',ToCurrncy='PEN',Date=datetime'${sFechaHoy}')`;
-						sUrl = sPath;
-					}
+				let sUrl = "";
+				const oToday = that.getOwnerComponent().getOrderQueryDate();
+				const sYear = oToday.getFullYear();
+				const sMonth = String(oToday.getMonth() + 1).padStart(2, "0");
+				const sDay = String(oToday.getDate()).padStart(2, "0");
+				const sFechaHoy = `${sYear}-${sMonth}-${sDay}T00:00:00`;
+				if (that.local) {
+					const sPath = `/sap/opu/odata/sap/ZSDWS_PORTAL_CLIENTES_SRV/iTipoCambioSet(RateType='M',FromCurr='USD',ToCurrncy='PEN',Date=datetime'${sFechaHoy}')`;
+					sUrl = that.getOwnerComponent().getManifestObject().resolveUri(sPath);
+				} else {
+					const sPath = jQuery.sap.getModulePath(that.route) +
+						`/S4HANA/sap/opu/odata/sap/ZSDWS_PORTAL_CLIENTES_SRV/iTipoCambioSet(RateType='M',FromCurr='USD',ToCurrncy='PEN',Date=datetime'${sFechaHoy}')`;
+					sUrl = sPath;
+				}
+				return that.getOwnerComponent().getCustomerQuery(sUrl, () => new Promise(function (resolve, reject) {
 					Services.getoDataERPSync(that, sUrl, function (result) {
 						util.response.validateAjaxGetERPNotMessage(result, {
 							success: function (oData, message) {
@@ -2017,7 +2019,7 @@ sap.ui.define([
 							}
 						});
 					});
-				});
+				}));
 			} catch (oError) {
 				that.getMessageBox("error", that.getI18nText("sErrorTry"));
 			}
@@ -2203,11 +2205,11 @@ sap.ui.define([
 				return new Promise(function (resolve, reject) {
 					let sUrl = "";
 					if (that.local) {
-						const sPath = "/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/MarMat?$top=10000&$format=json&sap-language=ES";
+						const sPath = "/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/MarMat?$filter=org_ventas%20eq%20%271120%27&$top=10000&$format=json&sap-language=ES";
 						sUrl = that.getOwnerComponent().getManifestObject().resolveUri(sPath);
 					} else {
 						const sPath = jQuery.sap.getModulePath(that.route) +
-							"/S4HANA/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/MarMat?$top=10000&$format=json&sap-language=ES";
+							"/S4HANA/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/MarMat?$filter=org_ventas%20eq%20%271120%27&$top=10000&$format=json&sap-language=ES";
 						sUrl = sPath;
 					}
 					Services.getoDataERPSync(that, sUrl, function (result) {
@@ -2303,44 +2305,41 @@ sap.ui.define([
 			}
 		},
 		_getAddresTravel: function (sCustomer) {
+			const that = this;
 			try {
 				var oResp = { sEstado: "E", oResults: [] };
 
-				return new Promise((resolve) => {
-					if (!sCustomer) {
-						void 0;
-						return resolve(oResp);
-					}
+				if (!sCustomer) {
+					return Promise.resolve(oResp);
+				}
 
-					const oModelUser = that.getModel("oModelUser");
-					const vIsVendedor = oModelUser ? oModelUser.getProperty("/bIsVendedor") : false;
-					const bIsVendedor = vIsVendedor === true || vIsVendedor === "true";
-					const sBPUsuario = oModelUser
-						? (oModelUser.getProperty("/bBPFinal") || oModelUser.getProperty("/bBP") || "")
-						: "";
+				const oModelUser = that.getModel("oModelUser");
+				const vIsVendedor = oModelUser ? oModelUser.getProperty("/bIsVendedor") : false;
+				const bIsVendedor = vIsVendedor === true || vIsVendedor === "true";
+				const sBPUsuario = oModelUser
+					? (oModelUser.getProperty("/bBPFinal") || oModelUser.getProperty("/bBP") || "")
+					: "";
 
-					let sFilter = `Customer eq '${sCustomer}' and SalesOrganization eq '1120'`;
+				let sFilter = `Customer eq '${String(sCustomer).replace(/'/g, "''")}' and SalesOrganization eq '1120'`;
 
-					// Nuevo requerimiento:
-					// si es vendedor  enviar también SalesPartner
-					if (bIsVendedor && sBPUsuario) {
-						sFilter += ` and SalesPartner eq '${sBPUsuario}'`;
-					}
+				// Nuevo requerimiento:
+				// si es vendedor  enviar también SalesPartner
+				if (bIsVendedor && sBPUsuario) {
+					sFilter += ` and SalesPartner eq '${String(sBPUsuario).replace(/'/g, "''")}'`;
+				}
 
-					let sUrl = "";
-					if (that.local) {
-						const sPath = `/sap/opu/odata/sap/ZSDWS_PORTAL_CLIENTES_SRV/FullAddressSet?$filter=${sFilter}&$top=10000&$format=json&sap-language=ES`;
-						sUrl = that.getOwnerComponent().getManifestObject().resolveUri(sPath);
-					} else {
-						const sPath = jQuery.sap.getModulePath(that.route) +
-							`/S4HANA/sap/opu/odata/sap/ZSDWS_PORTAL_CLIENTES_SRV/FullAddressSet?$filter=${sFilter}&$top=10000&$format=json&sap-language=ES`;
-						sUrl = sPath;
-					}
+				let sUrl = "";
+				if (that.local) {
+					const sPath = `/sap/opu/odata/sap/ZSDWS_PORTAL_CLIENTES_SRV/FullAddressSet?$filter=${encodeURIComponent(sFilter)}&$top=10000&$format=json&sap-language=ES`;
+					sUrl = that.getOwnerComponent().getManifestObject().resolveUri(sPath);
+				} else {
+					const sPath = jQuery.sap.getModulePath(that.route) +
+						`/S4HANA/sap/opu/odata/sap/ZSDWS_PORTAL_CLIENTES_SRV/FullAddressSet?$filter=${encodeURIComponent(sFilter)}&$top=10000&$format=json&sap-language=ES`;
+					sUrl = sPath;
+				}
 
-					void 0;
-					void 0;
-					void 0;
 
+				return that.getOwnerComponent().getCustomerQuery(sUrl, () => new Promise((resolve) => {
 					Services.getoDataERPSync(that, sUrl, function (result) {
 						util.response.validateAjaxGetERPNotMessage(result, {
 							success: function (oData) {
@@ -2354,90 +2353,6 @@ sap.ui.define([
 
 								oResp.oResults = aResults;
 
-								const pickCarrier = (r) => {
-									const v =
-										r.Carrier ||
-										r.CARRIER ||
-										r.CarrierId ||
-										r.CARRIER_ID ||
-										r.Transportista ||
-										r.TRANSPORTISTA ||
-										r.Transporte ||
-										r.TRANSPORTE ||
-										r.ForwardingAgent ||
-										r.FORWARDING_AGENT ||
-										"";
-									return String(v || "").trim();
-								};
-
-								const aAgencias = aResults
-									.filter(r => r.Customer && r.Agencyname)
-									.map(r => ({
-										Customer: String(r.Customer || "").trim(),
-										Agencyaddress: r.Agencyaddress || "",
-										Agencyname: r.Agencyname || "",
-										Carrier: pickCarrier(r),
-										_raw: r
-									}));
-
-								const normDestino = (id, text, name, cust) => ({
-									Id: String(id || "").trim(),
-									Text: String(text || "").trim(),
-									Name: String(name || "").trim(),
-									Customer: String(cust || "").trim(),
-									Source: "DESTINO"
-								});
-
-								const aDestino1 = aResults
-									.filter(r => (r.Destinationid || r.Destination))
-									.map(r => normDestino(r.Destinationid, r.Destination, r.Destinationname, r.Customer));
-
-								const aDestino2 = aResults
-									.filter(r => (r.Shippingdestinationid || r.Shippingdestination))
-									.map(r => normDestino(r.Shippingdestinationid, r.Shippingdestination, r.Shippingname, r.Customer));
-
-								const mDest = new Map();
-								[...aDestino1, ...aDestino2].forEach(d => {
-									if (!d.Id) return;
-									if (!mDest.has(d.Id)) {
-										mDest.set(d.Id, d);
-									}
-								});
-
-								const aDestinos = Array.from(mDest.values());
-
-								const normFinal = (id, text, name, cust) => ({
-									Id: String(id || "").trim(),
-									Text: String(text || "").trim(),
-									Name: String(name || "").trim(),
-									Customer: String(cust || "").trim(),
-									Source: "FINAL"
-								});
-
-								const aFinal = aResults
-									.filter(r => (r.Finaldestinationid || r.Finaldestination))
-									.map(r => normFinal(r.Finaldestinationid, r.Finaldestination, r.Finaldestinationname, r.Customer));
-
-								const mFinal = new Map();
-								aFinal.forEach(f => {
-									if (!f.Id) return;
-									if (!mFinal.has(f.Id)) {
-										mFinal.set(f.Id, f);
-									}
-								});
-
-								const aFinalDestinos = Array.from(mFinal.values());
-
-								const oModel = that.getView().getModel("oModelProyect");
-								oModel.setProperty("/oAgenciasCliente", aAgencias);
-								oModel.setProperty("/oDestinosCliente", aDestinos);
-								oModel.setProperty("/oFinalDestinosCliente", aFinalDestinos);
-
-								void 0;
-								void 0;
-								void 0;
-								void 0;
-
 								resolve(oResp);
 							},
 							error: function () {
@@ -2446,9 +2361,92 @@ sap.ui.define([
 							}
 						});
 					});
+				})).then(oResponse => {
+					if (oResponse.sEstado !== "S") return oResponse;
+					const aResults = oResponse.oResults;
+					const pickCarrier = (r) => {
+						const v =
+							r.Carrier ||
+							r.CARRIER ||
+							r.CarrierId ||
+							r.CARRIER_ID ||
+							r.Transportista ||
+							r.TRANSPORTISTA ||
+							r.Transporte ||
+							r.TRANSPORTE ||
+							r.ForwardingAgent ||
+							r.FORWARDING_AGENT ||
+							"";
+						return String(v || "").trim();
+					};
+
+					const aAgencias = aResults
+						.filter(r => r.Customer && r.Agencyname)
+						.map(r => ({
+							Customer: String(r.Customer || "").trim(),
+							Agencyaddress: r.Agencyaddress || "",
+							Agencyname: r.Agencyname || "",
+							Carrier: pickCarrier(r),
+							_raw: r
+						}));
+
+					const normDestino = (id, text, name, cust) => ({
+						Id: String(id || "").trim(),
+						Text: String(text || "").trim(),
+						Name: String(name || "").trim(),
+						Customer: String(cust || "").trim(),
+						Source: "DESTINO"
+					});
+
+					const aDestino1 = aResults
+						.filter(r => (r.Destinationid || r.Destination))
+						.map(r => normDestino(r.Destinationid, r.Destination, r.Destinationname, r.Customer));
+
+					const aDestino2 = aResults
+						.filter(r => (r.Shippingdestinationid || r.Shippingdestination))
+						.map(r => normDestino(r.Shippingdestinationid, r.Shippingdestination, r.Shippingname, r.Customer));
+
+					const mDest = new Map();
+					[...aDestino1, ...aDestino2].forEach(d => {
+						if (!d.Id) return;
+						if (!mDest.has(d.Id)) {
+							mDest.set(d.Id, d);
+						}
+					});
+
+					const aDestinos = Array.from(mDest.values());
+
+					const normFinal = (id, text, name, cust) => ({
+						Id: String(id || "").trim(),
+						Text: String(text || "").trim(),
+						Name: String(name || "").trim(),
+						Customer: String(cust || "").trim(),
+						Source: "FINAL"
+					});
+
+					const aFinal = aResults
+						.filter(r => (r.Finaldestinationid || r.Finaldestination))
+						.map(r => normFinal(r.Finaldestinationid, r.Finaldestination, r.Finaldestinationname, r.Customer));
+
+					const mFinal = new Map();
+					aFinal.forEach(f => {
+						if (!f.Id) return;
+						if (!mFinal.has(f.Id)) {
+							mFinal.set(f.Id, f);
+						}
+					});
+
+					const aFinalDestinos = Array.from(mFinal.values());
+
+					const oModel = that.getView().getModel("oModelProyect");
+					oModel.setProperty("/oAgenciasCliente", aAgencias);
+					oModel.setProperty("/oDestinosCliente", aDestinos);
+					oModel.setProperty("/oFinalDestinosCliente", aFinalDestinos);
+
+
+					return oResponse;
 				});
 			} catch (e) {
-				void 0;
 				that.getMessageBox("error", that.getI18nText("sErrorTry"));
 				return Promise.resolve({ sEstado: "E", oResults: [] });
 			}
@@ -2609,21 +2607,21 @@ sap.ui.define([
 			});
 		},
 		_getBPVendedor: function () {
-			that = this;
+			const that = this;
 			try {
 				var oResp = {
 					"sEstado": "E",
 					"oResults": []
 				};
-				return new Promise(function (resolve, reject) {
-					let sUrl = "";
-					if (that.local) {
-						const sPath = "/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/UsOrve?$top=10000&$format=json&sap-language=ES";
-						sUrl = that.getOwnerComponent().getManifestObject().resolveUri(sPath);
-					} else {
-						const sPath = jQuery.sap.getModulePath(that.route) + "/S4HANA/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/UsOrve?$top=10000&$format=json&sap-language=ES";
-						sUrl = sPath;
-					}
+				let sUrl = "";
+				if (that.local) {
+					const sPath = "/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/UsOrve?$top=10000&$format=json&sap-language=ES";
+					sUrl = that.getOwnerComponent().getManifestObject().resolveUri(sPath);
+				} else {
+					const sPath = jQuery.sap.getModulePath(that.route) + "/S4HANA/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/UsOrve?$top=10000&$format=json&sap-language=ES";
+					sUrl = sPath;
+				}
+				return that.getOwnerComponent().getCustomerQuery(sUrl, () => new Promise(function (resolve, reject) {
 					Services.getoDataERPSync(that, sUrl, function (result) {
 						util.response.validateAjaxGetERPNotMessage(result, {
 							success: function (oData, message) {
@@ -2637,7 +2635,7 @@ sap.ui.define([
 							}
 						});
 					});
-				});
+				}));
 			} catch (oError) {
 				that.getMessageBox("error", that.getI18nText("sErrorTry"));
 			}

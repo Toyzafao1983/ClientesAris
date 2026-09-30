@@ -647,7 +647,6 @@ sap.ui.define([
 
             if (sCustomer) {
                 this.getRouter().navTo("Detail", { app: sCustomer });
-                sap.m.MessageToast.show("Fecha guardada: " + sToday);
             } else {
                 sap.m.MessageToast.show("No se encontró Customer para continuar");
             }

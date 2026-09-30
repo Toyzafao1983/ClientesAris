@@ -40,18 +40,20 @@ sap.ui.define([
 
         },
          handleRouteMatched: function (bInit) {
+            // Main starts a new order flow; Detail -> FormClient keeps its cache.
+            this.getOwnerComponent().clearCustomerQueries();
             this.getView().setVisible(false);
             that._initialCustomerData = null;
 
             sap.ui.core.BusyIndicator.show(0)
              return Promise.all([that._getUsers(), that._getPrueba(),
-            that._getTipChangeData(),that._getDatClient(),
+            that._getDatClient(),
             that._getClientPet(),that._getBPVendedor()
             ]).then(async (values) => {
                 // Conservar las respuestas originales para buscar sin repetir OData.
                 that._initialCustomerData = {
-                    customers: values[4],
-                    customerData: values[3]
+                    customers: values[3],
+                    customerData: values[2]
                 };
                 try {
                     that._setLanguageModel("esp");
@@ -70,24 +72,10 @@ sap.ui.define([
                     }
 
                     that.getView().setVisible(true);
-                    that.oModelProyect.setProperty("/oSeller", values[5].oResults);
-                    that.oModelProyect.setProperty("/oClienteFilter", values[4].oResults);
+                    that.oModelProyect.setProperty("/oSeller", values[4].oResults);
+                    that.oModelProyect.setProperty("/oClienteFilter", values[3].oResults);
                     that.onClearFilters();
 
-                    let oData = values[2].oResults;
-                    let oTipoCambio = {
-                        from: {
-                            moneda: oData.FromCurr || "PEN",
-                            valor: oData.ExchRateV || 0
-                        },
-                        to: {
-                            moneda: oData.ToCurrncy || "USD",
-                            valor: oData.ExchRate || 0
-                        },
-                        fechaValidez: oData.ValidFrom ? new Date(parseInt(oData.ValidFrom.match(/\d+/)[0], 10)) : null,
-                        fecha: oData.Date ? new Date(parseInt(oData.Date.match(/\d+/)[0], 10)) : null
-                    };
-                    that.oModelData.setProperty("/oTipChangeData", oTipoCambio);
                     if(sIdioma == undefined){
                         that._setLanguageModel("esp");
                     }else{
@@ -173,7 +161,7 @@ sap.ui.define([
         // ========================================================
         // El atributo 7 tiene prioridad; un interno rechazado no pasa a cliente.
         if (sBPCliente && !sBPVendedor) {
-            let aClientes = values[4]?.oResults || [];
+            let aClientes = values[3]?.oResults || [];
             let oCliente  = aClientes.find(item => item.Customer === sBPCliente);
 
             const aSalesOrgs = await this._getSalesOrgByBP(sBPCliente);
@@ -205,8 +193,8 @@ sap.ui.define([
         // ========================================================
         if (sBPInterno) {
             const sUsuarioIAS = sBPInterno;
-            // values[5] contiene el OData de vendedores/coordinadores
-            let oVendResp   = values[5]?.oResults;
+            // values[4] contiene el OData de vendedores/coordinadores
+            let oVendResp   = values[4]?.oResults;
             let aVendedores = [];
 
             if (oVendResp) {
