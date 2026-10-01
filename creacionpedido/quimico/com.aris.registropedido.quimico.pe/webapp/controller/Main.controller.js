@@ -180,8 +180,6 @@ sap.ui.define([
             oModelUser.setProperty("/bIsVendedor", false);
             oModelUser.setProperty("/bIsCoord", false);
 
-            sap.ui.core.BusyIndicator.show(0);
-            await this._loadClientData(sBPCliente);
             sap.ui.core.BusyIndicator.hide(0);
 
             oRouter.navTo("FormClient", { app: sBPCliente });
@@ -298,31 +296,6 @@ sap.ui.define([
         _onClearDataFilter: function () {
             that.getModel("oModelProyect").setProperty("/", models.createModelProyect());
         },
-        _loadClientData: async function (sCustomer) {
-            try {
-                const oModel = this.getOwnerComponent().getModel("oModelEntity");
-                if (!oModel) throw new Error("Modelo oModelEntity no definido");
-                const oDireccion = await new Promise((resolve, reject) => {
-                    oModel.read(`/iDireccionesSet(Businesspartner='${sCustomer}')`, {
-                        success: (oResultDireccion) => {
-                            const oDir = oResultDireccion || {};
-                            oDir.FullAddress = `${oDir.Street || ""} ${oDir.HouseNo || ""} ${oDir.StrSuppl1 || ""} ${oDir.StrSuppl2 || ""}, ${oDir.District || ""}, ${oDir.City || ""}, ${oDir.Country || ""}`;
-                            resolve(oDir);
-                        },
-                        error: reject
-                    });
-                });
-                const oCredito = await this._getCreditoCliente(sCustomer);
-                this.oModelProyect.setProperty("/oDireccionCliente", oDireccion);
-                this.oModelProyect.setProperty("/oCreditoCliente", oCredito || { Amount: 0 });
-                this.oModelProyect.refresh(true);
-
-            } catch (e) {
-                this.oModelProyect.setProperty("/oDireccionCliente", {});
-                this.oModelProyect.setProperty("/oCreditoCliente", { Amount: 0 });
-                sap.m.MessageToast.show("Error al cargar datos del cliente");
-            }
-        },
         _onPressNavigateForm: function (oEvent) {
             const jData = oEvent.getSource().getBindingContext("oModelProyect").getObject();
             if (jData.length === 0) {
@@ -331,69 +304,7 @@ sap.ui.define([
             }
             this.oModelProyect.setProperty("/oCabecera", jData);
             const sCustomer = jData.Customer;
-            const oModel = this.getOwnerComponent().getModel("oModelEntity");
-            if (!oModel) {
-                void 0;
-                return;
-            }
-            sap.ui.core.BusyIndicator.show(0);
-            oModel.read("/iDireccionesSet(Businesspartner='" + sCustomer + "')", {
-                success: (oResultDireccion) => {
-                    const oDir = oResultDireccion || {};
-                    oDir.FullAddress = `${oDir.Street || ""} ${oDir.HouseNo || ""} ${oDir.StrSuppl1 || ""} ${oDir.StrSuppl2 || ""}, ${oDir.District || ""}, ${oDir.City || ""}, ${oDir.Country || ""}`;
-                    this.oModelProyect.setProperty("/oDireccionCliente", oDir);
-                    this.oModelProyect.refresh(true);
-                    this._getCreditoCliente(sCustomer).then((oCredito) => {
-                        if (oCredito) {
-                            this.oModelProyect.setProperty("/oCreditoCliente", oCredito);
-                        } else {
-                            this.oModelProyect.setProperty("/oCreditoCliente", { Amount: 0 });
-                        }
-                    }).catch((err) => {
-                        this.oModelProyect.setProperty("/oCreditoCliente", { Amount: 0 });
-                        sap.m.MessageToast.show("Error al obtener crédito del cliente");
-                    }).finally(() => {
-                        sap.ui.core.BusyIndicator.hide();
-                        this.oRouter.navTo("FormClient", { app: sCustomer });
-                    });
-
-                },
-                error: (oError) => {
-                    sap.ui.core.BusyIndicator.hide();
-                    sap.m.MessageToast.show("Error al obtener dirección de l cliente");
-                }
-            });
-        },
-        _getCreditoCliente: function(sPartner, sSegment = "100102") {
-            return new Promise((resolve, reject) => {
-                const oModel = this.getOwnerComponent().getModel("oModelEntity");
-                if (!oModel) {
-                    void 0;
-                    reject("Modelo no definido");
-                    return;
-                }
-
-                const sPath = `/EcreditosSet`;
-                const aFilters = [
-                    new sap.ui.model.Filter("Partner", sap.ui.model.FilterOperator.EQ, sPartner),
-                    new sap.ui.model.Filter("Segment", sap.ui.model.FilterOperator.EQ, sSegment)
-                ];
-
-                oModel.read(sPath, {
-                    filters: aFilters,
-                    success: (oData) => {
-                        if (oData.results && oData.results.length > 0) {
-                            resolve(oData.results[0]); // retorna el primer registro de crédito
-                        } else {
-                            resolve(null); // no hay crédito
-                        }
-                    },
-                    error: (oError) => {
-                        void 0;
-                        reject(oError);
-                    }
-                });
-            });
+            this.oRouter.navTo("FormClient", { app: sCustomer });
         },
          _syncSearchFiltersFromTokens: function () {
             // Al buscar, los tokens visibles son la fuente de los filtros vigentes.

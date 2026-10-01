@@ -61,3 +61,7 @@ Archivos funcionales modificados en este ajuste: `webapp/controller/BaseControll
 `node webapp/test/customer-catalog.cjs`: valida el transporte, Component y métodos reales, una sola petición inicial con top=100000, ausencia de paginación automática, filtrado local, copias independientes, respaldo si hay continuación o se alcanza el límite, entrada directa, reinicio y reintentos en ambas rutas.
 
 Pendiente en Network conectado a SAP: una llamada inicial por entidad; sin llamadas con skiptoken; reutilización en formulario y detalle cuando el bloque está completo. Confirmar el volumen real y verificar las ayudas de clientes y la creación del pedido.
+
+## Reutilización de Users
+
+`_getUsers` comparte la respuesta de IAS por URL (incluido el correo) durante el flujo entre Main, FormClient y Detail. Mantiene el formato Resources y copias independientes; las validaciones de acceso se siguen ejecutando. Entrar a Main renueva la consulta. La entrada directa carga los datos si no están guardados y los errores permiten reintentar. Validación simulada: `node webapp/test/users-query-cache.cjs`. Pendiente confirmar una sola solicitud Users en Network durante el flujo conectado a SAP.

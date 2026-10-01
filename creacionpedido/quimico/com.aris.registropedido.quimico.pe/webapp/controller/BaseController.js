@@ -36,27 +36,29 @@ sap.ui.define([
 		driveId: "b!ger65VR1VEerCnoWFakAb9nmGbJ284hOpTWdHF4jSOIq-iKPjCYQRr6ew-GrzZyr",
 		_getUsers: function () {
 			that = this;
+			const oController = this;
 			try {
-				var model = new sap.ui.model.json.JSONModel();
-				return new Promise(function (resolve, reject) {
-					let sUrl = "";
-					const sMail = that.getUserLoged();
-					if (that.local) {
-						const sPath = '/service/scim/Users?filter=emails eq "' + sMail + '"';
-						sUrl = that.getOwnerComponent().getManifestObject().resolveUri(sPath);
-					} else {
-						const sPath = jQuery.sap.getModulePath(that.route) + '/API-USER-IAS/service/scim/Users?filter=emails eq "' + sMail + '"';
-						sUrl = sPath;
-					}
-					if (that.local) {
+				let sUrl = "";
+				const sMail = oController.getUserLoged();
+				if (oController.local) {
+					const sPath = '/service/scim/Users?filter=emails eq "' + sMail + '"';
+					sUrl = oController.getOwnerComponent().getManifestObject().resolveUri(sPath);
+				} else {
+					const sPath = jQuery.sap.getModulePath(oController.route) + '/API-USER-IAS/service/scim/Users?filter=emails eq "' + sMail + '"';
+					sUrl = sPath;
+				}
+				return oController.getOwnerComponent().getCustomerQuery(sUrl, () => new Promise(function (resolve, reject) {
+					const model = new sap.ui.model.json.JSONModel();
+					const complete = data => resolve({ sEstado: "S", oResults: data });
+					if (oController.local) {
 						setTimeout(() => {
-							if (that.AdminUser) {
+							if (oController.AdminUser) {
 
-								resolve(models.oModelUser());
+								complete(models.oModelUser());
 							} else {
 
 
-								resolve(models.oModelUserExt());
+								complete(models.oModelUserExt());
 							}
 
 						}, "1000");
@@ -65,13 +67,13 @@ sap.ui.define([
 							"Content-Type": "application/scim+json"
 						}).then(() => {
 							var oDataTemp = model.getData();
-							resolve(oDataTemp);
+							complete(oDataTemp);
 						}).catch(err => {
 							void 0;
 							reject(err);
 						});
 					}
-				});
+				})).then(result => result.oResults);
 			} catch (oError) {
 				this.getMessageBox("error", this.getI18nText("sErrorTry"));
 			}
@@ -2452,20 +2454,21 @@ sap.ui.define([
 			}
 		},
 		_getTransport: function () {
+			const that = this;
 			try {
 				var oResp = {
 					"sEstado": "E",
 					"oResults": []
 				};
-				return new Promise(function (resolve, reject) {
-					let sUrl = "";
-					if (that.local) {
-						const sPath = "/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/Carrier?$top=10000&$format=json&sap-language=ES";
-						sUrl = that.getOwnerComponent().getManifestObject().resolveUri(sPath);
-					} else {
-						const sPath = jQuery.sap.getModulePath(that.route) + "/S4HANA/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/Carrier?$top=10000&$format=json&sap-language=ES";
-						sUrl = sPath;
-					}
+				let sUrl = "";
+				if (that.local) {
+					const sPath = "/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/Carrier?$top=10000&$format=json&sap-language=ES";
+					sUrl = that.getOwnerComponent().getManifestObject().resolveUri(sPath);
+				} else {
+					const sPath = jQuery.sap.getModulePath(that.route) + "/S4HANA/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/Carrier?$top=10000&$format=json&sap-language=ES";
+					sUrl = sPath;
+				}
+				return that.getOwnerComponent().getCustomerQuery(sUrl, () => new Promise(function (resolve, reject) {
 					Services.getoDataERPSync(that, sUrl, function (result) {
 						util.response.validateAjaxGetERPNotMessage(result, {
 							success: function (oData, message) {
@@ -2479,26 +2482,27 @@ sap.ui.define([
 							}
 						});
 					});
-				});
+				}));
 			} catch (oError) {
 				that.getMessageBox("error", that.getI18nText("sErrorTry"));
 			}
 		},
 		_getCOnditionPay: function () {
+			const that = this;
 			try {
 				var oResp = {
 					"sEstado": "E",
 					"oResults": []
 				};
-				return new Promise(function (resolve, reject) {
-					let sUrl = "";
-					if (that.local) {
-						const sPath = "/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/Conditions?$filter=SalesOrganization eq '1120'&$top=10000&$format=json&sap-language=ES";
-						sUrl = that.getOwnerComponent().getManifestObject().resolveUri(sPath);
-					} else {
-						const sPath = jQuery.sap.getModulePath(that.route) + "/S4HANA/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/Conditions?$filter=SalesOrganization eq '1120'&$top=10000&$format=json&sap-language=ES";
-						sUrl = sPath;
-					}
+				let sUrl = "";
+				if (that.local) {
+					const sPath = "/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/Conditions?$filter=SalesOrganization eq '1120'&$top=10000&$format=json&sap-language=ES";
+					sUrl = that.getOwnerComponent().getManifestObject().resolveUri(sPath);
+				} else {
+					const sPath = jQuery.sap.getModulePath(that.route) + "/S4HANA/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/Conditions?$filter=SalesOrganization eq '1120'&$top=10000&$format=json&sap-language=ES";
+					sUrl = sPath;
+				}
+				return that.getOwnerComponent().getCustomerQuery(sUrl, () => new Promise(function (resolve, reject) {
 					Services.getoDataERPSync(that, sUrl, function (result) {
 						util.response.validateAjaxGetERPNotMessage(result, {
 							success: function (oData, message) {
@@ -2512,7 +2516,7 @@ sap.ui.define([
 							}
 						});
 					});
-				});
+				}));
 			} catch (oError) {
 				that.getMessageBox("error", that.getI18nText("sErrorTry"));
 			}
