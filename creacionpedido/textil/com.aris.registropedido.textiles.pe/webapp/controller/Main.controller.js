@@ -33,18 +33,19 @@ sap.ui.define([
 
         },
         handleRouteMatched: function (bInit) {
+            this.getOwnerComponent().clearCustomerQueries();
             this.getView().setVisible(false);
             that._initialCustomerData = null;
 
             sap.ui.core.BusyIndicator.show(0)
              return Promise.all([that._getUsers(), that._getPrueba(),
-            that._getTipDocument(that),that._getTipChangeData(),
+            that._getTipDocument(that),
             that._getDatClient(),that._getClientPet(),that._getBPVendedor()
             ]).then(async (values) => {
                 // Conservar las respuestas originales para buscar sin repetir OData.
                 that._initialCustomerData = {
-                    customers: values[5],
-                    customerData: values[4]
+                    customers: values[4],
+                    customerData: values[3]
                 };
                     try {
                         that._setLanguageModel("esp");
@@ -62,9 +63,9 @@ sap.ui.define([
                         let sIdioma = that.oModelProyect.getProperty("/sIdioma");
                         that.oModelProyect.setSizeLimit(99999999);
                         that.oModelData.setSizeLimit(99999999);
-                        that.oModelProyect.setProperty("/oClienteFilter", values[5].oResults);
-                        that.oModelProyect.setProperty("/oSeller",        values[4].oResults);
-                        const aSellerRaw = values[4].oResults || [];
+                        that.oModelProyect.setProperty("/oClienteFilter", values[4].oResults);
+                        that.oModelProyect.setProperty("/oSeller",        values[3].oResults);
+                        const aSellerRaw = values[3].oResults || [];
                         const m = new Map();
 
                         aSellerRaw.forEach(r => {
@@ -76,20 +77,6 @@ sap.ui.define([
                         that._onInitSellerDefault();
                         that.onClearFilters();
 
-                        let oData = values[3].oResults;
-                        let oTipoCambio = {
-                            from: {
-                                moneda: oData.FromCurr || "PEN",
-                                valor: oData.ExchRateV || 0
-                            },
-                            to: {
-                                moneda: oData.ToCurrncy || "USD",
-                                valor: oData.ExchRate || 0
-                            },
-                            fechaValidez: oData.ValidFrom ? new Date(parseInt(oData.ValidFrom.match(/\d+/)[0], 10)) : null,
-                            fecha: oData.Date ? new Date(parseInt(oData.Date.match(/\d+/)[0], 10)) : null
-                        };
-                        that.oModelData.setProperty("/oTipChangeData", oTipoCambio);
                         that.oModelData.setProperty("/oFilterMaterial", values[2].oResults);
                         that.oModelProyect.setProperty("/ListaBrands", values[2].aBrands);
                         that.oModelProyect.setProperty("/ListaMaterialGroups", values[2].aMaterialGroups);
@@ -207,7 +194,7 @@ sap.ui.define([
                 localStorage.setItem("oUserCache", JSON.stringify(oUserCache));
                 // El atributo 7 tiene prioridad; un interno rechazado no pasa a cliente.
                 if (sBPCliente && !sBPVendedor) {
-                    let aClientes = values[5]?.oResults || [];
+                    let aClientes = values[4]?.oResults || [];
                     let oCliente  = aClientes.find(item => item.Customer === sBPCliente);
 
                     const aSalesOrgs = await this._getSalesOrgByBP(sBPCliente);
@@ -226,7 +213,6 @@ sap.ui.define([
                     oModelUser.setProperty("/bIsCoord", false);
 
                     sap.ui.core.BusyIndicator.show(0);
-                    await this._loadClientData(sBPCliente);
                     sap.ui.core.BusyIndicator.hide(0);
 
                     oRouter.navTo("FormClient", { app: sBPCliente });
@@ -234,7 +220,7 @@ sap.ui.define([
                 }
                 if (sBPInterno) {
                     const sUsuarioIAS = sBPInterno;
-                    let oVendResp   = values[6]?.oResults;
+                    let oVendResp   = values[5]?.oResults;
                     let aVendedores = [];
                     if (oVendResp) {
                         if (oVendResp.d && Array.isArray(oVendResp.d.results)) {
@@ -303,32 +289,6 @@ sap.ui.define([
                 return this._denyAccess();
             }
         },
-         _loadClientData: async function (sCustomer) {
-            try {
-                const oModel = this.getOwnerComponent().getModel("oModelEntity");
-                if (!oModel) throw new Error("Modelo oModelEntity no definido");
-                const oDireccion = await new Promise((resolve, reject) => {
-                    oModel.read(`/iDireccionesSet(Businesspartner='${sCustomer}')`, {
-                        success: (oResultDireccion) => {
-                            const oDir = oResultDireccion || {};
-                            oDir.FullAddress = `${oDir.Street || ""} ${oDir.HouseNo || ""} ${oDir.StrSuppl1 || ""} ${oDir.StrSuppl2 || ""}, ${oDir.District || ""}, ${oDir.City || ""}, ${oDir.Country || ""}`;
-                            resolve(oDir);
-                        },
-                        error: reject
-                    });
-                });
-
-                const oCredito = await this._getCreditoCliente(sCustomer);
-                this.oModelProyect.setProperty("/oDireccionCliente", oDireccion);
-                this.oModelProyect.setProperty("/oCreditoCliente", oCredito || { Amount: 0 });
-                this.oModelProyect.refresh(true);
-
-            } catch (e) {
-                this.oModelProyect.setProperty("/oDireccionCliente", {});
-                this.oModelProyect.setProperty("/oCreditoCliente", { Amount: 0 });
-                sap.m.MessageToast.show("Error al cargar datos del cliente");
-            }
-        },
          _onInitSellerDefault: function () {
             const oUser = this.getView().getModel("oModelUser");
             const oProj = this.getView().getModel("oModelProyect");
@@ -370,72 +330,7 @@ sap.ui.define([
             }
             this.oModelProyect.setProperty("/oCabecera", jData);
             const sCustomer = jData.Customer;
-            const oModel = this.getOwnerComponent().getModel("oModelEntity");
-            if (!oModel) {
-                void 0;
-                return;
-            }
-            sap.ui.core.BusyIndicator.show(0);
-            oModel.read("/iDireccionesSet(Businesspartner='" + sCustomer + "')", {
-                success: (oResultDireccion) => {
-                    const oDir = oResultDireccion || {};
-                    oDir.FullAddress = `${oDir.Street || ""} ${oDir.HouseNo || ""} ${oDir.StrSuppl1 || ""} ${oDir.StrSuppl2 || ""}, ${oDir.District || ""}, ${oDir.City || ""}, ${oDir.Country || ""}`;
-                    this.oModelProyect.setProperty("/oDireccionCliente", oDir);
-                    this.oModelProyect.refresh(true);
-                    void 0;
-                    this._getCreditoCliente(sCustomer).then((oCredito) => {
-                        if (oCredito) {
-                            this.oModelProyect.setProperty("/oCreditoCliente", oCredito);
-                            void 0;
-                        } else {
-                            this.oModelProyect.setProperty("/oCreditoCliente", { Amount: 0 });
-                            void 0;
-                        }
-                    }).catch((err) => {
-                        this.oModelProyect.setProperty("/oCreditoCliente", { Amount: 0 });
-                        sap.m.MessageToast.show("Error al obtener crédito del cliente");
-                    }).finally(() => {
-                        sap.ui.core.BusyIndicator.hide();
-                        this.oRouter.navTo("FormClient", { app: sCustomer });
-                    });
-
-                },
-                error: (oError) => {
-                    sap.ui.core.BusyIndicator.hide();
-                    sap.m.MessageToast.show("Error al obtener dirección de l cliente");
-                }
-            });
-        },
-        _getCreditoCliente: function(sPartner, sSegment = "100102") {
-            return new Promise((resolve, reject) => {
-                const oModel = this.getOwnerComponent().getModel("oModelEntity");
-                if (!oModel) {
-                    void 0;
-                    reject("Modelo no definido");
-                    return;
-                }
-
-                const sPath = `/EcreditosSet`;
-                const aFilters = [
-                    new sap.ui.model.Filter("Partner", sap.ui.model.FilterOperator.EQ, sPartner),
-                    new sap.ui.model.Filter("Segment", sap.ui.model.FilterOperator.EQ, sSegment)
-                ];
-
-                oModel.read(sPath, {
-                    filters: aFilters,
-                    success: (oData) => {
-                        if (oData.results && oData.results.length > 0) {
-                            resolve(oData.results[0]);
-                        } else {
-                            resolve(null);
-                        }
-                    },
-                    error: (oError) => {
-                        void 0;
-                        reject(oError);
-                    }
-                });
-            });
+            this.oRouter.navTo("FormClient", { app: sCustomer });
         },
        _syncSearchFiltersFromTokens: function () {
             // Al buscar, los tokens visibles son la fuente de los filtros vigentes.
