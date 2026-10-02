@@ -64,10 +64,12 @@ sap.ui.define([
             that._getAddresTravel(sCustomer), that._getDatClientView(sCustomer),
             that._getCOnditionPay(), that._getAnticipo(sCustomer, sCurrency),
             that._getNotaCredito(sCustomer, sCurrency),
+            that._getReason(oInputForm.tipDocument), // 14: cached ZGNA reasons or direct-entry load
             ]).then(async (values) => {
                 let sCustomer = this.oRouter.getHashChanger().hash.split("/")[1];
                 that.oModelProyect = that.getModel("oModelProyect");
                 that.oModelData = that.getModel("oModelData");
+                that.oModelData.setProperty("/oReason", values[14]?.oResults || []);
                 that.oModelUser = that.getModel("oModelUser");
                 that.oModelDevice = that.getModel("oModelDevice");
                 that._validateAccessToPortal(values);

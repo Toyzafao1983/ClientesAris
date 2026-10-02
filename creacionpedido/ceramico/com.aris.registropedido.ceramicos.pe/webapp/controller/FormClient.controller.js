@@ -47,7 +47,7 @@ sap.ui.define([
             let sCustomer = this.oRouter.getHashChanger().hash.split("/")[1];
             this._clearOCUploadState();
             Promise.all([that._getPrueba(), that._getTipMaterialData(),
-            that._getTipChangeData(), that._getReason(), that._getTipDocumentData(),
+            that._getTipChangeData(), that._getReason(oModelProyect.getProperty("/inputForm/tipDocument")), that._getTipDocumentData(),
             that._getClientPet(sCustomer), that._getAddressData(sCustomer),
             that._getCreditDispo(sCustomer), that._getPrincipalSeller(sCustomer),
             that._getDatClientView(sCustomer), that._getAddresTravel(sCustomer), that._getCOnditionPay(),
@@ -877,6 +877,12 @@ sap.ui.define([
                     if (sAction === sap.m.MessageBox.Action.OK) {
                         oModelProyect.setProperty("/inputForm/tipDocument", sKey);
                         oModelProyect.setProperty("/inputForm/txtTipDocument", sText);
+                        this.getModel("oModelData").setProperty("/oReason", []);
+                        this._getReason(sKey).then(response => {
+                            if (oModelProyect.getProperty("/inputForm/tipDocument") === sKey) {
+                                this.getModel("oModelData").setProperty("/oReason", response.oResults || []);
+                            }
+                        }).catch(() => this.getModel("oModelData").setProperty("/oReason", []));
                         oModelProyect.setProperty("/isFormEnabled", !!sKey);
                         oModelProyect.setProperty("/inputForm/isTipDocumentEnabled", false);
 
