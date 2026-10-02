@@ -42,7 +42,7 @@ sap.ui.define([
                 that._getPrueba(),                  // 0
                 that._getTipMaterialData(),        // 1
                 that._getTipChangeData(),          // 2
-                that._getReason(),                 // 3
+                that._getReason(this.getModel("oModelProyect").getProperty("/inputForm/tipDocument")), // 3
                 that._getTipDocumentData(),        // 4
                 that._getClientPet(sCustomer),     // 5
                 that._getAddressData(sCustomer),   // 6

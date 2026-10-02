@@ -16,6 +16,7 @@ for (const local of [true, false]) {
         getView: () => ({ getModel: () => ({ getProperty: () => type, setProperty() {} }) }),
         _setDeliveryAddressData: (rows, delivery) => deliveries.push({ rows, delivery }) }; }
     const form = controller('A'), detail = controller('B');
+    form._getDatClient = detail._getDatClient = method('_getDatClient');
     function method(name) {
         const a = source.indexOf(name + ': function'), b = source.indexOf('\n\t\t},', a);
         return vm.runInNewContext('(' + source.slice(a + name.length + 2, b + 4) + ')', {
@@ -39,7 +40,7 @@ for (const local of [true, false]) {
         assert.equal(urls.length, before + 1);
         if (name === '_getDatClientView') {
             const query = new URL(urls.at(-1), 'https://test').searchParams;
-            assert.equal(query.get('$top'), '1');
+            assert.equal(query.get('$top'), '100000');
             assert.ok(!query.get('$filter').includes('CustomerDni'));
             await fn.call(detail, '0002'); assert.equal(urls.length, before + 2);
         }
@@ -61,10 +62,10 @@ for (const local of [true, false]) {
     const before = urls.length;
     await method('_getDatClient').call(form);
     await method('_getDatClientView').call(detail, '0001');
-    assert.equal(urls.length, before + 2, 'distinct catalog and customer filters must not be merged');
-    assert.ok(new URL(urls[before], 'https://test').searchParams.get('$filter').includes('CustomerDni'));
+    assert.equal(urls.length, before + 1, 'customer view reuses the complete catalog');
+    assert.ok(!new URL(urls[before], 'https://test').searchParams.get('$filter').includes('CustomerDni'));
     await method('_getDescriptionMaterial').call(detail);
     assert.equal(new URL(urls.at(-1), 'https://test').searchParams.get('$filter'), "org_ventas eq '1110'");
 }
-console.log('PASS: textile shared queries, delivery types, separate customer filters, retries, copies, date reset and MarMat in local/S4HANA.');
+console.log('PASS: textile shared queries, delivery types, shared customer catalog, retries, copies, date reset and MarMat in local/S4HANA.');
 })().catch(e => { console.error(e); process.exitCode = 1; });

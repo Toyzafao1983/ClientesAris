@@ -22,12 +22,16 @@ const plain = value => JSON.parse(JSON.stringify(value));
                 let fail = false;
                 const rows = mode === 'limit'
                     ? Array.from({ length: 100000 }, (_, i) => ({ Customer: 'OTHER' + i }))
-                    : [{ Customer: '0001', Channel: 'C1' }, { Customer: '0001', Channel: 'C2' }];
+                    : [{ Customer: '0001', Channel: 'C1', CustomerDni: '', CustomerRuc: '' }, { Customer: '0001', Channel: 'C2', CustomerDni: '', CustomerRuc: '' }];
                 const http = moduleFrom('util/utilHttp.js', {}, { $: { ajax: options => {
                     urls.push(options.url);
                     const query = new URL(options.url, 'https://test').searchParams;
                     assert.equal(query.get('$top'), '100000');
                     assert.equal(query.has('$skiptoken'), false, 'no automatic pagination');
+                    if (method === '_getDatClient') {
+                        assert.ok(!query.get('$filter').includes('CustomerDni'));
+                        assert.ok(!query.get('$filter').includes('CustomerRuc'));
+                    }
                     if (fail) return options.error({}, 'error', 'SAP unavailable');
                     const filtered = query.get('$filter').includes('Customer eq');
                     options.success({ d: {
@@ -37,13 +41,13 @@ const plain = value => JSON.parse(JSON.stringify(value));
                 } } });
                 const component = moduleFrom('Component.js', {
                     'sap/ui/core/UIComponent': { extend: (_, methods) => methods },
-                    'com/aris/registropedido/quimico/pe/services/CustomerQueryCache': Cache
+                    'com/aris/registropedido/textiles/pe/services/CustomerQueryCache': Cache
                 });
                 const owner = Object.assign({}, component, {
                     _customerQueryCache: new Cache(),
                     getManifestObject: () => ({ resolveUri: url => url })
                 });
-                const controller = { local, route: 'chemical', getOwnerComponent: () => owner };
+                const controller = { local, route: 'textile', getOwnerComponent: () => owner };
                 const start = source.indexOf('\t\t' + method + ': function (');
                 const end = source.indexOf('\n\t\t},', start);
                 const call = vm.runInNewContext('(function' + source.slice(source.indexOf(': function', start) + 10, end + 4) + ')', {
@@ -63,6 +67,20 @@ const plain = value => JSON.parse(JSON.stringify(value));
                 assert.notEqual(second.oResults[0].Customer, 'edited');
                 await call.call(controller, '0001');
                 assert.equal(urls.length, mode === 'complete' ? 1 : 2, 'reuse local or fallback result');
+                if (method === '_getDatClient') {
+                    controller._getDatClient = call;
+                    const startView = source.indexOf('_getDatClientView: function');
+                    const endView = source.indexOf('\n\t\t},', startView);
+                    const view = vm.runInNewContext('(' + source.slice(startView + '_getDatClientView: '.length, endView + 4) + ')');
+                    const beforeView = urls.length;
+                    const selected = await view.call(controller, '0001');
+                    assert.equal(selected.oResults.length, 1);
+                    assert.equal(selected.oResults[0].Customer, mode === 'complete' ? '0001' : 'DIRECT');
+                    selected.oResults[0].Customer = 'mutated';
+                    assert.notEqual((await view.call(controller, '0001')).oResults[0].Customer, 'mutated');
+                    assert.equal(urls.length, beforeView, 'page 2/3 use catalog or cached fallback');
+                    assert.equal((await call.call(controller)).oResults.length, rows.length, 'view preserves all catalog rows');
+                }
                 if (mode === 'complete') {
                     assert.equal((await call.call(controller, 'MISSING')).oResults.length, 0);
                     assert.equal(urls.length, 1);

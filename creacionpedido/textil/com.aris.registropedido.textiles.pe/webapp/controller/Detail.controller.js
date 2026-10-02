@@ -63,7 +63,7 @@ sap.ui.define([
                 that._getDescriptionMaterial(),        // 7
                 that._getAddresTravel(sCustomer),      // 8
                 that._getCOnditionPay(),               // 9
-                that._getReason(),                     // 10
+                that._getReason(oInputForm.tipDocument), // 10
                 that._getAnticipo(sCustomer, sCurrency), // 11
                 that._getNotaCredito(sCustomer, sCurrency), // 12
                 that._getPrincipalSeller(sCustomer),   // 13
@@ -239,6 +239,7 @@ sap.ui.define([
                     that.oModelProyect.getProperty("/inputForm/tipoEntrega") || ""
                 );
                 that.oModelData.setProperty("/oConditionPay", values[9].oResults);
+                that.oModelData.setProperty("/oReason", values[10]?.oResults || []);
                 const aPortEmbarkationRaw = values[14]?.oResults || [];
                 const aPortEmbarkation = that._normalizePortEmbarkation(aPortEmbarkationRaw);
 

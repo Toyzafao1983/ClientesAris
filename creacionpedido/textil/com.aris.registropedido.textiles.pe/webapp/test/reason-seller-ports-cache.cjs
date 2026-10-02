@@ -17,7 +17,12 @@ for (const local of [true, false]) for (const name of ['_getReason', '_getPrinci
         } },
         util: { response: { validateAjaxGetERPNotMessage: (r, c) => fail ? c.error() : c.success(r) } }
     });
-    const arg = name === '_getPrincipalSeller' ? '0001' : undefined;
+    const arg = name === '_getPrincipalSeller' ? '0001' : name === '_getReason' ? 'ZPES' : undefined;
+    if (name === '_getReason') {
+        assert.equal((await fn.call(form)).oResults.length, 0);
+        assert.equal((await fn.call(form, '   ')).oResults.length, 0);
+        assert.equal(urls.length, 0, 'no unfiltered Reason request');
+    }
     const [first, second] = await Promise.all([fn.call(form, arg), fn.call(detail, arg)]);
     assert.equal(urls.length, 1);
     const row = r => name === '_getPrincipalSeller' ? r.oResults : r.oResults[0];
@@ -26,9 +31,9 @@ for (const local of [true, false]) for (const name of ['_getReason', '_getPrinci
     if (name === '_getReason') {
         assert.equal(first.oResults.length, 1, 'ZT4 excluded');
         await fn.call(form, 'ZPES'); await fn.call(detail, 'ZPES'); await fn.call(detail);
-        assert.equal(urls.length, 2, 'general, filtered, general sequence only sends two requests');
-        assert.equal(new URL(urls[1], 'https://test').searchParams.get('$filter'), "SalesDocumentClass eq 'ZPES'");
-        await fn.call(detail, 'ZCNA'); assert.equal(urls.length, 3);
+        assert.equal(urls.length, 1, 'only the selected document is requested');
+        assert.equal(new URL(urls[0], 'https://test').searchParams.get('$filter'), "SalesDocumentClass eq 'ZPES'");
+        await fn.call(detail, 'ZCNA'); assert.equal(urls.length, 2);
     }
     if (name === '_getPrincipalSeller') {
         await fn.call(detail, '0002'); assert.equal(urls.length, 2);

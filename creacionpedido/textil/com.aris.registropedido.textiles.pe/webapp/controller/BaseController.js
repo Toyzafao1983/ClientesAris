@@ -1809,7 +1809,7 @@ sap.ui.define([
 		_getDatClient: function (sCustomer) {
 			const that = this;
 			try {
-				let sFilter = "SalesOrganization eq '1110' and (DistributionChannel eq 'C1' or DistributionChannel eq 'C2') and Division eq 'S1' and (CustomerDni ne '' or CustomerRuc ne '')";
+				let sFilter = "SalesOrganization eq '1110' and (DistributionChannel eq 'C1' or DistributionChannel eq 'C2') and Division eq 'S1'";
 				const sCatalogFilter = sFilter;
 				if (sCustomer) {
 					sFilter += " and Customer eq '" + String(sCustomer).replace(/'/g, "''") + "'";
@@ -1995,18 +1995,16 @@ sap.ui.define([
 		},
 		_getReason: function (sSalesDocumentClass) {
 			const that = this;
+			const sDocumentClass = String(sSalesDocumentClass || "").trim();
+			if (!sDocumentClass) return Promise.resolve({ sEstado: "S", oResults: [] });
 			try {
 				var oResp = {
 					"sEstado": "E",
 					"oResults": []
 				};
 				let sUrl = "";
-				let sQuery = "";
-				if (sSalesDocumentClass) {
-					sQuery = "?$filter=SalesDocumentClass eq '" + sSalesDocumentClass + "'&$top=10000&$format=json&sap-language=es-ES";
-				} else {
-					sQuery = "?$top=10000&$format=json&sap-language=es-ES";
-				}
+				const sFilter = "SalesDocumentClass eq '" + sDocumentClass.replace(/'/g, "''") + "'";
+				const sQuery = "?$filter=" + encodeURIComponent(sFilter) + "&$top=10000&$format=json&sap-language=es-ES";
 				if (that.local) {
 					const sPath = "/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/Reason" + sQuery;
 					sUrl = that.getOwnerComponent().getManifestObject().resolveUri(sPath);
@@ -2854,74 +2852,15 @@ sap.ui.define([
 			}
 		},
 		_getDatClientView: function (sCustomer) {
-			const oController = this;
-			try {
-				var oResp = {
-					sEstado: "E",
-					oResults: []
-				};
-
-				return new Promise(function (resolve, reject) {
-					let sUrl = "";
-
-					const sCustomerSafe = String(sCustomer || "").trim().replace(/'/g, "''");
-
-					const aFilters = [
-						"SalesOrganization eq '1110'",
-						"(DistributionChannel eq 'C1' or DistributionChannel eq 'C2')",
-						"Division eq 'S1'"
-					];
-
-					if (sCustomerSafe) {
-						aFilters.push("Customer eq '" + sCustomerSafe + "'");
-					} else {
-
-						aFilters.push("(CustomerDni ne '' or CustomerRuc ne '')");
-					}
-
-					/*
-					 * En el flujo de pedidos textiles el cliente puede pertenecer a C1 o C2.
-					 * Cuando se recibe su código sólo necesitamos ese registro, no el bloque
-					 * completo de DataCustomer.
-					 */
-					const sTop = sCustomerSafe ? "1" : "10000";
-					const sQuery = "$filter=" + aFilters.join(" and ") + "&$top=" + sTop + "&$format=json&sap-language=es-ES";
-
-					if (oController.local) {
-						const sPath = "/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/DataCustomer?" + sQuery;
-						sUrl = oController.getOwnerComponent().getManifestObject().resolveUri(sPath);
-					} else {
-						const sPath = jQuery.sap.getModulePath(oController.route) +
-							"/S4HANA/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/DataCustomer?" + sQuery;
-						sUrl = sPath;
-					}
-
-					void 0;
-
-					oController.getOwnerComponent().getCustomerQuery(sUrl, () => new Promise(function (resolve, reject) {
-						Services.getoDataERPSync(oController, sUrl, function (result) {
-							util.response.validateAjaxGetERPNotMessage(result, {
-								success: function (oData) {
-									oResp.sEstado = "S";
-									oResp.oResults = oData.data || [];
-
-									void 0;
-
-									resolve(oResp);
-								},
-								error: function () {
-									oResp.oResults = [];
-									resolve(oResp);
-								}
-							});
-						});
-					})).then(resolve, reject);
-				});
-			} catch (oError) {
-				oController.getMessageBox("error", oController.getI18nText("sErrorTry"));
-			}
-		},
-		_getAnticipo: function (sCustomer, sCurrency) {
+			const sCustomerKey = String(sCustomer || "").trim();
+			// Reuse the complete catalog, including customers without DNI/RUC.
+			// _getDatClient handles direct entry and incomplete/failed catalog fallback.
+			return this._getDatClient(sCustomerKey).then(result => ({
+				sEstado: result.sEstado,
+				// Preserve the form's single-row contract without trimming the cached catalog.
+				oResults: sCustomerKey ? result.oResults.slice(0, 1) : result.oResults
+			}));
+		},		_getAnticipo: function (sCustomer, sCurrency) {
 			that = this;
 			try {
 				var oResp = {
