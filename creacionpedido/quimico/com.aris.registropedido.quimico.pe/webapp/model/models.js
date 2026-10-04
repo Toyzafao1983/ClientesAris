@@ -116,7 +116,7 @@ function (JSONModel, Device) {
                         },
                         "emails": [
                             {
-                                "value": "kestefo@ravaconsulting.com.pe",
+                                "value": "",
                                 "primary": true
                             }
                         ],
@@ -174,7 +174,7 @@ function (JSONModel, Device) {
                         },
                         "emails": [
                             {
-                                "value": "kestefo@ravaconsulting.com.pe",
+                                "value": "",
                                 "primary": true
                             }
                         ],

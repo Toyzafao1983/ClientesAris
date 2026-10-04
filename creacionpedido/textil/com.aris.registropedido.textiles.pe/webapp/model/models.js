@@ -131,7 +131,7 @@ sap.ui.define([
                             },
                             "emails": [
                                 {
-                                    "value": "kestefo@ravaconsulting.com.pe",
+                                    "value": "",
                                     "primary": true
                                 }
                             ],
@@ -189,7 +189,7 @@ sap.ui.define([
                             },
                             "emails": [
                                 {
-                                    "value": "kestefo@ravaconsulting.com.pe",
+                                    "value": "",
                                     "primary": true
                                 }
                             ],

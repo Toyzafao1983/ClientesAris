@@ -29,59 +29,43 @@ sap.ui.define([
 		local: window.location.href.indexOf('launchpad') == -1 ? true : false,
 		localModel: true,
 		AdminUser: true,
-		userSet: "kestefo@ravaconsulting.com.pe",
 		route: "com.aris.consultaestadocuenta.pe",
 		_getUsers: function () {
 			that = this;
-			try {
-				var model = new sap.ui.model.json.JSONModel();
-				return new Promise(function (resolve, reject) {
-					let sUrl = "";
-					const sMail = that.getUserLoged();
-					if (that.local) {
-						const sPath = '/service/scim/Users?filter=emails eq "' + sMail + '"';
-						sUrl = that.getOwnerComponent().getManifestObject().resolveUri(sPath);
-					} else {
-						const sPath = jQuery.sap.getModulePath(that.route) + '/API-USER-IAS/service/scim/Users?filter=emails eq "' + sMail + '"';
-						sUrl = sPath;
-					}
-					if (that.local) {
-						setTimeout(() => {
-							if (that.AdminUser) {
-								resolve(models.oModelUserExt());
-
-							} else {
-								resolve(models.oModelUser());
-							}
-						}, "1000");
-					} else {
-						model.loadData(sUrl, null, true, "GET", null, null, {
-							"Content-Type": "application/scim+json"
-						}).then(() => {
-							var oDataTemp = model.getData();
-							resolve(oDataTemp);
-						}).catch(err => {
-							void 0;
-							reject(err);
-						});
-					}
-				});
-			} catch (oError) {
-				this.getMessageBox("error", this.getI18nText("sErrorTry"));
-			}
+			const controller = this;
+			return Promise.resolve().then(() => {
+				let email;
+				try {
+					email = controller.getUserLoged();
+				} catch (error) {
+					sap.ui.core.BusyIndicator.hide();
+					sap.m.MessageBox.error(error.message);
+					throw error;
+				}
+				const filter = encodeURIComponent("emails eq " + JSON.stringify(email));
+				const sUrl = jQuery.sap.getModulePath(controller.route) +
+					"/API-USER-IAS/service/scim/Users?filter=" + filter;
+				const load = () => {
+					const model = new sap.ui.model.json.JSONModel();
+					return model.loadData(sUrl, null, true, "GET", null, null, {
+						"Content-Type": "application/scim+json"
+					}).then(() => ({ sEstado: "S", oResults: model.getData() }));
+				};
+				return load().then(result => result.oResults);
+			});
 		},
 		getUserLoged: function () {
-			var user = "";
-			if (this.local || this.isEmpty(sap.ushell)) {
-				user = this.userSet;
-			} else {
-				if (this.isEmpty(sap.ushell.Container.getService("UserInfo").getUser().getEmail())) {
-					user = this.userSet;
-				} else {
-					user = sap.ushell.Container.getService("UserInfo").getUser().getEmail();
-				}
+			let email = "";
+			try {
+				const userInfo = sap.ushell?.Container?.getService("UserInfo");
+				email = String(userInfo?.getUser()?.getEmail() || "").trim();
+			} catch (error) {
+				// An unavailable identity must never be replaced by a different user.
 			}
-			return user;
+			if (!email) {
+				throw new Error("No se pudo obtener el correo del usuario autenticado. Ingrese nuevamente desde el portal.");
+			}
+			return email;
 		},
 		validateUser: function () {
 			that = this;

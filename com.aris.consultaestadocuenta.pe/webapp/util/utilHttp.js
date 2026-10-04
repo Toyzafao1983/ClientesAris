@@ -183,9 +183,6 @@ sap.ui.define([
 		},
 		Post2: function (service, oResults, success, context) {
 			var self = this;
-			var oResults = {
-				name: "kestefo", email: "kestefo@ravaconsulting.com.pe", displayName: "kestefo"
-			};
 			$.ajax({
 				url: this.serviceRootpath() + service,
 				// url: service,

@@ -22,14 +22,6 @@
                         
                         <f:actions>
                             <Button text="{i18n>textHome}" press="_onbtnHome" type="Back" icon="sap-icon://home" tooltip="{i18n>tooltipbtnHome}"/>
-                            <MenuButton text="{i18n>titleButtonLanguaje}">
-                                    <menu>
-                                        <Menu itemSelected="onMenuAction">
-                                            <MenuItem text="{i18n>titleButtonLanguajeEN}" press="onLanguageEng"/>
-                                            <MenuItem text="{i18n>titleButtonLanguajeES}" press="onLanguageEsp"/>
-                                        </Menu>
-                                    </menu>
-                                </MenuButton>
 
                         </f:actions>
                     </f:DynamicPageTitle>

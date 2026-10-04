@@ -30,65 +30,44 @@ sap.ui.define([
 		local: window.location.href.indexOf('launchpad') == -1 ? true : false,
 		localModel: true,
 		AdminUser: true,
-		userSet: "kestefo@ravaconsulting.com.pe",
 		route: "com.aris.registropedido.textiles.pe",
 		driveId: "b!ger65VR1VEerCnoWFakAb9nmGbJ284hOpTWdHF4jSOIq-iKPjCYQRr6ew-GrzZyr",
 		_getUsers: function () {
 			that = this;
-			const oController = this;
-			try {
-				let sUrl = "";
-				const sMail = oController.getUserLoged();
-				if (oController.local) {
-					const sPath = '/service/scim/Users?filter=emails eq "' + sMail + '"';
-					sUrl = oController.getOwnerComponent().getManifestObject().resolveUri(sPath);
-				} else {
-					const sPath = jQuery.sap.getModulePath(oController.route) + '/API-USER-IAS/service/scim/Users?filter=emails eq "' + sMail + '"';
-					sUrl = sPath;
+			const controller = this;
+			return Promise.resolve().then(() => {
+				let email;
+				try {
+					email = controller.getUserLoged();
+				} catch (error) {
+					sap.ui.core.BusyIndicator.hide();
+					sap.m.MessageBox.error(error.message);
+					throw error;
 				}
-				return oController.getOwnerComponent().getCustomerQuery(sUrl, () => new Promise(function (resolve, reject) {
+				const filter = encodeURIComponent("emails eq " + JSON.stringify(email));
+				const sUrl = jQuery.sap.getModulePath(controller.route) +
+					"/API-USER-IAS/service/scim/Users?filter=" + filter;
+				const load = () => {
 					const model = new sap.ui.model.json.JSONModel();
-					const complete = data => resolve({ sEstado: "S", oResults: data });
-					if (oController.local) {
-						setTimeout(() => {
-							if (oController.AdminUser) {
-
-								complete(models.oModelUser());
-							} else {
-
-
-								complete(models.oModelUserExt());
-							}
-
-						}, "1000");
-					} else {
-						model.loadData(sUrl, null, true, "GET", null, null, {
-							"Content-Type": "application/scim+json"
-						}).then(() => {
-							var oDataTemp = model.getData();
-							complete(oDataTemp);
-						}).catch(err => {
-							void 0;
-							reject(err);
-						});
-					}
-				})).then(result => result.oResults);
-			} catch (oError) {
-				this.getMessageBox("error", this.getI18nText("sErrorTry"));
-			}
+					return model.loadData(sUrl, null, true, "GET", null, null, {
+						"Content-Type": "application/scim+json"
+					}).then(() => ({ sEstado: "S", oResults: model.getData() }));
+				};
+				return controller.getOwnerComponent().getCustomerQuery(sUrl, load).then(result => result.oResults);
+			});
 		},
 		getUserLoged: function () {
-			var user = "";
-			if (this.local || this.isEmpty(sap.ushell)) {
-				user = this.userSet;
-			} else {
-				if (this.isEmpty(sap.ushell.Container.getService("UserInfo").getUser().getEmail())) {
-					user = this.userSet;
-				} else {
-					user = sap.ushell.Container.getService("UserInfo").getUser().getEmail();
-				}
+			let email = "";
+			try {
+				const userInfo = sap.ushell?.Container?.getService("UserInfo");
+				email = String(userInfo?.getUser()?.getEmail() || "").trim();
+			} catch (error) {
+				// An unavailable identity must never be replaced by a different user.
 			}
-			return user;
+			if (!email) {
+				throw new Error("No se pudo obtener el correo del usuario autenticado. Ingrese nuevamente desde el portal.");
+			}
+			return email;
 		},
 		validateUser: function () {
 			that = this;
