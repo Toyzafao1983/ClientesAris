@@ -65,3 +65,15 @@ Pendiente en Network conectado a SAP: una llamada inicial por entidad; sin llama
 ## Reutilización de Users
 
 `_getUsers` comparte la respuesta de IAS por URL (incluido el correo) durante el flujo entre Main, FormClient y Detail. Mantiene el formato Resources y copias independientes; las validaciones de acceso se siguen ejecutando. Entrar a Main renueva la consulta. La entrada directa carga los datos si no están guardados y los errores permiten reintentar. Validación simulada: `node webapp/test/users-query-cache.cjs`. Pendiente confirmar una sola solicitud Users en Network durante el flujo conectado a SAP.
+
+## Renderizado de transportista y dirección de agencia (04-10-2026)
+
+La traza QAS `Trace-20261004T085251.json.gz`, con SAPUI5 1.152.0, muestra aproximadamente 2,42 s de renderizado, con recorridos repetidos en `getVisibleItems`, `getSize` y `getAccessbilityPosition`. Se conserva el ComboBox y su renderer original. Las funciones compartidas `_optimizeCatalogCombo` y `_optimizeComboListRendering` residen en BaseController. FormClient y Detail las activan al configurar sus filtros de búsqueda. Durante un renderizado completo de la lista, se reutilizan las filas visibles y un mapa de posiciones. Fuera del renderizado se ejecutan los métodos originales; cada nuevo renderizado reconstruye los cálculos. Las listas agrupadas mantienen el cálculo original de posiciones.
+
+No se limita, pagina ni recorta el catálogo. Los bindings, IDs, eventos, búsqueda, claves, textos secundarios, validaciones y filtro por transportista permanecen en los controladores existentes. Se aplica únicamente a transportista y agencia de FormClient y Detail. No se modifican prototipos globales ni se desactiva accesibilidad.
+
+Archivos para desplegar: `webapp/controller/BaseController.js`, `webapp/controller/FormClient.controller.js` y `webapp/controller/Detail.controller.js`. Las vistas conservan sus ComboBox originales; no se requieren nuevos módulos de aplicación.
+
+Validación: `node webapp/test/combo-list-render-cache.cjs` compara posiciones y cantidades con 10000 entradas, filtrado, reemplazo de catálogo, catálogo vacío, agrupación, limpieza e instalación repetida. Además se compararon las 10000 posiciones con los métodos reales descargados de SAPUI5 1.152.0: mismos resultados, un recorrido del catálogo por renderizado. XML y `git diff --check` correctos. La compilación sigue fallando con `Temporal is not supported in this environment`, tanto con Node 26 como con Node 22.
+
+Pendiente en QAS: repetir la grabación con igual volumen; comprobar selección por clic y teclado, búsqueda por nombre/código/dirección, limpiar selección, cambiar transportista, resultados al final de la lista y edición al volver de Detail. La mejora de tiempo real aún no está medida. El ajuste usa métodos internos de la lista de UI5; al actualizar SAPUI5 hay que repetir la validación de compatibilidad. Si faltan los métodos esperados, la lista conserva su comportamiento original.

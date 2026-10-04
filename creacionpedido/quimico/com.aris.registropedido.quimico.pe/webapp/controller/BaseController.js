@@ -26,7 +26,83 @@ sap.ui.define([
 	var sMessage = "";
 	var that;
 
+	// Shared by FormClient and Detail; entries expire with their UI5 controls.
+	const optimizedComboLists = new WeakSet();
+	const optimizedCatalogCombos = new WeakSet();
+
 	return Controller.extend("com.aris.registropedido.quimico.pe.controller.BaseController", {
+		_optimizeCatalogCombo: function (oCombo) {
+            if (!oCombo || optimizedCatalogCombos.has(oCombo) ||
+                typeof oCombo.syncPickerContent !== "function" || typeof oCombo._getList !== "function") {
+                return;
+            }
+            optimizedCatalogCombos.add(oCombo);
+            const fnSync = oCombo.syncPickerContent;
+            const fnOptimizeList = this._optimizeComboListRendering.bind(this);
+            // Install before the lazily created picker list is rendered. Only
+            // this ComboBox instance is changed; its native renderer stays intact.
+            oCombo.syncPickerContent = function () {
+                const oPicker = fnSync.apply(this, arguments);
+                fnOptimizeList(this._getList());
+                return oPicker;
+            };
+            fnOptimizeList(oCombo._getList());
+		},
+		_optimizeComboListRendering: function (oList) {
+        const aMethods = ["onBeforeRendering", "onAfterRendering", "getVisibleItems",
+            "getAccessbilityPosition", "getSize", "_hasNestedGrouping", "getSkipGroupHeaderFocus"];
+        if (!oList || optimizedComboLists.has(oList) || aMethods.some(function (sName) {
+            return typeof oList[sName] !== "function";
+        })) {
+            return;
+        }
+        optimizedComboLists.add(oList);
+        const fnBefore = oList.onBeforeRendering;
+        const fnAfter = oList.onAfterRendering;
+        const fnVisible = oList.getVisibleItems;
+        const fnPosition = oList.getAccessbilityPosition;
+        let aVisible = null;
+        let mPositions = null;
+
+        oList.onBeforeRendering = function () {
+            aVisible = null;
+            mPositions = null;
+            return fnBefore.apply(this, arguments);
+        };
+        oList.onAfterRendering = function () {
+            try {
+                return fnAfter.apply(this, arguments);
+            } finally {
+                aVisible = null;
+                mPositions = null;
+            }
+        };
+        oList.getVisibleItems = function () {
+            if (!this._bRendering) {
+                return fnVisible.apply(this, arguments);
+            }
+            if (!aVisible) {
+                aVisible = fnVisible.apply(this, arguments);
+            }
+            return aVisible;
+        };
+        oList.getAccessbilityPosition = function (oItem) {
+            // Grouped lists retain the complete native calculation.
+            if (!this._bRendering || this._hasNestedGrouping() || this.getSkipGroupHeaderFocus()) {
+                return fnPosition.apply(this, arguments);
+            }
+            if (!mPositions) {
+                mPositions = new Map();
+                this.getVisibleItems().forEach(function (oVisibleItem, iIndex) {
+                    mPositions.set(oVisibleItem, iIndex + 1);
+                });
+            }
+            return {
+                setsize: this.getSize(),
+                posinset: oItem ? (mPositions.get(oItem) || 0) : undefined
+            };
+        };
+		},
 		formatter: Formatter,
 		local: window.location.href.indexOf('launchpad') == -1 ? true : false,
 		localModel: true,

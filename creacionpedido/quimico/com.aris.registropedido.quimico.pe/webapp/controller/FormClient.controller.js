@@ -2520,6 +2520,7 @@ sap.ui.define([
 
         _applyContainsFilterToCombo: function (sComboId) {
             const oCombo = this.byId(sComboId);
+            this._optimizeCatalogCombo(oCombo);
 
             if (!oCombo || !oCombo.setFilterFunction) {
                 return;
