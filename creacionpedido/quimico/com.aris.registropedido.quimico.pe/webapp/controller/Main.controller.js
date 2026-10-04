@@ -940,12 +940,12 @@ sap.ui.define([
 			let fValorFrom = parseFloat(oTipChangeData.from.valor) || 0; // USD → PEN
 			let fValorTo   = parseFloat(oTipChangeData.to.valor)   || 0; // PEN → USD
 			let sValorFrom = new Intl.NumberFormat("es-PE", {
-				minimumFractionDigits: 2,
-				maximumFractionDigits: 2
+				minimumFractionDigits: 3,
+				maximumFractionDigits: 3
 			}).format(fValorFrom);
 			let sValorTo = new Intl.NumberFormat("es-PE", {
-				minimumFractionDigits: 2,
-				maximumFractionDigits: 2
+				minimumFractionDigits: 3,
+				maximumFractionDigits: 3
 			}).format(fValorTo);
 			return `TIPO CAMBIO:${oTipChangeData.to.moneda}: ${sValorFrom} ${oTipChangeData.from.moneda}`;
 		}

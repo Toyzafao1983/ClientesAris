@@ -80,7 +80,7 @@
             </Column>
 
             <!-- Descripción -->
-            <Column width="10rem" hAlign="Left" vAlign="Middle"
+            <Column width="8rem" hAlign="Left" vAlign="Middle"
                 minScreenWidth="Tablet" demandPopin="true"
                 popinDisplay="Inline" mergeDuplicates="false">
                 <header>
@@ -109,7 +109,7 @@
             </Column>
 
             <!-- Cantidad -->
-            <Column width="5rem" hAlign="End" vAlign="Middle"
+            <Column width="8.5rem" hAlign="End" vAlign="Middle"
                 minScreenWidth="Tablet" demandPopin="true"
                 popinDisplay="Inline" mergeDuplicates="false">
                 <header>
@@ -120,12 +120,12 @@
             </Column>
 
             <!-- UMV -->
-            <Column width="5rem" hAlign="Center" vAlign="Middle"
+            <Column width="3rem" hAlign="Center" vAlign="Middle"
                 minScreenWidth="Tablet" demandPopin="true"
                 popinDisplay="Inline" mergeDuplicates="false">
                 <header>
                     <Text text="{i18n>txtTabledUMV}"
-                        width="5rem" maxLines="2" wrapping="true"
+                        width="auto" maxLines="2" wrapping="true"
                         textAlign="Begin" textDirection="Inherit" visible="true"/>
                 </header>
             </Column>
@@ -185,7 +185,7 @@
             </Column>
 
             <!-- Total línea -->
-            <Column width="8rem" hAlign="End" vAlign="Middle"
+            <Column width="9rem" hAlign="End" vAlign="Middle"
                 minScreenWidth="Tablet" demandPopin="true"
                 popinDisplay="Inline" mergeDuplicates="false">
                 <header>
@@ -201,7 +201,7 @@
                                 formatter: '.formatter.formatMonto2Dec'
                             }"
                             visible="{=${device>/system/phone}?false:true}"
-                            width="8rem"
+                            width="100%"
                             textAlign="End"
                             editable="false"/>
                         <Input id="TotalEmba"
@@ -210,7 +210,7 @@
                                 formatter: '.formatter.formatMonto2Dec'
                             }"
                             visible="{=${device>/system/phone}?false:true}"
-                            width="8rem"
+                            width="100%"
                             textAlign="End"
                             editable="false"/>
                         <Input id="TotalIgvMat"
@@ -219,7 +219,7 @@
                                 formatter: '.formatter.formatMonto2Dec'
                             }"
                             visible="{=${device>/system/phone}?false:true}"
-                            width="8rem"
+                            width="100%"
                             textAlign="End"
                             editable="false"/>
                         <Input id="TotalMat"
@@ -228,14 +228,14 @@
                                 formatter: '.formatter.formatMonto2Dec'
                             }"
                             visible="{=${device>/system/phone}?false:true}"
-                            width="8rem"
+                            width="100%"
                             textAlign="End"
                             editable="false"/>
                     </VBox>
                 </footer>
             </Column>
              <!-- UMV Peso -->
-             <Column id="clDetailTablePeso" width="7rem"
+             <Column id="clDetailTablePeso" width="8.5rem"
                 hAlign="End" vAlign="Middle" minScreenWidth="Tablet"
                 demandPopin="true" popinDisplay="Inline" mergeDuplicates="false">
                 <header>
@@ -256,7 +256,7 @@
             </Column>
             
             <!-- Peso -->
-            <Column id="clDetailTableUMVWeigth" width="4rem"
+            <Column id="clDetailTableUMVWeigth" width="8.5rem"
                 hAlign="Center" vAlign="Middle" minScreenWidth="Tablet"
                 demandPopin="true" popinDisplay="Inline" mergeDuplicates="false">
                 <header>
@@ -272,7 +272,7 @@
                                 formatter: '.formatter.formatMonto2Dec'
                             }"
                             visible="{=${device>/system/phone}?false:true}"
-                            width="7rem"
+                            width="100%"
                             textAlign="End"
                             editable="false"/>
                     </VBox>
@@ -327,25 +327,25 @@
                     <Text text="{
                                 path:'oModelProyect>prlist',
                                 formatter: '.formatter.formatMonto2Dec'
-                            }"/>
+                            }" wrapping="false"/>
                     <Text text="{
                                 path: 'oModelProyect>descuentoManualPctDisplay',
                                 formatter: '.formatter.formatPct'
-                            }"/>
+                            }" wrapping="false"/>
 
                     <Text text="{
                                 path:'oModelProyect>pvNeto',
                                 formatter: '.formatter.formatMonto2Dec'
-                            }"/>
+                            }" wrapping="false"/>
                     <Text text="{ 
                                 path:'oModelProyect>totalpos',
                                 formatter: '.formatter.formatMonto2Dec'
-                            }"/>
+                            }" wrapping="false"/>
 
                     <Text text="{ 
                                 path:'oModelProyect>Peso',
                                 formatter: '.formatter.formatPesoKg'
-                            }"/>
+                            }" wrapping="false"/>
                     <Text text="{oModelProyect>UMVWeight}"/>
                     <Text text="{oModelProyect>Bonus}"/>
 
