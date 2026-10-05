@@ -17,15 +17,42 @@ sap.ui.define([
 	"com/aris/registropedido/textiles/pe/services/Services",
 	"com/aris/registropedido/textiles/pe/util/util",
 	"sap/ui/model/resource/ResourceModel",
-	"sap/m/BusyDialog"
+	"sap/m/BusyDialog",
+	"sap/base/i18n/ResourceBundle"
 ], function (Controller, History, UIComponent, MessageBox, MessageToast, Fragment, BusyIndicator, JSONModel,
-	Filter, FilterOperator, Spreadsheet, Token, ServiceOdata, models, Formatter, Services, util, ResourceModel, BusyDialog) {
+	Filter, FilterOperator, Spreadsheet, Token, ServiceOdata, models, Formatter, Services, util, ResourceModel, BusyDialog, ResourceBundle) {
 	"use strict";
+	let pSharePointConfig = null;
 	var that;
 	var sMessage = "";
 	var that;
 
 	return Controller.extend("com.aris.registropedido.textiles.pe.controller.BaseController", {
+
+		_getSharePointFolder: function (sKey) {
+			if (!pSharePointConfig) {
+				pSharePointConfig = ResourceBundle.create({
+					url: sap.ui.require.toUrl(this.route.replace(/\./g, "/") + "/config/sharepoint.properties"),
+					async: true,
+					locale: "",
+					supportedLocales: [""],
+					fallbackLocale: ""
+				}).then(function (bundle) {
+					return bundle;
+				}).catch(function (error) {
+					pSharePointConfig = null;
+					throw error;
+				});
+			}
+			return pSharePointConfig.then(function (bundle) {
+				const sPath = bundle.hasText(sKey) ? bundle.getText(sKey).trim() : "";
+				if (!sPath || sPath.split("/").some(segment => !segment || segment === "." || segment === "..")) {
+					pSharePointConfig = null;
+					throw new Error("Configuración SharePoint inválida: " + sKey + " en config/sharepoint.properties");
+				}
+				return sPath;
+			});
+		},
 		formatter: Formatter,
 		local: window.location.href.indexOf('launchpad') == -1 ? true : false,
 		localModel: true,
@@ -1579,8 +1606,7 @@ sap.ui.define([
 		_uploadSharepoint: function (file, onProgress, sFileNameOverride) {
 			const that = this;
 
-			return new Promise((resolve) => {
-				const folderPath = "Pruebas BTP/Clientes/documentos/textil";
+			return this._getSharePointFolder("documentsFolder").then(folderPath => new Promise((resolve) => {
 
 				const sFileName = String(
 					sFileNameOverride ||
@@ -1625,7 +1651,7 @@ sap.ui.define([
 						}
 					}
 				);
-			});
+			}));
 		},
 		//Llamadas reutilizables
 		_getPrueba: function () {

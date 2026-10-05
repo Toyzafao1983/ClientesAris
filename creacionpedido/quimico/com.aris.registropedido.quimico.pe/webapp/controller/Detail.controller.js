@@ -488,7 +488,12 @@ sap.ui.define([
                     Plant: sPlant,
                     RefDoc: pos.RefDoc,
                     RefDocIt: pos.RefDocIt,
-                    RefDocCa: pos.RefDocCa
+                    RefDocCa: pos.RefDocCa,
+                    zzimporte: pos._raw?.zzimporte,
+                    zzmoneda: pos._raw?.zzmoneda,
+                    zzbase: pos._raw?.zzbase,
+                    zzunidad: pos._raw?.zzunidad,
+                    zzdescporc: pos._raw?.zzdescporc
                 });
 
                 aMaterialUI.push({
@@ -1368,6 +1373,42 @@ sap.ui.define([
             // 3) Ninguno => nada
             return [];
         },
+        // Las condiciones de referencia son una fuente alternativa del envío habitual.
+        _getReferenceManualPrice: function (item) {
+            if (item.usarPrecioManual || item.usarDescuentoManual ||
+                Number(item.descuentoManualPct) !== 0 && Number.isFinite(Number(item.descuentoManualPct))) {
+                return null;
+            }
+            const aValues = [item.zzimporte, item.zzmoneda, item.zzbase, item.zzunidad];
+            if (aValues.some(v => v == null || String(v).trim() === "") ||
+                !Number.isFinite(Number(item.zzimporte)) ||
+                !Number.isFinite(Number(item.zzbase)) || Number(item.zzbase) <= 0) {
+                return null;
+            }
+            return {
+                CondType: "ZPMA",
+                CondValue: String(item.zzimporte),
+                Currency: String(item.zzmoneda).trim(),
+                CondPUnt: String(item.zzbase),
+                CondDUnt: String(item.zzunidad).trim()
+            };
+        },
+
+        _isConditionActive: function (condition) {
+            return String(this._getFirstNonEmptyValue(condition, [
+                "CONDISACTI", "Condisacti", "CondIsActi", "CondInactive", "Inactive"
+            ]) || "").trim() === "";
+        },
+
+        _getManualDiscountValue: function (item) {
+            if (item.usarPrecioManual) { return 0; }
+            const nManual = Number(item.descuentoManualPct);
+            if (Number.isFinite(nManual) && nManual > 0) { return nManual; }
+            if (item.usarDescuentoManual) { return 0; }
+            const nReference = Number(item.zzdescporc);
+            return Number.isFinite(nReference) && nReference !== 0 ? nReference : 0;
+        },
+
         onSimulateOrder: function () {
             return new Promise(async (resolve, reject) => {
                 const oModelProyect = this.getView().getModel("oModelProyect");
@@ -1620,19 +1661,6 @@ sap.ui.define([
                     }
 
 
-                    (aMatForSap || []).forEach(item => {
-                        if (
-                            item.descuentoManualPct != null &&
-                            !isNaN(item.descuentoManualPct) &&
-                            parseFloat(item.descuentoManualPct) > 0
-                        ) {
-                            aCondSim.push({
-                                ItmNumber: item.ItmNumber,
-                                CondType: "ZDMP",
-                                CondValue: parseFloat(item.descuentoManualPct).toString()
-                            });
-                        }
-                    });
                     void 0;
                     void 0;
 
@@ -1653,6 +1681,28 @@ sap.ui.define([
                             oItm.CondValue = nManual.toString();
                             oItm.CondPUnt = "00010";
                             oItm.CondDUnt = item.TargetQu || item.UMV || "UND";
+                        }
+
+                        const oReferencePrice = this._getReferenceManualPrice(item);
+                        if (oReferencePrice) {
+                            // Currency pertenece a la condición; no al contrato del ítem.
+                            Object.assign(oItm, {
+                                CondType: oReferencePrice.CondType,
+                                CondValue: oReferencePrice.CondValue,
+                                // Solo la simulación con referencia a cotización requiere base x10.
+                                CondPUnt: bPedidoConReferencia && sTipoRef === "ZCNA"
+                                    ? String(Number(oReferencePrice.CondPUnt) * 10)
+                                    : oReferencePrice.CondPUnt,
+                                CondDUnt: oReferencePrice.CondDUnt
+                            });
+                        }
+
+                        const nDiscount = this._getManualDiscountValue(item);
+                        if (nDiscount !== 0 && !oItm.CondType) {
+                            // La simulación recibe la condición manual en la posición.
+                            // toConditions se usa para el descuento al guardar.
+                            oItm.CondType = "ZDMP";
+                            oItm.CondValue = nDiscount.toString();
                         }
 
                         if (bPedidoConReferencia) {
@@ -1898,7 +1948,9 @@ sap.ui.define([
                                 const aBaseItems = (oData.oMaterial || []).filter(it => !it.isExtraFromSAP);
                                 if (isClienteIAS) {
                                     const aSinZPRE = aBaseItems.filter(it =>
-                                        !aConditions.some(c => c.ItmNumber === it.ItmNumber && c.CondType === "ZPRE")
+                                        !aConditions.some(c => c.ItmNumber === it.ItmNumber &&
+                                            this._isConditionActive(c) &&
+                                            (c.CondType === "ZPRE" || c.CondType === "ZPMA"))
                                     );
 
                                     if (aSinZPRE.length > 0) {
@@ -2009,7 +2061,20 @@ sap.ui.define([
                                         (oData.oMaterial.find(i => i.ItmNumber === item.ItmNumber)?.usarPrecioManual) || false;
                                 });
 
+                                const aMissingReferenceDiscount = aMatForSap.filter(item =>
+                                    Number(item.zzdescporc) !== 0 && Number.isFinite(Number(item.zzdescporc)) &&
+                                    this._getManualDiscountValue(item) !== 0 &&
+                                    !aConditions.some(c => c.ItmNumber === item.ItmNumber &&
+                                        c.CondType === "ZDMP" && this._isConditionActive(c) &&
+                                        this._getConditionAmount(c) !== 0));
+                                if (aMissingReferenceDiscount.length) {
+                                    sap.m.MessageBox.warning("SAP no devolvió el descuento manual enviado para las posiciones " +
+                                        aMissingReferenceDiscount.map(item => item.ItmNumber).join(", ") +
+                                        ". Los totales mostrados no incluyen ese descuento. Revise la simulación antes de grabar.");
+                                }
+
                                 aConditions.forEach(cond => {
+                                    if (!this._isConditionActive(cond)) { return; }
                                     const oItemUI = aMaterialUI.find(ui => ui.ItmNumber === cond.ItmNumber);
                                     const nValor = this._getConditionAmount(cond);
 
@@ -2038,7 +2103,10 @@ sap.ui.define([
                                             break;
 
                                         case "ZPRE":
-                                            if (!oItemUI.usarPrecioManual) {
+                                            const bHasActiveManualPrice = aConditions.some(c =>
+                                                c.ItmNumber === cond.ItmNumber && c.CondType === "ZPMA" &&
+                                                this._isConditionActive(c));
+                                            if (!oItemUI.usarPrecioManual && !bHasActiveManualPrice) {
                                                 oItemUI.precioBase = nValor;
                                                 oItemUI.precioUnit = nValor;
                                             }
@@ -2143,7 +2211,10 @@ sap.ui.define([
 
                                     const fleteLinea = fleteIncluidoUI ? (_n(item.fleteIncluido) || 0) : 0;
 
-                                    if (item.usarPrecioManual) {
+                                    const bHasActiveDiscount = aConditions.some(c =>
+                                        c.ItmNumber === item.ItmNumber &&
+                                        this._isActiveDiscountCondition(c, mPriceConditionTypes));
+                                    if (item.usarPrecioManual && !bHasActiveDiscount) {
                                         item.subtotal = item.precioBase - fleteLinea;
                                     } else {
                                         item.subtotal = (item.precioBase + item.descuentos) - fleteLinea;
@@ -2152,45 +2223,28 @@ sap.ui.define([
                                     item.totalpos = item.subtotal;
 
                                     const srcItem = oData.oMaterial.find(i => i.ItmNumber === item.ItmNumber);
-                                    const hasDescManual = !!(
-                                        srcItem &&
-                                        srcItem.descuentoManualPct != null &&
-                                        !isNaN(srcItem.descuentoManualPct) &&
-                                        srcItem.descuentoManualPct > 0
-                                    );
-
-                                    if (hasDescManual) {
-                                        const fPctManual = parseFloat(srcItem?.descuentoManualPct || 0);
-
-                                        void 0;
-
-                                        if (fPctManual > 0) {
-                                            item.descuentoManualPctDisplay = fPctManual.toString().replace(/\.0+$/, "") + "%";
-
-                                            const nBaseDescuento = _n(item.totalpos || item.precioBase || 0);
-                                            const nZDMPImporte = (nBaseDescuento * fPctManual) / 100;
-
-                                            void 0;
-                                            void 0;
-
-                                            item.descuentoManualImporte = nZDMPImporte;
-                                            item.totalpos = nBaseDescuento - nZDMPImporte;
-                                            item.subtotal = item.totalpos;
-
-                                            void 0;
-                                            void 0;
-                                            void 0;
-                                        } else {
-                                            item.descuentoManualPctDisplay = "";
-                                            item.descuentoManualImporte = 0;
-
-                                            void 0;
-                                        }
-                                    } else {
-                                        item.descuentoManualPctDisplay = "";
-                                        item.descuentoManualImporte = 0;
-
-                                        void 0;
+                                    const fPctManual = srcItem ? this._getManualDiscountValue(srcItem) : 0;
+                                    const aAppliedManualDiscount = aConditions.filter(c =>
+                                        c.ItmNumber === item.ItmNumber && c.CondType === "ZDMP" &&
+                                        this._isConditionActive(c) && this._getConditionAmount(c) !== 0);
+                                    item.descuentoManualPctDisplay = "";
+                                    item.descuentoManualImporte = 0;
+                                    if (fPctManual !== 0 && aAppliedManualDiscount.length) {
+                                        item.descuentoManualPctDisplay = fPctManual + "%";
+                                        item.descuentoManualImporte = aAppliedManualDiscount.reduce((sum, c) =>
+                                            sum + Math.abs(this._getConditionAmount(c)), 0);
+                                        // El descuento retornado se resta una sola vez, incluso si no está en el catálogo.
+                                        const nUnclassifiedDiscount = aAppliedManualDiscount
+                                            .filter(c => !this._isActiveDiscountCondition(c, mPriceConditionTypes))
+                                            .reduce((sum, c) => sum + Math.abs(this._getConditionAmount(c)), 0);
+                                        item.totalpos -= nUnclassifiedDiscount;
+                                        item.subtotal = item.totalpos;
+                                    } else if (fPctManual > 0 && srcItem?.descuentoManualPct > 0) {
+                                        // Conservar el cálculo local previo para descuentos ingresados en el portal.
+                                        item.descuentoManualPctDisplay = fPctManual + "%";
+                                        item.descuentoManualImporte = _n(item.totalpos || item.precioBase || 0) * fPctManual / 100;
+                                        item.totalpos -= item.descuentoManualImporte;
+                                        item.subtotal = item.totalpos;
                                     }
 
                                     item.total = item.subtotal + item.impuesto;
@@ -2616,12 +2670,21 @@ sap.ui.define([
                     Currency: "PEN"
                 });
             }
-            // ZPMA en toConditions (solo si NO es pedido con referencia, pero ya bloqueamos antes)
+            // Usar la condición heredada en el mismo lugar que el precio habitual.
             (oData.oMaterial || []).forEach(item => {
-                if (item.usarPrecioManual && item.precioBase) {
+                const oReferencePrice = this._getReferenceManualPrice(item);
+                if (oReferencePrice) {
+                    // El contrato de toConditions no admite CondDUnt; la unidad va en HeaderToItem.
+                    aConditions.push({
+                        ItmNumber: item.ItmNumber,
+                        CondType: oReferencePrice.CondType,
+                        CondValue: oReferencePrice.CondValue,
+                        Currency: oReferencePrice.Currency,
+                        CondPUnt: oReferencePrice.CondPUnt
+                    });
+                } else if (item.usarPrecioManual && item.precioBase) {
                     const nPrecioManual = parseFloat(item.precioBase || "0");
                     const nPrecioBapi = isNaN(nPrecioManual) ? 0 : nPrecioManual / 10;
-
                     aConditions.push({
                         ItmNumber: item.ItmNumber,
                         CondType: "ZPMA",
@@ -2629,18 +2692,12 @@ sap.ui.define([
                         CondPUnt: "1"
                     });
                 }
-            });
-            //  ZDMP en toConditions: "Descuento Manual" por posición
-            (oData.oMaterial || []).forEach(item => {
-                if (
-                    item.descuentoManualPct != null &&
-                    !isNaN(item.descuentoManualPct) &&
-                    item.descuentoManualPct > 0
-                ) {
+                const nDiscount = this._getManualDiscountValue(item);
+                if (nDiscount !== 0) {
                     aConditions.push({
                         ItmNumber: item.ItmNumber,
                         CondType: "ZDMP",
-                        CondValue: item.descuentoManualPct.toString(),
+                        CondValue: nDiscount.toString()
                     });
                 }
             });
@@ -2673,6 +2730,17 @@ sap.ui.define([
                         CondDUnt: item.TargetQu || item.UMV || "UND"
                     });
                 }
+                const oReferencePrice = this._getReferenceManualPrice(item);
+                if (oReferencePrice) {
+                    // Currency pertenece a la condición; no al contrato del ítem.
+                    Object.assign(oItemPayload, {
+                        CondType: oReferencePrice.CondType,
+                        CondValue: oReferencePrice.CondValue,
+                        CondPUnt: oReferencePrice.CondPUnt,
+                        CondDUnt: oReferencePrice.CondDUnt
+                    });
+                }
+
                 // Referencia de documento (RefDoc / RefDocIt / RefDocCa)
                 if (bPedidoConReferencia) {
                     let sRefDocCa = item.RefDocCa;

@@ -17,14 +17,41 @@ sap.ui.define([
 	"aris/com/clientes/controlstock/pe/services/Services",
 	"aris/com/clientes/controlstock/pe/util/util",
 	"sap/ui/core/format/NumberFormat",
-	"sap/ui/model/resource/ResourceModel"
+	"sap/ui/model/resource/ResourceModel",
+	"sap/base/i18n/ResourceBundle"
 ], function (Controller, History, UIComponent, MessageBox, MessageToast, Fragment, BusyIndicator, JSONModel,
-	Filter, FilterOperator, Spreadsheet, Token, ServiceOdata, models, Formatter, Services, util, NumberFormat, ResourceModel) {
+	Filter, FilterOperator, Spreadsheet, Token, ServiceOdata, models, Formatter, Services, util, NumberFormat, ResourceModel, ResourceBundle) {
 	"use strict";
+	let pSharePointConfig = null;
 	var that;
 	var sMessage = "";
 	var that;
 	return Controller.extend("aris.com.clientes.controlstock.pe.controller.BaseController", {
+
+		_getSharePointFolder: function (sKey) {
+			if (!pSharePointConfig) {
+				pSharePointConfig = ResourceBundle.create({
+					url: sap.ui.require.toUrl(this.route.replace(/\./g, "/") + "/config/sharepoint.properties"),
+					async: true,
+					locale: "",
+					supportedLocales: [""],
+					fallbackLocale: ""
+				}).then(function (bundle) {
+					return bundle;
+				}).catch(function (error) {
+					pSharePointConfig = null;
+					throw error;
+				});
+			}
+			return pSharePointConfig.then(function (bundle) {
+				const sPath = bundle.hasText(sKey) ? bundle.getText(sKey).trim() : "";
+				if (!sPath || sPath.split("/").some(segment => !segment || segment === "." || segment === "..")) {
+					pSharePointConfig = null;
+					throw new Error("Configuración SharePoint inválida: " + sKey + " en config/sharepoint.properties");
+				}
+				return sPath;
+			});
+		},
 		formatter: Formatter,
 		local: window.location.href.indexOf('launchpad') == -1 ? true : false,
 		localModel: true,
@@ -2540,9 +2567,8 @@ sap.ui.define([
 		_listarArchivos: function (siteId, driveId) {
 			void 0;
 
-			return new Promise((resolve, reject) => {
+			return this._getSharePointFolder("materialsFolder").then(subPath => new Promise((resolve, reject) => {
 
-				const subPath = "Pruebas BTP/Clientes/materiales";
 				const safePath = subPath.split("/").map(encodeURIComponent).join("/");
 
 				const url = `/SharePointAris/sites/${siteId}/drives/${driveId}/root:/${safePath}:/children`;
@@ -2561,39 +2587,42 @@ sap.ui.define([
 						reject(err);
 					}
 				});
-			});
+			}));
 		},
 
 		// 4) Proveedor central: obtiene TODA la data SharePoint
 		_getSharepoint: function (sNumPedido) {
-			that = this;
+			const that = this;
 			try {
 				var oResp = { sEstado: "E", oResults: [] };
 
-				return new Promise(function (resolve, reject) {
-					let sUrl = "";
-					const sRel =
-						"/SharePointAris/" +
-						"drives/b!ger65VR1VEerCnoWFakAb9nmGbJ284hOpTWdHF4jSOIq-iKPjCYQRr6ew-GrzZyr" +
-						"/root:/Pruebas BTP/Clientes/materiales:/children";
+				return this._getSharePointFolder("materialsFolder").then(function (folderPath) {
+					const safePath = folderPath.split("/").map(encodeURIComponent).join("/");
+					return new Promise(function (resolve, reject) {
+						let sUrl = "";
+						const sRel =
+							"/SharePointAris/" +
+							"drives/b!ger65VR1VEerCnoWFakAb9nmGbJ284hOpTWdHF4jSOIq-iKPjCYQRr6ew-GrzZyr" +
+							"/root:/" + safePath + ":/children";
 
-					if (that.local) {
-						sUrl = that.getOwnerComponent().getManifestObject().resolveUri(sRel);
-					} else {
-						sUrl = jQuery.sap.getModulePath(that.route) + sRel;
-					}
+						if (that.local) {
+							sUrl = that.getOwnerComponent().getManifestObject().resolveUri(sRel);
+						} else {
+							sUrl = jQuery.sap.getModulePath(that.route) + sRel;
+						}
 
-					Services.getSharepointSync(sUrl, function (result) {
-						util.response.validateAjaxGetERPNotMessage(result, {
-							success: function (oData, message) {
-								oResp.sEstado = "S";
-								oResp.oResults = oData.data;
-								resolve(oResp);
-							},
-							error: function (message) {
-								oResp.oResults = [];
-								resolve(oResp);
-							}
+						Services.getSharepointSync(sUrl, function (result) {
+							util.response.validateAjaxGetERPNotMessage(result, {
+								success: function (oData, message) {
+									oResp.sEstado = "S";
+									oResp.oResults = oData.data;
+									resolve(oResp);
+								},
+								error: function (message) {
+									oResp.oResults = [];
+									resolve(oResp);
+								}
+							});
 						});
 					});
 				});
