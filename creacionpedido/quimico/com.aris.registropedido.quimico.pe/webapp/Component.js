@@ -22,6 +22,9 @@ sap.ui.define([
 
             this._customerQueryCache = new CustomerQueryCache();
 
+            // Load the complete catalog into combos before any screen binds its items.
+            this.getModel("oModelData").setSizeLimit(10000);
+
             // enable routing
             this.getRouter().initialize();
 

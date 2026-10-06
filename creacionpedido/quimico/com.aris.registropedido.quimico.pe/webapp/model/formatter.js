@@ -300,17 +300,8 @@ sap.ui.define([
 			return flag;
 		},
 		cleanCustomerFullName: function (sFullName) {
-			if (!sFullName) {
-				return "";
-			}
-			let sName = sFullName;
-			sName = sName.replace(/(.+)\1+/, "$1");
-			if (sName.includes("/")) {
-				sName = sName.split("/")[0];
-			}
-			sName = sName.trim();
-
-			return sName;
+			// Preserve the company name exactly as supplied by SAP.
+			return sFullName == null ? "" : sFullName;
 		},
 		getDocumento: function (oContext) {
 			if (!oContext) return "";
