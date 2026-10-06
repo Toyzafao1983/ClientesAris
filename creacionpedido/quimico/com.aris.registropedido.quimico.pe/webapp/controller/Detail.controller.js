@@ -1087,6 +1087,10 @@ sap.ui.define([
             let subtotalGeneral = 0, totalImpuesto = 0, totalGeneral = 0;
 
             aMaterialUI.forEach(item => {
+                if (this._getMaterialTaxClassification(item) !== "1") {
+                    item.impuesto = 0;
+                    item.total = Number(item.subtotal) || 0;
+                }
                 subtotalGeneral += item.subtotal || 0;
                 totalImpuesto += item.impuesto || 0;
                 totalGeneral += item.total || 0;
@@ -1095,7 +1099,7 @@ sap.ui.define([
             const igvPorcentaje = oDatCalculo.igvPorcentaje != null ? parseFloat(oDatCalculo.igvPorcentaje) : 18;
             const oTotalesFlete = this._calculateFreightTotals(
                 oModel.getProperty("/inputForm/fleteIncluido"), subtotalGeneral,
-                aMaterialUI.length ? oDatCalculo.embalaje : 0, igvPorcentaje
+                aMaterialUI.length ? oDatCalculo.embalaje : 0, igvPorcentaje, aMaterialUI
             );
             if (oTotalesFlete) {
                 totalImpuesto = oTotalesFlete.igv;
@@ -1506,6 +1510,13 @@ sap.ui.define([
                         oModelProyect.setProperty("/ui/materialesBusy", false);
                         resolve();
                         return;
+                    }
+
+                    try {
+                        await this._ensureMaterialTaxClassifications(oModelProyect);
+                    } catch (oTaxError) {
+                        sap.m.MessageBox.error("No se pudo validar la clasificación de impuesto de los materiales del pedido.");
+                        throw oTaxError;
                     }
 
                     let aPartners = [];
@@ -2022,6 +2033,7 @@ sap.ui.define([
                                         Material: sMat,
                                         Descriptions: sDesc,
                                         TargetQu: sTargetQu,
+                                        TaxClasification: parent ? this._getMaterialTaxClassification(parent) : "",
                                         UMVWeight: parent ? parent.UMVWeight : "KG",
                                         cantidad: "0.000",
                                         prlist: parent ? parent.prlist : 0,
@@ -2117,7 +2129,7 @@ sap.ui.define([
                                             break;
 
                                         case "MWST":
-                                            oItemUI.impuesto = nValor;
+                                            oItemUI.impuesto = this._getMaterialTaxClassification(oItemUI) === "1" ? nValor : 0;
                                             break;
 
                                         case "ZPRL":
@@ -2247,6 +2259,9 @@ sap.ui.define([
                                         item.subtotal = item.totalpos;
                                     }
 
+                                    if (this._getMaterialTaxClassification(item) !== "1") {
+                                        item.impuesto = 0;
+                                    }
                                     item.total = item.subtotal + item.impuesto;
                                     item.cantidad = cantidad > 0 ? cantidad.toFixed(3) : "0.000";
                                     item.pvNeto = (cantidad > 0) ? (item.totalpos / cantidad).toFixed(2) : "0.00";
@@ -2337,7 +2352,7 @@ sap.ui.define([
                                 const oDatCalculoActual = oModelProyect.getProperty("/oDatCalculo") || {};
                                 const oTotalesFlete = this._calculateFreightTotals(
                                     oData.inputForm?.fleteIncluido, subtotalGeneral, fleteMostrar,
-                                    oDatCalculoActual.igvPorcentaje
+                                    oDatCalculoActual.igvPorcentaje, aMaterialUI
                                 );
                                 if (oTotalesFlete) {
                                     embalajeUI = oTotalesFlete.flete;
@@ -4436,6 +4451,24 @@ sap.ui.define([
 
             oModelP.setProperty("/oSelectDetail", oSel);
         },
+        _ensureMaterialTaxClassifications: async function (oModel) {
+            const aRows = oModel.getProperty("/oMaterialUI") || [];
+            const aMissing = aRows.filter(item => !item.isExtraFromSAP &&
+                !["0", "1"].includes(this._getMaterialTaxClassification(item)));
+            if (!aMissing.length) { return; }
+            const aResults = await this._getTaxClassificationForSelectedMaterials(aMissing);
+            const normalize = value => String(value || "").trim().replace(/^0+/, "");
+            const mTax = new Map(aResults.map(item => [
+                normalize(item.Material || item.Matnr), this._getMaterialTaxClassification(item)
+            ]));
+            aMissing.forEach(item => {
+                item.TaxClasification = mTax.get(normalize(item.Material || item.Matnr)) || "";
+            });
+            if (aMissing.some(item => !["0", "1"].includes(this._getMaterialTaxClassification(item)))) {
+                throw new Error("No se pudo validar la clasificación de impuesto de los materiales del pedido.");
+            }
+            oModel.setProperty("/oMaterialUI", aRows);
+        },
         _getMaterialTaxClassification: function (oMat) {
             return String(
                 oMat?.TaxClasification ??
@@ -4716,14 +4749,22 @@ sap.ui.define([
                 .reduce((sum, c) => sum + this._getConditionAmount(c), 0);
         },
 
-        _calculateFreightTotals: function (bIncluded, nSubtotal, nFreight, vTaxRate) {
+        _calculateFreightTotals: function (bIncluded, nSubtotal, nFreight, vTaxRate, aMaterials) {
             if (bIncluded !== true && bIncluded !== false) {
                 return null; // Sin selección se mantiene el cálculo recibido de SAP.
             }
             const nRate = vTaxRate == null || vTaxRate === "" ? 18 : Number(vTaxRate);
             const nBase = Number(nSubtotal) || 0;
             const nFlete = Number(nFreight) || 0;
-            const nIgv = Number(((nBase + nFlete) * (Number.isFinite(nRate) ? nRate : 18) / 100).toFixed(2));
+            // Solo las posiciones afectas pueden formar parte de la base imponible.
+            const aRows = Array.isArray(aMaterials) ? aMaterials : [];
+            const nTaxableBase = aRows.reduce((sum, item) =>
+                sum + (this._getMaterialTaxClassification(item) === "1" ? Number(item.subtotal) || 0 : 0), 0);
+            const bAllTaxable = aRows.length > 0 && aRows.every(item =>
+                this._getMaterialTaxClassification(item) === "1");
+            const nTaxableFreight = bAllTaxable ? nFlete :
+                (nBase > 0 ? nFlete * nTaxableBase / nBase : 0);
+            const nIgv = Number(((nTaxableBase + nTaxableFreight) * (Number.isFinite(nRate) ? nRate : 18) / 100).toFixed(2));
             return { flete: nFlete, igv: nIgv, total: Number((nBase + nFlete + nIgv).toFixed(2)) };
         },
 
