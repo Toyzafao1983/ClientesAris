@@ -2350,11 +2350,11 @@ sap.ui.define([
                 let sPath;
                 if (that.local) {
                     sPath = that.getOwnerComponent().getManifestObject().resolveUri(
-                        `/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/MaterialsConsultation?${sQuery}&$top=5000&$format=json&sap-language=ES`
+                        `/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/MaterialsConsultation?${sQuery}&$top=900000000&$format=json&sap-language=ES`
                     );
                 } else {
                     sPath = jQuery.sap.getModulePath(that.route) +
-                        `/S4HANA/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/MaterialsConsultation?${sQuery}&$top=5000&$format=json&sap-language=ES`;
+                        `/S4HANA/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/MaterialsConsultation?${sQuery}&$top=900000000&$format=json&sap-language=ES`;
                 }
 
                 Services.getoDataERPSync(that, sPath, function (result) {
@@ -2545,11 +2545,11 @@ sap.ui.define([
                 let sPath;
                 if (that.local) {
                     sPath = that.getOwnerComponent().getManifestObject().resolveUri(
-                        `/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/MaterialsConsultation?${sQuery}&$top=5000&$format=json&sap-language=ES`
+                        `/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/MaterialsConsultation?${sQuery}&$top=900000000&$format=json&sap-language=ES`
                     );
                 } else {
                     sPath = jQuery.sap.getModulePath(that.route) +
-                        `/S4HANA/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/MaterialsConsultation?${sQuery}&$top=5000&$format=json&sap-language=ES`;
+                        `/S4HANA/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/MaterialsConsultation?${sQuery}&$top=900000000&$format=json&sap-language=ES`;
                 }
 
                 Services.getoDataERPSync(that, sPath, function (result) {
