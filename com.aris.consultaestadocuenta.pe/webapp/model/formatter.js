@@ -331,19 +331,10 @@ sap.ui.define([
 			return "";
 		},
 
-		   cleanCustomerFullName: function (sFullName) {
-            if (!sFullName) {
-                return "";
-            }
-            let sName = sFullName;
-            sName = sName.replace(/(.+)\1+/, "$1");
-            if (sName.includes("/")) {
-                sName = sName.split("/")[0];
-            }
-            sName = sName.trim();
-
-            return sName;
-        },
+		cleanCustomerFullName: function (sFullName) {
+			// Preserve the company name exactly as supplied by SAP.
+			return sFullName == null ? "" : sFullName;
+		},
 
 		formatDocumentText: function (oCliente) {
 		if (!oCliente) return "";
