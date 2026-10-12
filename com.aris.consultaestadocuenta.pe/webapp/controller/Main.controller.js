@@ -1312,6 +1312,10 @@ sap.ui.define([
                     var sSalesOrg = mapOrg[tUniNeg] || "1110";
                     let sFilter = `SalesOrganization eq '${sSalesOrg}' and (DistributionChannel eq 'C1' or DistributionChannel eq 'C2') and Division eq 'S1'`;
 
+                    if (sSalesOrg === "1130") {
+                        sFilter += ` and (CustomerGroup eq '05' or CustomerGroup eq '06' or CustomerGroup eq '15')`;
+                    }
+
                     if (sCustomer) {
                         sFilter += ` and Customer eq '${sCustomer}'`;
                     }

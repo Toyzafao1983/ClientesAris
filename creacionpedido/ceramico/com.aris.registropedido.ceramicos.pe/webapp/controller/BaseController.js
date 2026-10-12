@@ -1822,7 +1822,7 @@ sap.ui.define([
 		_getClientPet: function (sCustomer) {
 			const that = this;
 			try {
-				let sFilter = `SalesOrganization eq '1130' and DistributionChannel eq 'C1' and Division eq 'S1'`;
+				let sFilter = `SalesOrganization eq '1130' and DistributionChannel eq 'C1' and Division eq 'S1' and CustomerGroup ne '10'`;
 				const sCatalogFilter = sFilter;
 				if (sCustomer) {
 					sFilter += " and Customer eq '" + String(sCustomer).replace(/'/g, "''") + "'";
