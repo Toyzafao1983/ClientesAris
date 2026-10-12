@@ -19,13 +19,19 @@ sap.ui.define([
 			utilHttp.Post(constantes.services.postoDataEstandar, oResults, callback, context);
 		},
 		getoDataERPSync: function (context, url, callback) {
-			utilHttp.ERPGetSync(url, callback);
+			const owner = context.getOwnerComponent();
+            const load = done => utilHttp.ERPGetSync(url, done);
+            if (owner.getAccountQuery) return owner.getAccountQuery(url, load, callback);
+            return load(callback);
 		},
 		getoDataERPSyncNotResult: function (context, url, callback) {
 			utilHttp.ERPGetSyncNotResult(url, callback);
 		},
 		getoDataERPAsync: function (context, url, callback) {
-			utilHttp.ERPGetAsync(url, callback);
+			const owner = context.getOwnerComponent();
+            const load = done => utilHttp.ERPGetAsync(url, done);
+            if (owner.getAccountQuery) return owner.getAccountQuery(url, load, callback);
+            return load(callback);
 		},
 		postoDataERPSync: function (context, urlget, urlpost, data, callback) {
 			utilHttp.ERPPostTokenSync(urlget, urlpost, data, callback);

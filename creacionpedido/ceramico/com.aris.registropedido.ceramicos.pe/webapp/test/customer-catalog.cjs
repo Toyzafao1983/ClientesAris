@@ -21,18 +21,18 @@ const plain = value => JSON.parse(JSON.stringify(value));
                 const urls = [];
                 let fail = false;
                 const rows = mode === 'limit'
-                    ? Array.from({ length: 100000 }, (_, i) => ({ Customer: 'OTHER' + i }))
+                    ? Array.from({ length: 100001 }, (_, i) => ({ Customer: '0001', Row: i }))
                     : [{ Customer: '0001', Channel: 'C1' }, { Customer: '0001', Channel: 'C2' }];
                 const http = moduleFrom('util/utilHttp.js', {}, { $: { ajax: options => {
                     urls.push(options.url);
                     const query = new URL(options.url, 'https://test').searchParams;
-                    assert.equal(query.get('$top'), '100000');
-                    assert.equal(query.has('$skiptoken'), false, 'no automatic pagination');
+                    assert.equal(query.has('$top'), false);
+                    assert.equal(options.url.startsWith('/app/S4HANA/'), !local, 'continuations preserve proxy');
                     if (fail) return options.error({}, 'error', 'SAP unavailable');
-                    const filtered = query.get('$filter').includes('Customer eq');
+                    const filtered = (query.get('$filter') || '').includes('Customer eq');
                     options.success({ d: {
-                        results: filtered ? [{ Customer: 'DIRECT' }] : rows,
-                        __next: !filtered && mode === 'continuation' ? '?$skiptoken=page2' : undefined
+                        results: filtered ? [{ Customer: 'DIRECT' }] : query.has('$skiptoken') ? [{ Customer: 'PAGE2', Seller: 'Vendedor segunda pagina' }] : rows,
+                        __next: !filtered && !query.has('$skiptoken') && mode === 'continuation' ? 'https://sap.internal/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/DataCustomer?$skiptoken=page2' : undefined
                     } });
                 } } });
                 const component = moduleFrom('Component.js', {
@@ -53,16 +53,19 @@ const plain = value => JSON.parse(JSON.stringify(value));
                         result.iCode === 1 ? events.success(result) : events.error(result) } }
                 });
                 const catalog = await call.call(controller);
-                assert.equal(urls.length, 1, 'exactly one initial request even with continuation');
-                assert.equal(catalog.complete, mode === 'complete');
+                const pages = mode === 'continuation' ? 2 : 1;
+                assert.equal(urls.length, pages);
+                assert.equal(catalog.oResults.length, rows.length + pages - 1);
+                if (pages === 2) assert.equal(catalog.oResults.at(-1).Seller, 'Vendedor segunda pagina');
+                assert.equal(catalog.complete, true);
                 assert.equal(urls[0].startsWith('/app/S4HANA/'), !local);
                 const [first, second] = await Promise.all([call.call(controller, '0001'), call.call(controller, '0001')]);
-                assert.equal(urls.length, mode === 'complete' ? 1 : 2);
-                assert.deepEqual(plain(first.oResults), mode === 'complete' ? rows : [{ Customer: 'DIRECT' }]);
+                assert.equal(urls.length, pages);
+                assert.deepEqual(plain(first.oResults), rows);
                 first.oResults[0].Customer = 'edited';
                 assert.notEqual(second.oResults[0].Customer, 'edited');
                 await call.call(controller, '0001');
-                assert.equal(urls.length, mode === 'complete' ? 1 : 2, 'reuse local or fallback result');
+                assert.equal(urls.length, pages, 'reuse local or fallback result');
                 if (mode === 'complete') {
                     assert.equal((await call.call(controller, 'MISSING')).oResults.length, 0);
                     assert.equal(urls.length, 1);
@@ -76,9 +79,25 @@ const plain = value => JSON.parse(JSON.stringify(value));
                 assert.equal((await call.call(controller)).sEstado, 'E');
                 fail = false;
                 assert.equal((await call.call(controller)).sEstado, 'S');
-                assert.equal(urls.length, before + 3, 'failed requests can be retried');
+                assert.equal(urls.length, before + 2 + pages, 'failed requests can be retried');
             }
         }
     }
-    console.log('PASS: one initial block with top=100000, no continuation requests, local filtering, copies, incomplete catalog fallback, direct entry, reset and retries in local/S4HANA routes.');
+    // A failed later page must discard partial rows and allow a full retry.
+    const cache = new Cache();
+    const initial = '/app/S4HANA/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/Customer?$format=json';
+    let broken = true;
+    const load = async url => url.includes('$skiptoken')
+        ? (broken ? { sEstado: 'E', oResults: [] } : { sEstado: 'S', oResults: [{ Customer: 'SECOND' }] })
+        : { sEstado: 'S', oResults: [{ Customer: 'FIRST' }], next: '?$skiptoken=2' };
+    assert.equal((await cache.readCatalog(initial, initial, null, load)).sEstado, 'E');
+    broken = false;
+    assert.equal((await cache.readCatalog(initial, initial, null, load)).oResults.length, 2);
+    const looping = new Cache();
+    const cycle = await looping.readCatalog(initial, initial, null, async () => ({
+        sEstado: 'S', oResults: [{ Customer: 'PARTIAL' }], next: '?$skiptoken=2'
+    }));
+    assert.equal(cycle.sEstado, 'E');
+    assert.equal(cycle.oResults.length, 0);
+    console.log('PASS: complete pagination without top limit, proxy preservation, local filtering, copies, direct entry, reset and retries in local/S4HANA routes.');
 })().catch(error => { console.error(error); process.exitCode = 1; });

@@ -2746,11 +2746,11 @@ sap.ui.define([
 
 			let sUrl = "";
 			if (this.local) {
-				const sPath = `/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/MaterialsConsultation?${sFilter}&$top=${aSafeCodes.length}&$format=json&sap-language=ES`;
+				const sPath = `/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/MaterialsConsultation?${sFilter}&$format=json&sap-language=ES`;
 				sUrl = this.getOwnerComponent().getManifestObject().resolveUri(sPath);
 			} else {
 				sUrl = jQuery.sap.getModulePath(this.route) +
-					`/S4HANA/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/MaterialsConsultation?${sFilter}&$top=${aSafeCodes.length}&$format=json&sap-language=ES`;
+					`/S4HANA/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/MaterialsConsultation?${sFilter}&$format=json&sap-language=ES`;
 			}
 
 			return new Promise(resolve => {

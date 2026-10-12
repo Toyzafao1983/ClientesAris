@@ -545,7 +545,7 @@ sap.ui.define([
             ];
 
             return new Promise((resolve) => {
-                oModel.read("/ObserPedSet", {
+                Services.readAllOData(oModel, "/ObserPedSet", {
                     filters: aFilters,
                     success: function (oData) {
                         const aRaw = oData.results || [];

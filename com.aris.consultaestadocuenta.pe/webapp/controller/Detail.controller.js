@@ -30,9 +30,17 @@ sap.ui.define([
 		handleRouteMatched: function (bInit) {
 			sap.ui.core.BusyIndicator.show(0);
 			let sCustomer = this.oRouter.getHashChanger().hash.split("/")[1];
-			Promise.all([that._getAddressData(sCustomer), that._getClientDetail(tUniNeg, sCustomer),
-			that._getEstadoCuenta(sCustomer), that._getProductPres(sCustomer), that._getUsers()
-			]).then((values) => {
+            const owner = this.getOwnerComponent();
+            owner.ensureAccountOrganization(tUniNeg);
+            const prepared = owner.takeAccountDetail(sCustomer, tUniNeg, this._getEstadoCuentaDate());
+            const reuse = (index, load) => prepared?.[index]?.sEstado === "S" ? prepared[index] : load();
+            Promise.all([
+                reuse(0, () => this._getAddressData(sCustomer)),
+                this._getClientDetail(tUniNeg, sCustomer),
+                reuse(1, () => this._getEstadoCuenta(sCustomer)),
+                reuse(2, () => this._getProductPres(sCustomer)),
+                this._getUsers()
+            ]).then((values) => {
 				let sCustomer = this.oRouter.getHashChanger().hash.split("/")[1];
 				that.oModelProyect = that.getModel("oModelProyect");
 				that.oModelData = that.getModel("oModelData");
@@ -98,6 +106,7 @@ sap.ui.define([
 			this._onPressNavButtonDetail();
 		},
 		_cleanupDetailState: function () {
+            this.getOwnerComponent().clearAccountDetail();
 			const oModelProyect = this.getModel("oModelProyect");
 
 			if (!oModelProyect) return;

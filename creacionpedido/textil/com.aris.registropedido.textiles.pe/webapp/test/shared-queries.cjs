@@ -40,7 +40,7 @@ for (const local of [true, false]) {
         assert.equal(urls.length, before + 1);
         if (name === '_getDatClientView') {
             const query = new URL(urls.at(-1), 'https://test').searchParams;
-            assert.equal(query.get('$top'), '100000');
+            assert.equal(query.has('$top'), false);
             assert.ok(!query.get('$filter').includes('CustomerDni'));
             await fn.call(detail, '0002'); assert.equal(urls.length, before + 2);
         }

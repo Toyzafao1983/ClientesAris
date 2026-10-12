@@ -403,81 +403,61 @@ sap.ui.define([
 				}
 			});
 		},
-		ERPGetAsync: function (url, callback) {
-			$.ajax({
-				url: url,
-				method: "GET",
-				async: true,
-				contentType: 'application/json',
-				dataType: 'json',
-				success: function (result) {
-					if (!Array.isArray(result.d.results)) { delete result.d.results.__metadata }
-					var respuestaService = {
-						iCode: 1,
-						c: "suc",
-						u: url,
-						m: "Exito HTTP - GET",
-						data: Array.isArray(result.d.results) ? result.d.results.map(({ __metadata, ...rest }) => rest) : result.d.results
-					};
-					return callback(respuestaService);
-				},
-				error: function (xhr, status, error) {
-					var respuestaService = {
-						iCode: -1,
-						c: "ex",
-						u: url,
-						m: "Error HTTP - GET",
-						data: error
-					};
-					return callback(respuestaService);
-				}
-			});
-		},
-		ERPGetSync: function (url, callback) {
-			$.ajax({
-				url: url,
-				method: "GET",
-				async: false,
-				contentType: "application/json",
-				dataType: "json",
-				success: function (result) {
-					let data;
-
-					// Caso 1: respuesta con array
-					if (result.d && Array.isArray(result.d.results)) {
-						data = result.d.results.map(({ __metadata, ...rest }) => rest);
-					}
-					// Caso 2: respuesta con un solo objeto
-					else if (result.d) {
-						let { __metadata, ...rest } = result.d;
-						data = rest;
-					}
-					// Caso 3: respuesta vacía
-					else {
-						data = [];
-					}
-
-					var respuestaService = {
-						iCode: 1,
-						c: "suc",
-						u: url,
-						m: "Exito HTTP - GET",
-						data: data
-					};
-					return callback(respuestaService);
-				},
-				error: function (xhr, status, error) {
-					var respuestaService = {
-						iCode: -1,
-						c: "ex",
-						u: url,
-						m: "Error HTTP - GET",
-						data: error
-					};
-					return callback(respuestaService);
-				}
-			});
-		},
+        ERPGetAsync: function (url, callback) {
+            return this._ERPGetPages(url, callback, true);
+        },
+        ERPGetSync: function (url, callback) {
+            return this._ERPGetPages(url, callback, false);
+        },
+        _ERPGetPages: function (url, callback, async) {
+            const top = url.match(/[?&]\$top=(\d+)/);
+            const limited = !!top && Number(top[1]) <= 200;
+            const initialUrl = limited ? url : url.replace(/([?&])\$top=\d+&?/, "$1").replace(/[?&]$/, "");
+            const visited = new Set();
+            const rows = [];
+            let pageUrl = initialUrl;
+            let finished = false;
+            const fail = message => {
+                if (finished) return;
+                finished = true;
+                callback({ iCode: -1, c: "ex", u: url, m: "Error HTTP - GET", data: message });
+            };
+            const clean = row => {
+                if (!row || typeof row !== "object") return row;
+                const item = Object.assign({}, row);
+                delete item.__metadata;
+                return item;
+            };
+            const readPage = () => {
+                if (visited.has(pageUrl)) return fail("Continuación OData repetida");
+                visited.add(pageUrl);
+                $.ajax({
+                    url: pageUrl, method: "GET", async: async,
+                    contentType: 'application/json', dataType: 'json',
+                    success: result => {
+                        const body = result && result.d ? result.d : [];
+                        const data = body && Array.isArray(body.results) ? body.results : body;
+                        const isList = Array.isArray(data);
+                        if (isList) data.forEach(row => rows.push(clean(row)));
+                        const next = !limited && isList && body.__next;
+                        if (next) {
+                            const queryIndex = String(next).indexOf("?");
+                            if (queryIndex < 0) return fail("Continuación OData inválida");
+                            pageUrl = initialUrl.split("?")[0] + String(next).slice(queryIndex);
+                            // Schedule async continuation without recursive stack growth.
+                            if (async) Promise.resolve().then(readPage);
+                        } else {
+                            finished = true;
+                            callback({ iCode: 1, c: "suc", u: url, m: "Exito HTTP - GET",
+                                data: isList ? rows : clean(data), next: null });
+                        }
+                    },
+                    error: (xhr, status, error) => fail(error)
+                });
+            };
+            if (async) readPage();
+            else while (!finished) readPage();
+        },
 		ERPGetSyncNotResult: function (url, callback) {
 			$.ajax({
 				url: url,

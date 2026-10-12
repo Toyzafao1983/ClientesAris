@@ -850,7 +850,7 @@ sap.ui.define([
 
                 sap.ui.core.BusyIndicator.show(0);
 
-                oModel.read("/MaterialsConsultation", {
+                Services.readAllOData(oModel, "/MaterialsConsultation", {
                     filters: aFilters,
 
                     success: function (oData) {
@@ -5099,7 +5099,7 @@ sap.ui.define([
                         new sap.ui.model.Filter("Material", sap.ui.model.FilterOperator.EQ, sMat)
                     );
 
-                    oModel.read("/MaterialsConsultation", {
+                    Services.readAllOData(oModel, "/MaterialsConsultation", {
                         filters: [
                             new sap.ui.model.Filter({
                                 filters: aMatFilters,

@@ -1461,7 +1461,7 @@ sap.ui.define([
                     defaultBindingMode: "TwoWay"
                 });
                 sap.ui.core.BusyIndicator.show(0);
-                oModel.read("/MaterialsConsultation", {
+                Services.readAllOData(oModel, "/MaterialsConsultation", {
                     filters: aFilters,
                     success: async function (oData) {
                         try {

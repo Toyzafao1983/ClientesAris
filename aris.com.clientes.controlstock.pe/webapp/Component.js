@@ -1,7 +1,8 @@
 sap.ui.define([
     "sap/ui/core/UIComponent",
-    "aris/com/clientes/controlstock/pe/model/models"
-], (UIComponent, models) => {
+    "aris/com/clientes/controlstock/pe/model/models",
+    "aris/com/clientes/controlstock/pe/services/StockQueryCache"
+], (UIComponent, models, StockQueryCache) => {
     "use strict";
 
     return UIComponent.extend("aris.com.clientes.controlstock.pe.Component", {
@@ -12,6 +13,20 @@ sap.ui.define([
             ]
         },
 
+        _getStockQueryCache() {
+            if (!this._stockQueryCache) this._stockQueryCache = new StockQueryCache();
+            return this._stockQueryCache;
+        },
+        ensureStockOrganization(salesOrg) {
+            if (this._stockOrganization !== salesOrg) {
+                this._getStockQueryCache().clear();
+                this._stockOrganization = salesOrg;
+            }
+        },
+        getStockQuery(url, salesOrg, load, callback) {
+            this.ensureStockOrganization(salesOrg);
+            return this._getStockQueryCache().read(url, load, callback);
+        },
         init() {
             // call the base component's init function
             UIComponent.prototype.init.apply(this, arguments);

@@ -434,66 +434,54 @@ sap.ui.define([
 			});
 		},
 		ERPGetSync: function (url, callback) {
-			$.ajax({
-				url: url,
-				method: "GET",
-				async: false,
-				contentType: "application/json",
-				dataType: "json",
-				success: function (result) {
-					var dataResponse;
-
-					if (result && result.d) {
-						if (Array.isArray(result.d.results)) {
-							dataResponse = result.d.results.map(function (item) {
-								if (item && typeof item === "object") {
-									var clean = Object.assign({}, item);
-									delete clean.__metadata;
-									return clean;
-								}
-								return item;
-							});
-						} else if (Array.isArray(result.d)) {
-							dataResponse = result.d.map(function (item) {
-								if (item && typeof item === "object") {
-									var clean = Object.assign({}, item);
-									delete clean.__metadata;
-									return clean;
-								}
-								return item;
-							});
-						} else if (typeof result.d === "object") {
-							dataResponse = Object.assign({}, result.d);
-							delete dataResponse.__metadata;
-						} else {
-							dataResponse = result.d;
-						}
-					} else {
-						dataResponse = result;
-					}
-
-					var respuestaService = {
-						iCode: 1,
-						c: "suc",
-						u: url,
-						m: "Exito HTTP - GET",
-						data: dataResponse
-					};
-
-					return callback(respuestaService);
-				},
-				error: function (xhr, status, error) {
-					var respuestaService = {
-						iCode: -1,
-						c: "ex",
-						u: url,
-						m: "Error HTTP - GET",
-						data: error
-					};
-					return callback(respuestaService);
-				}
-			});
-		},
+            // Small explicit limits belong to suggestions/single-record lookups.
+            const match = url.match(/[?&]\$top=(\d+)/);
+            const limited = !!match && Number(match[1]) <= 200;
+            const initialUrl = limited ? url : url.replace(/([?&])\$top=\d+&?/, "$1").replace(/[?&]$/, "");
+            const rows = [];
+            const visited = new Set();
+            let pageUrl = initialUrl;
+            let response;
+            while (pageUrl) {
+                if (visited.has(pageUrl)) {
+                    response = { iCode: -1, c: "ex", u: url, m: "Continuación OData repetida", data: [] };
+                    break;
+                }
+                visited.add(pageUrl);
+                let next = null;
+                $.ajax({
+                    url: pageUrl, method: "GET", async: false,
+                    contentType: 'application/json', dataType: 'json',
+                    success: function (result) {
+                        const original = result && result.d ? (result.d.results || result.d) : result;
+                        const clean = item => {
+                            if (!item || typeof item !== "object") return item;
+                            const row = Object.assign({}, item);
+                            delete row.__metadata;
+                            return row;
+                        };
+                        const data = Array.isArray(original) ? original.map(clean) : clean(original);
+                        response = { iCode: 1, c: "suc", u: url, m: "Exito HTTP - GET", data: data, next: null };
+                        if (Array.isArray(data)) {
+                            data.forEach(row => rows.push(row));
+                            response.data = rows;
+                            if (!limited) next = (result.d && result.d.__next) || null;
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        response = { iCode: -1, c: "ex", u: url, m: "Error HTTP - GET", data: error };
+                    }
+                });
+                if (!response || response.iCode !== 1 || !next) break;
+                const queryIndex = String(next).indexOf("?");
+                if (queryIndex < 0) {
+                    response = { iCode: -1, c: "ex", u: url, m: "Continuación OData inválida", data: [] };
+                    break;
+                }
+                pageUrl = initialUrl.split("?")[0] + String(next).slice(queryIndex);
+            }
+            return callback(response);
+        },
 		ERPGetSyncNotResult: function (url, callback) {
 			$.ajax({
 				url: url,

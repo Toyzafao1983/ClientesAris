@@ -51,7 +51,7 @@ sap.ui.define([
 						"Content-Type": "application/scim+json"
 					}).then(() => ({ sEstado: "S", oResults: model.getData() }));
 				};
-				return load().then(result => result.oResults);
+				return controller.getOwnerComponent().getCustomerQuery(sUrl, load).then(result => result.oResults);
 			});
 		},
 		getUserLoged: function () {
@@ -1667,6 +1667,11 @@ sap.ui.define([
 				"EPdf"
 			].join(",");
 		},
+        _getEstadoCuentaDate: function () {
+            const today = new Date();
+            return today.getFullYear() + "-" + String(today.getMonth() + 1).padStart(2, "0") +
+                "-" + String(today.getDate()).padStart(2, "0") + "T00:00:00";
+        },
 		_getEstadoCuenta: function (sCustomer, sBukrs = "1001", sForma = "1", sSelect) {
 			that = this;
 			try {
@@ -1678,12 +1683,7 @@ sap.ui.define([
 				return new Promise(function (resolve, reject) {
 					let sUrl = "";
 
-					// 📌 Obtener la fecha de hoy
-					let oToday = new Date();
-					let sYear = oToday.getFullYear();
-					let sMonth = String(oToday.getMonth() + 1).padStart(2, "0");
-					let sDay = String(oToday.getDate()).padStart(2, "0");
-					let sFecha = `${sYear}-${sMonth}-${sDay}T00:00:00`;
+					const sFecha = that._getEstadoCuentaDate();
 
 					let sPath = `/sap/opu/odata/sap/ZSDWS_PORTAL_CLIENTES_SRV/eEstadoCuentaSet` + `?$filter=Bukrs eq '${sBukrs}' and Kunnr eq '${sCustomer}'` + ` and Datum eq datetime'${sFecha}' and Forma eq '${sForma}'`;
 					let sSelectParam = sSelect || that._getEstadoCuentaListSelect();

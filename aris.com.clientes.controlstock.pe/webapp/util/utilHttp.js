@@ -403,66 +403,88 @@ sap.ui.define([
 				}
 			});
 		},
-		ERPGetAsync: function (url, callback) {
-			$.ajax({
-				url: url,
-				method: "GET",
-				async: true,
-				contentType: 'application/json',
-				dataType: 'json',
-				success: function (result) {
-					if (!Array.isArray(result.d.results)) { delete result.d.results.__metadata }
-					var respuestaService = {
-						iCode: 1,
-						c: "suc",
-						u: url,
-						m: "Exito HTTP - GET",
-						data: Array.isArray(result.d.results) ? result.d.results.map(({ __metadata, ...rest }) => rest) : result.d.results
-					};
-					return callback(respuestaService);
-				},
-				error: function (xhr, status, error) {
-					var respuestaService = {
-						iCode: -1,
-						c: "ex",
-						u: url,
-						m: "Error HTTP - GET",
-						data: error
-					};
-					return callback(respuestaService);
-				}
-			});
-		},
-		ERPGetSync: function (url, callback) {
-			$.ajax({
-				url: url,
-				method: "GET",
-				async: false,
-				contentType: 'application/json',
-				dataType: 'json',
-				success: function (result) {
-					if (!Array.isArray(result.d.results)) { delete result.d.results.__metadata }
-					var respuestaService = {
-						iCode: 1,
-						c: "suc",
-						u: url,
-						m: "Exito HTTP - GET",
-						data: Array.isArray(result.d.results) ? result.d.results.map(({ __metadata, ...rest }) => rest) : result.d.results
-					};
-					return callback(respuestaService);
-				},
-				error: function (xhr, status, error) {
-					var respuestaService = {
-						iCode: -1,
-						c: "ex",
-						u: url,
-						m: "Error HTTP - GET",
-						data: error
-					};
-					return callback(respuestaService);
-				}
-			});
-		},
+        ERPGetAsync: function (url, callback) {
+            return this._ERPGetPages(url, callback, true);
+        },
+        ERPGetSync: function (url, callback) {
+            return this._ERPGetPages(url, callback, false);
+        },
+        _ERPGetPages: function (url, callback, async) {
+            const top = url.match(/[?&]\$top=(\d+)/);
+            const limited = !!top && Number(top[1]) <= 200;
+            // SAP uses 100 rows by default when top is absent. Keep a high
+            // result budget so its server paging can retain the 5000-row blocks.
+            const initialUrl = limited || top ? url : url + (url.includes("?") ? "&" : "?") + "$top=2147483647";
+            const visited = new Set();
+            const pages = new Set();
+            const describePage = value => {
+                const parsed = new URL(value, "https://stock.invalid");
+                // A decreasing remaining top does not mean the cursor advanced.
+                parsed.searchParams.delete("$top");
+                parsed.searchParams.sort();
+                return parsed.pathname + "?" + parsed.searchParams.toString();
+            };
+            const rows = [];
+            let pageUrl = initialUrl;
+            let finished = false;
+            const fail = message => {
+                if (finished) return;
+                finished = true;
+                callback({ iCode: -1, c: "ex", u: url, m: "Error HTTP - GET", data: message });
+            };
+            const clean = row => {
+                if (!row || typeof row !== "object") return row;
+                const item = Object.assign({}, row);
+                delete item.__metadata;
+                return item;
+            };
+            const readPage = () => {
+                if (finished) return;
+                const pageKey = describePage(pageUrl);
+                if (visited.has(pageKey)) return fail("Continuación OData repetida");
+                visited.add(pageKey);
+                $.ajax({
+                    url: pageUrl, method: "GET", async: async,
+                    contentType: 'application/json', dataType: 'json',
+                    success: result => {
+                        const body = result && result.d ? result.d : result;
+                        const data = body && Array.isArray(body.results) ? body.results : body;
+                        const isList = Array.isArray(data);
+                        if (isList && data.length) {
+                            const signature = JSON.stringify(data.map(row => row.__metadata?.id || row.__metadata?.uri || clean(row)));
+                            if (pages.has(signature)) return fail("SAP devolvió una página repetida sin avanzar.");
+                            pages.add(signature);
+                        }
+                        if (isList) data.forEach(row => rows.push(clean(row)));
+                        const next = !limited && isList && body.__next;
+                        if (next) {
+                            const queryIndex = String(next).indexOf("?");
+                            if (queryIndex < 0) return fail("Continuación OData inválida");
+                            if (!data.length) return fail("SAP devolvió una continuación sin resultados.");
+                            const nextUrl = new URL(initialUrl.split("?")[0] + String(next).slice(queryIndex), "https://stock.invalid");
+                            const currentUrl = new URL(pageUrl, "https://stock.invalid");
+                            const currentCursor = currentUrl.searchParams.get("$skiptoken") || currentUrl.searchParams.get("$skip") || "0";
+                            const nextCursor = nextUrl.searchParams.get("$skiptoken") || nextUrl.searchParams.get("$skip");
+                            if (/^\d+$/.test(currentCursor) && nextCursor !== null && /^\d+$/.test(nextCursor) &&
+                                Number(nextCursor) <= Number(currentCursor)) return fail("La continuación de SAP no avanza.");
+                            // Some services omit top from next; retain the high budget.
+                            let nextQuery = String(next).slice(queryIndex);
+                            if (!nextUrl.searchParams.has("$top")) nextQuery += "&$top=" + (top ? top[1] : "2147483647");
+                            pageUrl = initialUrl.split("?")[0] + nextQuery;
+                            // Schedule async continuation without recursive stack growth.
+                            if (async) Promise.resolve().then(readPage);
+                        } else {
+                            finished = true;
+                            callback({ iCode: 1, c: "suc", u: url, m: "Exito HTTP - GET",
+                                data: isList ? rows : clean(data), next: null });
+                        }
+                    },
+                    error: (xhr, status, error) => fail(error)
+                });
+            };
+            if (async) readPage();
+            else while (!finished) readPage();
+        },
 		ERPGetSyncNotResult: function (url, callback) {
 			$.ajax({
 				url: url,

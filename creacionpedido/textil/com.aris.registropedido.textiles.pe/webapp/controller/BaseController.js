@@ -1780,7 +1780,7 @@ sap.ui.define([
 				if (sCustomer) {
 					sFilter += " and Customer eq '" + String(sCustomer).replace(/'/g, "''") + "'";
 				}
-				const sQuery = `Customer?$filter=${encodeURIComponent(sFilter)}&$top=100000&$format=json&sap-language=es-ES`;
+				const sQuery = `Customer?$filter=${encodeURIComponent(sFilter)}&$format=json&sap-language=es-ES`;
 				let sUrl = "";
 				if (that.local) {
 					const sPath = `/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/${sQuery}`;
@@ -1821,10 +1821,10 @@ sap.ui.define([
 				}
 				let sUrl = "";
 				if (that.local) {
-					const sPath = "/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/DataCustomer?$filter=" + encodeURIComponent(sFilter) + "&$top=100000&$format=json&sap-language=es-ES";
+					const sPath = "/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/DataCustomer?$filter=" + encodeURIComponent(sFilter) + "&$format=json&sap-language=es-ES";
 					sUrl = that.getOwnerComponent().getManifestObject().resolveUri(sPath);
 				} else {
-					const sPath = jQuery.sap.getModulePath(that.route) + "/S4HANA/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/DataCustomer?$filter=" + encodeURIComponent(sFilter) + "&$top=100000&$format=json&sap-language=es-ES";
+					const sPath = jQuery.sap.getModulePath(that.route) + "/S4HANA/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/DataCustomer?$filter=" + encodeURIComponent(sFilter) + "&$format=json&sap-language=es-ES";
 					sUrl = sPath;
 				}
 				const sCatalogUrl = sUrl.replace(encodeURIComponent(sFilter), encodeURIComponent(sCatalogFilter));

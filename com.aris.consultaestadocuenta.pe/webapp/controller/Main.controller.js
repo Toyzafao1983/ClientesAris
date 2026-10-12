@@ -41,6 +41,7 @@ sap.ui.define([
 
         },
         handleRouteMatched: async function (bInit) {
+            this.getOwnerComponent().ensureAccountOrganization(tUniNeg);
             sap.ui.core.BusyIndicator.show(0);
 
             try {
@@ -532,133 +533,32 @@ sap.ui.define([
                 return false;
             }
         },
-        _navigateDetailForCustomer: function (sKunnr, oCabecera) {
-            const oView = this.getView();
-            const oModelProyect = oView.getModel("oModelProyect");
-            const oModelEntity = this.getOwnerComponent().getModel("oModelEntity");
-            const sBukrs = "1001";
-            const sForma = "1";
-            const sFechaHoy = new Date();
-            const sFormattedDate = Formatter._formatDateForOData(sFechaHoy);
-
-            if (!oModelEntity) {
-                return Promise.reject("Modelo OData no definido");
-            }
-            if (oCabecera) {
-                oModelProyect.setProperty("/oCabecera", oCabecera);
-            }
-            oModelProyect.setProperty("/oDireccionCliente", { FullAddress: "" });
-            oModelProyect.setProperty("/oLoanedProducts", []);
-            oModelProyect.setProperty("/oDetalle", []);
-            const aFilters = [
-                new sap.ui.model.Filter("Bukrs", sap.ui.model.FilterOperator.EQ, sBukrs),
-                new sap.ui.model.Filter("Kunnr", sap.ui.model.FilterOperator.EQ, sKunnr),
-                new sap.ui.model.Filter("Datum", sap.ui.model.FilterOperator.EQ, sFormattedDate),
-                new sap.ui.model.Filter("Forma", sap.ui.model.FilterOperator.EQ, sForma)
-            ];
-            return new Promise((resolve, reject) => {
-                oModelEntity.read("/eEstadoCuentaSet", {
-                    filters: aFilters,
-                    urlParameters: {
-                        "$select": this._getEstadoCuentaListSelect()
-                    },
-                    success: (oData) => {
-                        oModelProyect.setProperty("/oDetalle", oData.results || []);
-
-                        Promise.all([
-                            this._getCustomerAddress(sKunnr),
-                            this._getLoanedProducts(sKunnr)
-                        ])
-                            .then(([oDir, aLoaned]) => {
-                                const oDireccion = (oDir && oDir.FullAddress)
-                                    ? oDir
-                                    : { FullAddress: "" };
-
-                                oModelProyect.setProperty("/oDireccionCliente", oDireccion);
-                                oModelProyect.setProperty("/oLoanedProducts", aLoaned || []);
-                                oModelProyect.refresh(true);
-
-                                this.oRouter.navTo("Detail", { app: sKunnr });
-                                resolve();
-                            })
-                            .catch((err) => {
-                                oModelProyect.setProperty("/oDireccionCliente", { FullAddress: "" });
-                                oModelProyect.setProperty("/oLoanedProducts", []);
-                                oModelProyect.refresh(true);
-                                this.oRouter.navTo("Detail", { app: sKunnr });
-                                resolve();
-                            });
-                    },
-                    error: (oError) => {
-                        sap.m.MessageToast.show("Error al obtener estado de cuenta del cliente");
-                        oModelProyect.setProperty("/oDireccionCliente", { FullAddress: "" });
-                        oModelProyect.setProperty("/oLoanedProducts", []);
-                        oModelProyect.refresh(true);
-                        reject(oError);
-                    }
-                });
-            });
+        _navigateDetailForCustomer: async function (sKunnr, oCabecera) {
+            const owner = this.getOwnerComponent();
+            const model = this.getView().getModel("oModelProyect");
+            owner.clearAccountDetail();
+            if (oCabecera) model.setProperty("/oCabecera", oCabecera);
+            model.setProperty("/oDireccionCliente", { FullAddress: "" });
+            model.setProperty("/oLoanedProducts", []);
+            model.setProperty("/oDetalle", []);
+            // Use the same midnight date/filter as Detail; each opening fetches fresh balances.
+            const date = this._getEstadoCuentaDate();
+            const values = await Promise.all([
+                this._getAddressData(sKunnr),
+                this._getEstadoCuenta(sKunnr),
+                this._getProductPres(sKunnr)
+            ]);
+            if (values[1]?.sEstado !== "S") throw new Error("No se pudo obtener el estado de cuenta.");
+            owner.setAccountDetail(sKunnr, tUniNeg, date, values);
+            model.setProperty("/oDetalle", values[1].oResults || []);
+            this.oRouter.navTo("Detail", { app: sKunnr });
         },
         _onPressNavigateDetail: function (oEvent) {
-            const jData = oEvent.getSource().getBindingContext("oModelProyect").getObject();
-            this.oModelProyect.setProperty("/oCabecera", jData);
-
-            const sKunnr = jData.Customer;
-            const sBukrs = "1001";
-            const sForma = "1";
-            const sDatum = new Date();
-            const sFormattedDate = Formatter._formatDateForOData(sDatum);
-
+            const data = oEvent.getSource().getBindingContext("oModelProyect").getObject();
             sap.ui.core.BusyIndicator.show(0);
-
-            const oModel = this.getOwnerComponent().getModel("oModelEntity");
-
-            this.oModelProyect.setProperty("/oDireccionCliente", { FullAddress: "" });
-            this.oModelProyect.setProperty("/oLoanedProducts", []);
-            const aFilters = [
-                new sap.ui.model.Filter("Bukrs", sap.ui.model.FilterOperator.EQ, sBukrs),
-                new sap.ui.model.Filter("Kunnr", sap.ui.model.FilterOperator.EQ, sKunnr),
-                new sap.ui.model.Filter("Datum", sap.ui.model.FilterOperator.EQ, sFormattedDate),
-                new sap.ui.model.Filter("Forma", sap.ui.model.FilterOperator.EQ, sForma)
-            ];
-            oModel.read("/eEstadoCuentaSet", {
-                filters: aFilters,
-                urlParameters: {
-                    "$select": this._getEstadoCuentaListSelect()
-                },
-                success: (oData) => {
-                    this.oModelProyect.setProperty("/oDetalle", oData.results || []);
-                    Promise.all([
-                        this._getCustomerAddress(sKunnr),
-                        this._getLoanedProducts(sKunnr)
-                    ])
-                        .then(([oDir, aLoaned]) => {
-                            const oDireccion = oDir && oDir.FullAddress ? oDir : { FullAddress: "" };
-                            this.oModelProyect.setProperty("/oDireccionCliente", oDireccion);
-                            this.oModelProyect.setProperty("/oLoanedProducts", aLoaned || []);
-                            this.oModelProyect.refresh(true);
-                            this.oRouter.navTo("Detail", { app: jData.Customer });
-                        })
-                        .catch((err) => {
-                            void 0;
-                            this.oModelProyect.setProperty("/oDireccionCliente", { FullAddress: "" });
-                            this.oModelProyect.setProperty("/oLoanedProducts", []);
-                            this.oModelProyect.refresh(true);
-                            this.oRouter.navTo("Detail", { app: jData.Customer });
-                        })
-                        .finally(() => {
-                            sap.ui.core.BusyIndicator.hide();
-                        });
-                },
-                error: (oError) => {
-                    sap.ui.core.BusyIndicator.hide();
-                    void 0;
-                    sap.m.MessageToast.show("Error al obtener estado de cuenta del cliente");
-                    this.oModelProyect.setProperty("/oDireccionCliente", { FullAddress: "" });
-                    this.oModelProyect.setProperty("/oLoanedProducts", []);
-                    this.oModelProyect.refresh(true);
-                }
-            });
+            return this._navigateDetailForCustomer(data.Customer, data)
+                .catch(() => sap.m.MessageToast.show("Error al obtener estado de cuenta del cliente"))
+                .finally(() => sap.ui.core.BusyIndicator.hide());
         },
         _onPressExecute: function () {
             const that = this;
@@ -1419,7 +1319,7 @@ sap.ui.define([
                     if (sCustomer) {
                         sFilter += ` and Customer eq '${sCustomer}'`;
                     }
-                    const sQuery = `Customer?$filter=${encodeURIComponent(sFilter)}&$top=3000&$format=json&sap-language=es-ES`;
+                    const sQuery = `Customer?$filter=${encodeURIComponent(sFilter)}&$format=json&sap-language=es-ES`;
                     let sUrl = "";
                     if (that.local) {
                         const sPath = `/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/${sQuery}`;
@@ -1468,7 +1368,7 @@ sap.ui.define([
                     }
                     const sPath = "/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/DataCustomer?$filter=" +
                         sFilter +
-                        "&$top=3000&$format=json&sap-language=es-ES";
+                        "&$format=json&sap-language=es-ES";
 
                     let sUrl = "";
                     if (that.local) {

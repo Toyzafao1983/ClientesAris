@@ -433,36 +433,47 @@ sap.ui.define([
 			});
 		},
 		ERPGetSync: function (url, callback) {
-			$.ajax({
-				url: url,
-				method: "GET",
-				async: false,
-				contentType: 'application/json',
-				dataType: 'json',
-				success: function (result) {
-					var dataResponse = result.d.results ? result.d.results : result.d;
-					var respuestaService = {
-						iCode:1,
-						c: "suc",
-						u: url,
-						m: "Exito HTTP - GET",
-						data: dataResponse,
-						next: result.d.__next || null
-					};
-					return callback(respuestaService);
-				},
-				error: function (xhr, status, error) {
-					var respuestaService = {
-						iCode:-1,
-						c: "ex",
-						u: url,
-						m: "Error HTTP - GET",
-						data: error
-					};
-					return callback(respuestaService);
-				}
-			});
-		},
+            // Small explicit limits belong to suggestions/single-record lookups.
+            const match = url.match(/[?&]\$top=(\d+)/);
+            const limited = !!match && Number(match[1]) <= 200;
+            const initialUrl = limited ? url : url.replace(/([?&])\$top=\d+&?/, "$1").replace(/[?&]$/, "");
+            const rows = [];
+            const visited = new Set();
+            let pageUrl = initialUrl;
+            let response;
+            while (pageUrl) {
+                if (visited.has(pageUrl)) {
+                    response = { iCode: -1, c: "ex", u: url, m: "Continuación OData repetida", data: [] };
+                    break;
+                }
+                visited.add(pageUrl);
+                let next = null;
+                $.ajax({
+                    url: pageUrl, method: "GET", async: false,
+                    contentType: 'application/json', dataType: 'json',
+                    success: function (result) {
+                        const data = result.d.results || result.d;
+                        response = { iCode: 1, c: "suc", u: url, m: "Exito HTTP - GET", data: data, next: null };
+                        if (Array.isArray(data)) {
+                            data.forEach(row => rows.push(row));
+                            response.data = rows;
+                            if (!limited) next = result.d.__next || null;
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        response = { iCode: -1, c: "ex", u: url, m: "Error HTTP - GET", data: error };
+                    }
+                });
+                if (!response || response.iCode !== 1 || !next) break;
+                const queryIndex = String(next).indexOf("?");
+                if (queryIndex < 0) {
+                    response = { iCode: -1, c: "ex", u: url, m: "Continuación OData inválida", data: [] };
+                    break;
+                }
+                pageUrl = initialUrl.split("?")[0] + String(next).slice(queryIndex);
+            }
+            return callback(response);
+        },
 		ERPPostTokenSync: function (urlget, urlpost, data, callback) {
 			$.ajax({
 				url: urlget,

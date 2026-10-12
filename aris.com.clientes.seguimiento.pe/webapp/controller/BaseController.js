@@ -54,7 +54,7 @@ sap.ui.define([
 						"Content-Type": "application/scim+json"
 					}).then(() => ({ sEstado: "S", oResults: model.getData() }));
 				};
-				return load().then(result => result.oResults);
+				return controller.getOwnerComponent().getCustomerQuery(sUrl, load).then(result => result.oResults);
 			});
 		},
 		getUserLoged: function () {

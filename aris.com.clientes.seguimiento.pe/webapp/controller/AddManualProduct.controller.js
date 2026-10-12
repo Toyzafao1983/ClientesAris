@@ -6,7 +6,8 @@ sap.ui.define([
     "sap/ui/model/json/JSONModel",
     '../util/util',
     '../util/utilUI',
-], (BaseController, Controller, models, Formatter, JSONModel, util, utilUI) => {
+    '../services/Services',
+], (BaseController, Controller, models, Formatter, JSONModel, util, utilUI, Services) => {
     "use strict";
 
     var that;
@@ -1034,7 +1035,7 @@ sap.ui.define([
 
                 // 1) Leer materiales (await)
                 const oData = await new Promise((resolve, reject) => {
-                    oModel.read("/MaterialsConsultation", {
+                    Services.readAllOData(oModel, "/MaterialsConsultation", {
                         filters: aFilters,
                         success: resolve,
                         error: reject

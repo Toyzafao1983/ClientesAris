@@ -211,3 +211,17 @@ Validación local: bloque real de construcción de ítems ejecutado con cotizaci
 ## Carpetas SharePoint en archivo de configuración (05-10-2026)
 
 La ruta de documentos de químicos se trasladó de BaseController a `webapp/config/sharepoint.properties`, propiedad `documentsFolder`. El valor inicial sigue siendo `Pruebas BTP/Clientes/documentos/quimicos`. BaseController la carga asíncronamente y la reutiliza durante la sesión. Para llevar el cambio a BAS/desplegar, incluir el controlador y el archivo properties. Configuración, pruebas y alcance de las cuatro aplicaciones documentados en [configuracion-sharepoint.md](../../../docs/configuracion-sharepoint.md). No se modificaron destinations.
+
+
+## Paginación completa de clientes (11-10-2026, ajuste vigente)
+
+Esta regla reemplaza la carga en un solo bloque descrita anteriormente. Customer y DataCustomer ya no solicitan `$top=100000`: siguen cada `__next` hasta que SAP no devuelve continuación. Se aplica a la carga inicial y a consultas por cliente. Las URLs de continuación conservan la ruta local/S4HANA de la petición original y usan la consulta devuelta por SAP.
+
+La caché publica y reutiliza el catálogo solo después de completar todas las páginas. Un fallo intermedio o una continuación repetida devuelve error sin filas parciales y permite reintentar. Las pruebas customer-catalog cubren continuación absoluta de SAP, conservación del proxy, más de 100000 filas, copias independientes, error intermedio y ciclos. Pendiente validar las páginas reales en Network conectado a SAP; no se realizó despliegue. La paginación no completa campos Seller que SAP entregue vacíos.
+
+
+## Paginación de otras listas de pedidos (11-10-2026)
+
+En químicos, textiles y cerámicos, ERPGetSync acumula las páginas anunciadas por SAP antes de entregar una lista. Retira los top altos usados como carga completa; conserva top de hasta 200 usados para sugerencias. Sin __next se hace una sola petición. Conserva el proxy original, rechaza ciclos y no entrega resultados parciales si falla una página.
+
+Services.readAllOData cubre las lecturas de MaterialsConsultation hechas con ODataModel en Detail de químicos y cerámicos, AddManualProduct de cerámicos y las observaciones de referencia de químicos. Mantiene filtros en la primera petición y usa la consulta de continuación de SAP en las siguientes. No cambia simulación, envío ni campos de vendedores. Validación: scripts/validate-order-pagination.cjs. Pendiente prueba real en SAP.

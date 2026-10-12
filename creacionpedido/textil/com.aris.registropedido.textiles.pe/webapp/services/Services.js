@@ -6,6 +6,35 @@ sap.ui.define([
 ], function(utilResponse, utilHttp, constantes,Estructura) {
 	"use strict";
 	return {
+        readAllOData: function (model, path, parameters) {
+            const rows = [];
+            const visited = new Set();
+            const readPage = function (pagePath, options) {
+                if (visited.has(pagePath)) {
+                    parameters.error({ message: "Continuación OData repetida" });
+                    return;
+                }
+                visited.add(pagePath);
+                model.read(pagePath, Object.assign({}, options, {
+                    success: function (data) {
+                        (data.results || []).forEach(row => rows.push(row));
+                        if (!data.__next) {
+                            parameters.success(Object.assign({}, data, { results: rows }));
+                            return;
+                        }
+                        const queryIndex = String(data.__next).indexOf("?");
+                        if (queryIndex < 0) {
+                            parameters.error({ message: "Continuación OData inválida" });
+                            return;
+                        }
+                        // Keep this model's service/destination; SAP supplies the query.
+                        readPage(path.split("?")[0] + String(data.__next).slice(queryIndex), {});
+                    },
+                    error: parameters.error
+                }));
+            };
+            readPage(path, parameters);
+        },
 		RegistrarAuditoriaSap: function (context, oResults, callback) {
 			utilHttp.Post(constantes.services.RegistrarAuditoriaSap, oResults, callback, context);
 		},

@@ -1282,7 +1282,7 @@ sap.ui.define([
 
         _GetFilteredMaterials: function (jFilter) {
             let that = this;
-            return new Promise((resolve) => {
+            return new Promise((resolve, reject) => {
                 try {
                     const sSalesOrg = that.sSalesOrg || "1110";
 
@@ -1389,15 +1389,13 @@ sap.ui.define([
                                 }
                             },
                             error: function () {
-                                void 0;
-                                resolve([]);
+                                reject(new Error("No se pudo completar el catálogo de materiales."));
                             }
                         });
                     });
 
                 } catch (err) {
-                    void 0;
-                    resolve([]);
+                    reject(err);
                 }
             });
         },
@@ -1522,7 +1520,7 @@ sap.ui.define([
                     void 0;
 
                     // eslint-disable-next-line no-await-in-loop
-                    const aChunkData = await new Promise((resolve) => {
+                    const aChunkData = await new Promise((resolve, reject) => {
                         Services.getoDataERPAsync(that, sUrl, function (result) {
                             util.response.validateAjaxGetERPNotMessage(result, {
                                 success: function (oData) {
@@ -1538,7 +1536,7 @@ sap.ui.define([
                                 },
                                 error: function (err) {
                                     void 0;
-                                    resolve([]); // continúa con el siguiente chunk
+                                    reject(new Error("No se pudo completar la consulta de stock."));
                                 }
                             });
                         });

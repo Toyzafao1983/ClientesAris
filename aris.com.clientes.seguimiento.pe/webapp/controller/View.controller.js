@@ -64,6 +64,7 @@ sap.ui.define([
 
         },
         handleRouteMatched: async function (bInit) {
+            this.getOwnerComponent().ensureTrackingOrganization(this.sSalesOrg);
             sap.ui.core.BusyIndicator.show(0);
 
             try {
@@ -350,7 +351,7 @@ sap.ui.define([
                 this.getView().getModel("ui").setProperty("/filtersReady", true);
 
                 if (tRol === "CLIENTES" || tRol === "VENDEDOR" || tUniNeg == "QUIMICOS") {
-                    this._onPressExecute();
+                    this._onPressExecute(true);
 
                 }
                 sap.ui.core.BusyIndicator.hide(0);
@@ -372,7 +373,7 @@ sap.ui.define([
                 app: jData.SalesDocument
             });
         },
-        _onPressExecute: function () {
+        _onPressExecute: function (bReuseQueries) {
             let oModel = this.getView().getModel("oModelProyect");
 
             function extractTokens(oControl, sControlId) {
@@ -488,6 +489,8 @@ sap.ui.define([
                 sap.m.MessageToast.show("Se descartaron: " + invalidRawInputs.join("; "));
             }
 
+            // Explicit search refreshes operational data; automatic entry reuses the flow.
+            if (bReuseQueries !== true) this.getOwnerComponent().refreshTrackingData();
             // ==== Ejecutar ====
             sap.ui.core.BusyIndicator.show();
             this._getData().then(oData => {
