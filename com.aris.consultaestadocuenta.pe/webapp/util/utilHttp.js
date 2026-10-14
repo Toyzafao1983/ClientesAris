@@ -412,7 +412,8 @@ sap.ui.define([
         _ERPGetPages: function (url, callback, async) {
             const top = url.match(/[?&]\$top=(\d+)/);
             const limited = !!top && Number(top[1]) <= 200;
-            const initialUrl = limited ? url : url.replace(/([?&])\$top=\d+&?/, "$1").replace(/[?&]$/, "");
+            // Preserve explicit top; without it SAP can default to 100 rows.
+            const initialUrl = top ? url : url + (url.includes("?") ? "&" : "?") + "$top=2147483647";
             const visited = new Set();
             const rows = [];
             let pageUrl = initialUrl;
@@ -443,7 +444,10 @@ sap.ui.define([
                         if (next) {
                             const queryIndex = String(next).indexOf("?");
                             if (queryIndex < 0) return fail("Continuación OData inválida");
-                            pageUrl = initialUrl.split("?")[0] + String(next).slice(queryIndex);
+                            // Keep the server cursor and remaining top; restore top only if omitted.
+                            let nextQuery = String(next).slice(queryIndex);
+                            if (!/[?&]\$top=/.test(nextQuery)) nextQuery += "&$top=" + (top ? top[1] : "2147483647");
+                            pageUrl = initialUrl.split("?")[0] + nextQuery;
                             // Schedule async continuation without recursive stack growth.
                             if (async) Promise.resolve().then(readPage);
                         } else {

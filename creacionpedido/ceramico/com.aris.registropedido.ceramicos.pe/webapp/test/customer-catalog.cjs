@@ -26,7 +26,7 @@ const plain = value => JSON.parse(JSON.stringify(value));
                 const http = moduleFrom('util/utilHttp.js', {}, { $: { ajax: options => {
                     urls.push(options.url);
                     const query = new URL(options.url, 'https://test').searchParams;
-                    assert.equal(query.has('$top'), false);
+                    assert.ok(Number(query.get('$top')) > 200);
                     assert.equal(options.url.startsWith('/app/S4HANA/'), !local, 'continuations preserve proxy');
                     if (fail) return options.error({}, 'error', 'SAP unavailable');
                     const filtered = (query.get('$filter') || '').includes('Customer eq');
@@ -99,5 +99,5 @@ const plain = value => JSON.parse(JSON.stringify(value));
     }));
     assert.equal(cycle.sEstado, 'E');
     assert.equal(cycle.oResults.length, 0);
-    console.log('PASS: complete pagination without top limit, proxy preservation, local filtering, copies, direct entry, reset and retries in local/S4HANA routes.');
+    console.log('PASS: complete pagination preserving top, proxy preservation, local filtering, copies, direct entry, reset and retries in local/S4HANA routes.');
 })().catch(error => { console.error(error); process.exitCode = 1; });

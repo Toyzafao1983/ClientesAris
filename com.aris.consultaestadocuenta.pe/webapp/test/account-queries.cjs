@@ -49,7 +49,7 @@ const query = (entity, filter) => base + entity + '?$filter=' + encodeURICompone
         const result = await new Promise(resolve => http[async ? 'ERPGetAsync' : 'ERPGetSync'](base + 'eEstadoCuentaSet?$top=3000&$filter=A', resolve));
         assert.equal(result.iCode, ['fail', 'cycle'].includes(mode) ? -1 : 1);
         assert.equal(urls.length, mode === 'single' ? 1 : 2);
-        assert.ok(urls.every(u => u.startsWith(base))); assert.ok(!urls[0].includes('$top='));
+        assert.ok(urls.every(u => u.startsWith(base))); assert.ok(urls.every(url => url.includes('$top=3000')));
         if (mode === 'pages') { assert.equal(result.data.length, 2); assert.equal(result.data[0].__metadata, undefined); }
     }
     for (const [unit, site] of [['TEXTILES', 'textiles'], ['QUIMICOS', 'quimicos'], ['CERAMICOS', 'ceramicos']]) {

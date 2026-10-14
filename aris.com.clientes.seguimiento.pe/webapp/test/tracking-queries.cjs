@@ -86,6 +86,7 @@ const url = (entity, filter, extra = '') => base + entity + '?$top=8000&$filter=
         http.ERPGetSync(base + 'Items?$filter=A&$top=' + (mode === 'suggestion' ? 200 : 8000), r => { result = r; });
         assert.equal(result.iCode, ['fail', 'cycle'].includes(mode) ? -1 : 1);
         assert.equal(urls.length, ['pages', 'fail', 'cycle'].includes(mode) ? 2 : 1);
+        assert.ok(urls.every(u => u.includes('$top=' + (mode === 'suggestion' ? 200 : 8000))));
         assert.ok(urls.every(u => u.startsWith(base)), 'preserve application proxy on absolute next');
         if (mode === 'pages') { assert.equal(result.data.length, 2); assert.equal(result.data[0].__metadata, undefined); }
         if (mode === 'object') { assert.equal(result.data.Value, 42); assert.equal(result.data.__metadata, undefined); }
@@ -104,7 +105,8 @@ const url = (entity, filter, extra = '') => base + entity + '?$top=8000&$filter=
         assert.equal(calls.length, 2);
         assert.equal(calls[0].options.filters[0], 'BRAND');
         assert.equal(calls[1].options.filters, undefined, 'continuation already contains filters');
-        assert.equal(calls[1].page, '/MaterialsConsultation?$filter=Brand&$skiptoken=100');
+        assert.equal(calls[0].options.urlParameters['$top'], '2147483647');
+        assert.equal(calls[1].page, '/MaterialsConsultation?$filter=Brand&$skiptoken=100&$top=2147483647');
         if (mode === 'pages') assert.equal(result.results.length, 2);
         else { assert.ok(error); assert.equal(result, undefined); }
     }

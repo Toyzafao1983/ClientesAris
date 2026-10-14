@@ -16,14 +16,15 @@ for(const unit of ['quimico','textil','ceramico']) {
   if(mode==='pages')assert.equal(result.data.length,2);
   if(mode==='object')assert.equal(result.data.Value,42);
   if(mode==='suggestion')assert.ok(urls[0].includes('$top=200'));
-  else assert.ok(!urls[0].includes('$top='));
+  else assert.ok(urls.every(url => url.includes('$top=10000')));
  }
  const services=load('services/Services.js');
  for(const mode of ['pages','fail','cycle']){
   const calls=[];let result,error;
   services.readAllOData({read:(p,o)=>{calls.push([p,o]);if(calls.length===2&&mode==='fail')return o.error({message:'failed'});o.success({results:[{Page:calls.length}],__next:calls.length===1||mode==='cycle'?'https://internal/sap/MaterialsConsultation?$filter=Brand&$skiptoken=100':null});}},'/MaterialsConsultation',{filters:['BRAND'],success:r=>result=r,error:e=>error=e});
   assert.equal(calls.length,2);assert.equal(calls[0][1].filters[0],'BRAND');assert.equal(calls[1][1].filters,undefined);
-  assert.equal(calls[1][0],'/MaterialsConsultation?$filter=Brand&$skiptoken=100');
+  assert.equal(calls[0][1].urlParameters['$top'], '2147483647');
+  assert.equal(calls[1][0],'/MaterialsConsultation?$filter=Brand&$skiptoken=100&$top=2147483647');
   if(mode==='pages')assert.equal(result.results.length,2);else {assert.ok(error);assert.equal(result,undefined);}
  }
  console.log('PASS pagination transport and OData:',unit);

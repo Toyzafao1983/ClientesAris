@@ -436,7 +436,8 @@ sap.ui.define([
             // Small explicit limits belong to suggestions/single-record lookups.
             const match = url.match(/[?&]\$top=(\d+)/);
             const limited = !!match && Number(match[1]) <= 200;
-            const initialUrl = limited ? url : url.replace(/([?&])\$top=\d+&?/, "$1").replace(/[?&]$/, "");
+            // Preserve explicit top; without it SAP can default to 100 rows.
+            const initialUrl = match ? url : url + (url.includes("?") ? "&" : "?") + "$top=2147483647";
             const rows = [];
             const visited = new Set();
             let pageUrl = initialUrl;
@@ -470,7 +471,10 @@ sap.ui.define([
                     response = { iCode: -1, c: "ex", u: url, m: "Continuación OData inválida", data: [] };
                     break;
                 }
-                pageUrl = initialUrl.split("?")[0] + String(next).slice(queryIndex);
+                // Keep the server cursor and remaining top; restore top only if omitted.
+                            let nextQuery = String(next).slice(queryIndex);
+                            if (!/[?&]\$top=/.test(nextQuery)) nextQuery += "&$top=" + (match ? match[1] : "2147483647");
+                            pageUrl = initialUrl.split("?")[0] + nextQuery;
             }
             return callback(response);
         },

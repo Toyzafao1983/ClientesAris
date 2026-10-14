@@ -28,12 +28,16 @@ sap.ui.define([
                             return;
                         }
                         // Keep this model's service/destination; SAP supplies the query.
-                        readPage(path.split("?")[0] + String(data.__next).slice(queryIndex), {});
+                        let nextQuery = String(data.__next).slice(queryIndex);
+                        if (!/[?&]\$top=/.test(nextQuery)) nextQuery += "&$top=2147483647";
+                        readPage(path.split("?")[0] + nextQuery, {});
                     },
                     error: parameters.error
                 }));
             };
-            readPage(path, parameters);
+            readPage(path, Object.assign({}, parameters, {
+                urlParameters: Object.assign({ "$top": "2147483647" }, parameters.urlParameters)
+            }));
         },
 		RegistrarAuditoriaSap: function (context, oResults, callback) {
 			utilHttp.Post(constantes.services.RegistrarAuditoriaSap, oResults, callback, context);
