@@ -1885,7 +1885,7 @@ sap.ui.define([
 
             const sTipDoc = String(oInputForm.tipDocument || "").trim().toUpperCase();
 
-            return !!oInputForm.bClienteExteriorZPEF || (sCountry !== "PE" && sTipDoc === "ZPEF");
+            return !!sCountry && (sCountry !== "PE" && sTipDoc === "ZPEF");
         },
 
         _getShipCondForPayload: function () {
@@ -2106,6 +2106,10 @@ sap.ui.define([
         },
 
         onSimulateOrder: async function () {
+            if (!this._getClienteCountryForDetail()) {
+                this.getMessageBox("error", "No se pudo determinar el país del cliente. Vuelva a cargar sus datos antes de crear el pedido.");
+                return;
+            }
             const oModelProyect = this.getView().getModel("oModelProyect");
             const oCantidades = oModelProyect.getProperty("/oCantidades") || {};
             const oData = oModelProyect.getData();
@@ -2725,6 +2729,10 @@ sap.ui.define([
         },
 
         _createOrder: function () {
+            if (!this._getClienteCountryForDetail()) {
+                this.getMessageBox("error", "No se pudo determinar el país del cliente. Vuelva a cargar sus datos antes de crear el pedido.");
+                return;
+            }
             const oView = this.getView();
             const oModelProyect = oView.getModel("oModelProyect");
             const oModelUser = oView.getModel("oModelUser");
@@ -5144,8 +5152,8 @@ sap.ui.define([
             const sTipDoc = String(oInputForm.tipDocument || "").trim().toUpperCase();
             const sCountry = this._getClienteCountryForDetail();
 
-            // Regla del negocio: país vacío también se trata como exterior/no PE.
-            return !!oInputForm.bClienteExteriorZPEF || (sTipDoc === "ZPEF" && sCountry !== "PE");
+            // Export requires a confirmed foreign country; missing data cannot classify the customer.
+            return !!sCountry && sTipDoc === "ZPEF" && sCountry !== "PE";
         },
 
         _applyExternalZPEFDetailLock: function () {

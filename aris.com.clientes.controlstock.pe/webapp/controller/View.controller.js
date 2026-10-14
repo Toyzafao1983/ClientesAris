@@ -1016,6 +1016,10 @@ sap.ui.define([
 
         _onPressExecute: async function () {
             const that = this;
+            // New or invalid searches must not leave a previous, broader result visible.
+            ["/oStockDisponible", "/oStockTextil", "/oStockQuimico", "/oReporteCeraCli",
+                "/oReporteCeraCliBase", "/oTreeCer", "/oTreeCerBase", "/oStockQueue"]
+                .forEach(path => this.getModel("oModelProyect").setProperty(path, []));
             this.getView().setBusyIndicatorDelay(0);
             this.getView().setBusy(true);
 

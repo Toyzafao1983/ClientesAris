@@ -359,7 +359,24 @@ sap.ui.define([
                 this.oModelProyect.setProperty("/Main/filter/" + sProperty, Array.from(new Set(aValues)));
             });
         },
+        _hasIncompleteSearchFilters: function () {
+            return ["multiInputSeller", "multiInputCodClient", "multiInputRazonSocial", "multiInputDocument"]
+                .some(id => {
+                    const input = this.byId(id);
+                    if (!input) return false;
+                    if (String(input.getValue?.() || "").trim()) return true;
+                    return (input.getTokens?.() || []).some(token =>
+                        !String((id === "multiInputRazonSocial" ? token.getText() : token.getKey()) || "").trim());
+                });
+        },
         _onPressExecute: function () {
+            this.oModelProyect.setProperty("/oReporte", []);
+            if (this._hasIncompleteSearchFilters()) {
+                this.oModelProyect.setProperty("/oReporte", []);
+                sap.m.MessageToast.show("Complete o seleccione los filtros ingresados antes de buscar.");
+                return;
+            }
+
             this._syncSearchFiltersFromTokens();
             const oUser = this.getModel("oModelUser");
             const bIsVendedor = !!oUser?.getProperty("/bIsVendedor");
@@ -562,8 +579,7 @@ sap.ui.define([
                             error: function (message) {
                                 oResp.oResults = [];
                                 //temporal (mock)
-                                oResp.sEstado = "S";
-                                oResp.oResults = models.JsonReporte().d.results;
+                                oResp.sEstado = "E";
 
                                 // aplica filtros locales en tabla
                                 const oTable = that.byId("TableClient");
@@ -1099,17 +1115,19 @@ sap.ui.define([
                 });
         },
         _purgeClientTokensOutOfScope: function () {
-            const oProj = this.getModel("oModelProyect");
-            const aScope = oProj.getProperty("/oClienteFilter") || [];
-            const setOK = new Set(aScope.map(c => String(c.Customer || "").trim()));
-
-            const oMICod = this.byId("multiInputCodClient");
-            if (oMICod) {
-                const aKeep = oMICod.getTokens().filter(t => setOK.has(String(t.getKey()).trim()));
-                oMICod.removeAllTokens();
-                aKeep.forEach(t => oMICod.addToken(t));
-                this._setArray("/Main/filter/fCodClient", aKeep.map(t => t.getKey()));
+            const model = this.getModel("oModelProyect");
+            const allowed = new Set((model.getProperty("/oClienteFilter") || [])
+                .map(client => String(client.Customer || "").trim()));
+            const input = this.byId("multiInputCodClient");
+            if (!input) return;
+            const tokens = input.getTokens();
+            const retained = tokens.filter(token => allowed.has(String(token.getKey() || "").trim()));
+            if (retained.length !== tokens.length) {
+                input.removeAllTokens();
+                retained.forEach(token => input.addToken(token));
+                model.setProperty("/oReporte", []);
             }
+            model.setProperty("/Main/filter/fCodClient", retained.map(token => token.getKey()));
         },
         _setClientFiltersEnabledBySeller: function () {
             const oProj = this.getModel("oModelProyect");
@@ -1227,6 +1245,7 @@ sap.ui.define([
 
         },
         _onSellerTokensChanged: function () {
+            this.getModel("oModelProyect").setProperty("/oReporte", []);
             const oMI = this.byId("multiInputSeller");
             const aKeys = oMI
                 ? oMI.getTokens().map(t => (t.getKey() || "").trim()).filter(Boolean)

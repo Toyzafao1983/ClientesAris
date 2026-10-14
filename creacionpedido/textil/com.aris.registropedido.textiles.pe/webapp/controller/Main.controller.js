@@ -350,7 +350,24 @@ sap.ui.define([
                 this.oModelProyect.setProperty("/Main/filter/" + sProperty, Array.from(new Set(aValues)));
             });
         },
+        _hasIncompleteSearchFilters: function () {
+            return ["multiInputSeller", "multiInputCodClient", "multiInputRazonSocial", "multiInputDocument"]
+                .some(id => {
+                    const input = this.byId(id);
+                    if (!input) return false;
+                    if (String(input.getValue?.() || "").trim()) return true;
+                    return (input.getTokens?.() || []).some(token =>
+                        !String((id === "multiInputRazonSocial" ? token.getText() : token.getKey()) || "").trim());
+                });
+        },
         _onPressExecute: function () {
+            this.oModelProyect.setProperty("/oReporte", []);
+            if (this._hasIncompleteSearchFilters()) {
+                this.oModelProyect.setProperty("/oReporte", []);
+                sap.m.MessageToast.show("Complete o seleccione los filtros ingresados antes de buscar.");
+                return;
+            }
+
             this._syncSearchFiltersFromTokens();
             const jFilter = this.oModelProyect.getProperty("/Main/filter") || {};
 
@@ -487,8 +504,7 @@ sap.ui.define([
                                 error: function (message) {
                                     oResp.oResults = [];
                                     //temporal (mock)
-                                    oResp.sEstado = "S";
-                                    oResp.oResults = models.JsonReporte().d.results;
+                                    oResp.sEstado = "E";
 
                                     // aplica filtros locales en tabla
                                     var oTable = that._byId("TableClient").getItems().length > 0

@@ -1,5 +1,5 @@
 <core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core" xmlns:l="sap.ui.layout" xmlns:f="sap.ui.layout.form">
-    <Table items="{oModelProyect>/oReporteFiltrado}"   mode="None" growingThreshold="20" autoPopinMode="false" growing="true" sticky="ColumnHeaders,HeaderToolbar" popinLayout="GridSmall">
+    <Table noDataText="{i18n>noOrdersForFilters}" items="{oModelProyect>/oReporteFiltrado}"   mode="None" growingThreshold="20" autoPopinMode="false" growing="true" sticky="ColumnHeaders,HeaderToolbar" popinLayout="GridSmall">
         <columns>
             <Column width="100px" hAlign="Center" vAlign="Middle" minScreenWidth="Tablet" demandPopin="true" popinDisplay="Inline" mergeDuplicates="false">
                 <header>

@@ -37,6 +37,12 @@ sap.ui.define([
             const sCustomer = this.oRouter.getHashChanger().hash.split("/")[1];
 
             this._clearOCUploadState();
+            // Do not reuse another customer's address/country while loading.
+            const loadingModel = this.getModel("oModelProyect");
+            loadingModel.setProperty("/oDireccionCliente", {});
+            loadingModel.setProperty("/oDatClient", {});
+            loadingModel.setProperty("/oClientData", {});
+            this._blockUnknownCustomerCountry();
 
             Promise.all([
                 that._getPrueba(),                  // 0
@@ -142,6 +148,10 @@ sap.ui.define([
                     ""
                 ).trim().toUpperCase();
 
+                if (!sCountry) {
+                    that._blockUnknownCustomerCountry();
+                    throw new Error("No se pudo determinar el país del cliente. Vuelva a cargar sus datos antes de crear el pedido.");
+                }
                 const bClientePE = sCountry === "PE";
 
                 let aPermitidos = [];
@@ -349,7 +359,7 @@ sap.ui.define([
                 sap.ui.core.BusyIndicator.hide(0);
 
             }).catch(function (oError) {
-                that.getMessageBox("error", that.getI18nText("errorUserData"));
+                that.getMessageBox("error", oError?.message || that.getI18nText("errorUserData"));
                 sap.ui.core.BusyIndicator.hide(0);
             });
         },
@@ -548,6 +558,16 @@ sap.ui.define([
             }
         },
 
+        _blockUnknownCustomerCountry: function () {
+            const model = this.getView().getModel("oModelProyect");
+            const data = this.getView().getModel("oModelData");
+            model.setProperty("/inputForm/tipDocument", "");
+            model.setProperty("/inputForm/txtTipDocument", "");
+            model.setProperty("/inputForm/bClienteExteriorZPEF", false);
+            model.setProperty("/inputForm/isTipDocumentEnabled", false);
+            model.setProperty("/isFormEnabled", false);
+            data.setProperty("/oTipDocumentData", []);
+        },
         _getClienteCountry: function () {
             const oModelProyect = this.getView().getModel("oModelProyect");
             if (!oModelProyect) {
@@ -581,7 +601,7 @@ sap.ui.define([
                 oModelProyect.getProperty("/inputForm/tipDocument") || ""
             ).trim().toUpperCase();
 
-            return sCountry !== "PE" && sTipDoc === "ZPEF";
+            return !!sCountry && sCountry !== "PE" && sTipDoc === "ZPEF";
         },
 
         _ensureCondPagoOption: function (sKey, sText) {
@@ -1012,6 +1032,11 @@ sap.ui.define([
 
 
         _onPressMaterialDetail: function () {
+            if (!this._getClienteCountry()) {
+                this._blockUnknownCustomerCountry();
+                this.getMessageBox("error", "No se pudo determinar el país del cliente. Vuelva a cargar sus datos antes de crear el pedido.");
+                return;
+            }
             if (!this._validateRequiredFields()) {
                 return;
             }
@@ -3089,6 +3114,10 @@ sap.ui.define([
                 ""
             ).trim().toUpperCase();
 
+            if (!sCountry) {
+                this._blockUnknownCustomerCountry();
+                return;
+            }
             const bClientePE = sCountry === "PE";
 
             let aPermitidos = [];

@@ -414,7 +414,9 @@ sap.ui.define([
             const limited = !!top && Number(top[1]) <= 200;
             // SAP uses 100 rows by default when top is absent. Keep a high
             // result budget so its server paging can retain the 5000-row blocks.
-            const initialUrl = limited || top ? url : url + (url.includes("?") ? "&" : "?") + "$top=2147483647";
+            // Paging options are invalid on keyed single-entity reads (including navigation).
+            const isSingleEntity = /\([^/]*\)\/?$/.test(url.split("?")[0].replace(/%28/gi, "(").replace(/%29/gi, ")"));
+            const initialUrl = top || isSingleEntity ? url : url + (url.includes("?") ? "&" : "?") + "$top=2147483647";
             const visited = new Set();
             const pages = new Set();
             const describePage = value => {

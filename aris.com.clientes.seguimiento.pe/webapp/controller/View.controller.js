@@ -375,6 +375,8 @@ sap.ui.define([
         },
         _onPressExecute: function (bReuseQueries) {
             let oModel = this.getView().getModel("oModelProyect");
+            oModel.setProperty("/oReporte", []);
+            oModel.setProperty("/oReporteFiltrado", []);
 
             function extractTokens(oControl, sControlId) {
                 if (!oControl) {
@@ -393,17 +395,14 @@ sap.ui.define([
                 return { keys: aKeys, texts: aTexts, rawValue: rawVal };
             }
 
-            let aWarnings = [];
             let invalidRawInputs = [];
-            let bHasValidTokens = false;
 
             // ==== Documento ====
             let oDoc = extractTokens(this.byId("miDocumento"), "miDocumento");
             oModel.setProperty("/Main/filter/cbDocumento", oDoc.keys);
-            if (oDoc.keys.length > 0) bHasValidTokens = true;
-            if (oDoc.keys.length === 0 && oDoc.rawValue) {
+            if (String(oDoc.rawValue || "").trim() || oDoc.keys.some(key => !String(key || "").trim())) {
                 invalidRawInputs.push(`Documento: "${oDoc.rawValue}"`);
-                this.byId("miDocumento").setValue("");
+
             }
 
             const oLocked = this._getLockedFiltersByProfile();
@@ -419,11 +418,10 @@ sap.ui.define([
 
             oModel.setProperty("/Main/filter/cbCliente", aCli);
 
-            if (aCli.length > 0) bHasValidTokens = true;
 
-            if (aCli.length === 0 && oCli.rawValue) {
+            if (String(oCli.rawValue || "").trim() || oCli.keys.some(key => !String(key || "").trim())) {
                 invalidRawInputs.push(`Cliente: "${oCli.rawValue}"`);
-                this.byId("miCliente").setValue("");
+
             }
 
             // ==== Vendedor ====
@@ -447,7 +445,6 @@ sap.ui.define([
 
             oModel.setProperty("/Main/filter/cbVendor", aVen);
 
-            if (aVen.length > 0) bHasValidTokens = true;
 
             //codigo agregado el 16/02/2026
             // 🚫 Regla: en CERAMICOS, si es VENDEDOR el filtro vendedor es obligatorio
@@ -478,15 +475,12 @@ sap.ui.define([
                 return;
             }
 
-            // ==== Validaciones de tokens ====
-            if (invalidRawInputs.length > 0 && !bHasValidTokens) {
-                oModel.setProperty("/oReporte", []);
-                sap.m.MessageToast.show("Ningún token válido encontrado. No se realizará la búsqueda.\nDescartados: " + invalidRawInputs.join("; "));
-                return;
-            }
-
+            // Never discard an entered criterion and run a broader query.
             if (invalidRawInputs.length > 0) {
-                sap.m.MessageToast.show("Se descartaron: " + invalidRawInputs.join("; "));
+                oModel.setProperty("/oReporte", []);
+                oModel.setProperty("/oReporteFiltrado", []);
+                sap.m.MessageToast.show("Complete o seleccione los filtros ingresados antes de buscar.");
+                return;
             }
 
             // Explicit search refreshes operational data; automatic entry reuses the flow.
@@ -495,6 +489,8 @@ sap.ui.define([
             sap.ui.core.BusyIndicator.show();
             this._getData().then(oData => {
                 if (oData.sEstado === "E") {
+                    oModel.setProperty("/oReporte", []);
+                    oModel.setProperty("/oReporteFiltrado", []);
                     this.getMessageBox("error", this.getI18nText("errorData"));
                 } else {
                     oModel.setProperty("/oReporte", oData.oResults);
@@ -699,6 +695,9 @@ sap.ui.define([
         },
 
         onVendorSelectionChange: function (oEvent) {
+            const model = this.getView().getModel("oModelProyect");
+            model.setProperty("/oReporte", []);
+            model.setProperty("/oReporteFiltrado", []);
             let aSelected = oEvent.getSource().getSelectedKeys() || [];
             aSelected = aSelected.map(v => (v || "").toString().trim()).filter(Boolean);
 
@@ -1340,37 +1339,15 @@ sap.ui.define([
                                 const jFilter = that.getModel("oModelProyect").getProperty("/Main/filter");
                                 void 0;
 
-                                // Sets de referencia
-                                const setOf = (arr, prop) => new Set(arr.map(x => x[prop]).filter(Boolean));
-                                const sets = {
-                                    documento: setOf(aResults, "SalesDocument"),
-                                    cliente: setOf(aResults, "Customer")
-                                };
-
-                                // Validar tokens
-                                const splitValidInvalid = (vals = [], set) => {
-                                    const valid = [], invalid = [];
-                                    (vals || []).forEach(v => {
-                                        (set.has(v) ? valid : invalid).push(v);
-                                    });
-                                    return { valid, invalid };
-                                };
-
-                                const vDocs = splitValidInvalid(jFilter.cbDocumento, sets.documento);
-                                const vCli = splitValidInvalid(jFilter.cbCliente, sets.cliente);
-                                const aVendorRequested = (jFilter.cbVendor || [])
-                                    .map(normalizeVendor)
-                                    .filter(Boolean);
-
-                                void 0;
-                                void 0;
-                                void 0;
-
-                                // Sets válidos
+                                // Selected criteria remain restrictive even when SAP returns no matches.
+                                // A missing customer/document must yield an empty result, never all orders.
+                                const selectedKeys = values => new Set((values || [])
+                                    .map(value => String(value || "").trim())
+                                    .filter(Boolean));
                                 const k = {
-                                    doc: new Set(vDocs.valid),
-                                    cli: new Set(vCli.valid),
-                                    ven: new Set(aVendorRequested)
+                                    doc: selectedKeys(jFilter.cbDocumento),
+                                    cli: selectedKeys(jFilter.cbCliente),
+                                    ven: new Set((jFilter.cbVendor || []).map(normalizeVendor).filter(Boolean))
                                 };
 
                                 const from = jFilter.dStartDate ? that.toUTCDateMs(jFilter.dStartDate) : null;
@@ -1400,31 +1377,6 @@ sap.ui.define([
                                     if (k.ven.size > 0 && !k.ven.has(it.VendorID)) return false;
                                     return true;
                                 });
-
-                                // === 3) Eliminar tokens inválidos en UI según resultados ===
-                                const foundDocs = new Set(filtered.map(it => it.SalesDocument));
-                                const foundCli = new Set(filtered.map(it => it.Customer));
-
-                                if (k.doc.size > 0 && that.byId("miDocumento")) {
-                                    const invalidDocs = [...k.doc].filter(d => !foundDocs.has(d));
-                                    if (invalidDocs.length) {
-                                        invalidDocs.forEach(invalid => {
-                                            const oCtrl = that.byId("miDocumento");
-                                            oCtrl.removeToken(oCtrl.getTokens().find(t => t.getKey() === invalid || t.getText() === invalid));
-                                        });
-                                    }
-                                }
-                                if (k.cli.size > 0 && that.byId("miCliente")) {
-                                    const invalidCli = [...k.cli].filter(c => !foundCli.has(c));
-                                    if (invalidCli.length) {
-                                        invalidCli.forEach(invalid => {
-                                            const oCtrl = that.byId("miCliente");
-                                            oCtrl.removeToken(oCtrl.getTokens().find(t => t.getKey() === invalid || t.getText() === invalid));
-                                        });
-                                    }
-                                }
-                                void 0;
-                                if (filtered.length > 0) void 0;
 
                                 // === Enriquecer con EstadoGeneral ===
                                 that._getEstadoGeneral().then(oEstado => {
@@ -2428,17 +2380,20 @@ sap.ui.define([
             oProj.setProperty("/oCliente", aClientesScope);
         },
         _purgeClientTokensOutOfScope: function () {
-            const oProj = this.getModel("oModelProyect");
-            const aScope = oProj.getProperty("/oClienteFilter") || [];
-            const setOK = new Set(aScope.map(c => String(c.Customer || "").trim()));
-
-            const oMI = this.byId("miCliente");
-            if (oMI) {
-                const aKeep = oMI.getTokens().filter(t => setOK.has(String(t.getKey()).trim()));
-                oMI.removeAllTokens();
-                aKeep.forEach(t => oMI.addToken(t));
-                oProj.setProperty("/Main/filter/cbCliente", aKeep.map(t => t.getKey()));
+            const model = this.getModel("oModelProyect");
+            const allowed = new Set((model.getProperty("/oClienteFilter") || [])
+                .map(client => String(client.Customer || "").trim()));
+            const input = this.byId("miCliente");
+            if (!input) return;
+            const tokens = input.getTokens();
+            const retained = tokens.filter(token => allowed.has(String(token.getKey() || "").trim()));
+            if (retained.length !== tokens.length) {
+                input.removeAllTokens();
+                retained.forEach(token => input.addToken(token));
+                model.setProperty("/oReporte", []);
+                model.setProperty("/oReporteFiltrado", []);
             }
+            model.setProperty("/Main/filter/cbCliente", retained.map(token => token.getKey()));
         },
         onSuggestClient: function (e) {
             const term = (e.getParameter("suggestValue") || "").trim();

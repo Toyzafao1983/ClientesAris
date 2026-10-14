@@ -560,7 +560,24 @@ sap.ui.define([
                 .catch(() => sap.m.MessageToast.show("Error al obtener estado de cuenta del cliente"))
                 .finally(() => sap.ui.core.BusyIndicator.hide());
         },
+        _hasIncompleteSearchFilters: function () {
+            return ["multiInputSeller", "multiInputCodClient", "multiInputRazonSocial", "multiInputDocument"]
+                .some(id => {
+                    const input = this.byId(id);
+                    if (!input) return false;
+                    if (String(input.getValue?.() || "").trim()) return true;
+                    return (input.getTokens?.() || []).some(token =>
+                        !String((id === "multiInputRazonSocial" ? token.getText() : token.getKey()) || "").trim());
+                });
+        },
         _onPressExecute: function () {
+            this.oModelProyect.setProperty("/oReporte", []);
+            if (this._hasIncompleteSearchFilters()) {
+                this.oModelProyect.setProperty("/oReporte", []);
+                sap.m.MessageToast.show("Complete o seleccione los filtros ingresados antes de buscar.");
+                return;
+            }
+
             const that = this;
 
             this._syncFiltersFromTokens();
@@ -574,13 +591,13 @@ sap.ui.define([
 
             Promise.all([
                 that._getData(jFilter),
-                that._getClient(tUniNeg),
                 that._getDatClient(tUniNeg)
             ])
                 .then((values) => {
                     const oData = values[0];
 
                     if (oData.sEstado === "E") {
+                        this.oModelProyect.setProperty("/oReporte", []);
                         this.getMessageBox("error", this.getI18nText("errorData"));
                         sap.ui.core.BusyIndicator.hide();
                         return;
@@ -647,140 +664,9 @@ sap.ui.define([
             return Array.from(new Set(aExpanded));
         },
         _getData: function () {
-            try {
-                var oResp = {
-                    "sEstado": "E",
-                    "oResults": []
-                };
-
-                return new Promise(function (resolve, reject) {
-                    that.aFilter = [];
-                    let jFilter = that.getModel("oModelProyect").getProperty("/Main/filter") || {};
-
-                    // ✅ SELLER: fSeller viene con BP (kunn2) => lo convertimos a Seller/txt13
-                    if (Array.isArray(jFilter.fSeller) && jFilter.fSeller.length > 0) {
-                        const validKeys = jFilter.fSeller
-                            .map(k => (k || "").toString().trim())
-                            .filter(Boolean);
-
-                        if (validKeys.length > 0) {
-                            const aSellerCodes = that._expandSellerKeysToSellerCodes(validKeys);
-                            const aSellerOrs = aSellerCodes.map(code =>
-                                new sap.ui.model.Filter({
-                                    filters: [
-                                        new sap.ui.model.Filter("Seller", sap.ui.model.FilterOperator.EQ, code),
-                                        new sap.ui.model.Filter("txt13", sap.ui.model.FilterOperator.EQ, code)
-                                    ],
-                                    and: false
-                                })
-                            );
-                            that.aFilter.push(new sap.ui.model.Filter({ filters: aSellerOrs, and: false }));
-                        }
-                    }
-
-                    // Código Cliente (Customer)
-                    if (Array.isArray(jFilter.fCodClient) && jFilter.fCodClient.length > 0) {
-                        const validKeys = jFilter.fCodClient
-                            .map(k => (k || "").toString().trim())
-                            .filter(Boolean);
-
-                        if (validKeys.length > 0) {
-                            const aCodOrs = validKeys.map(key =>
-                                new sap.ui.model.Filter("Customer", sap.ui.model.FilterOperator.EQ, key)
-                            );
-                            that.aFilter.push(new sap.ui.model.Filter({ filters: aCodOrs, and: false }));
-                        }
-                    }
-
-                    // Razón Social (CustomerFullName + TaxNumbers)
-                    if (Array.isArray(jFilter.fRazSocial) && jFilter.fRazSocial.length > 0) {
-                        const validKeys = jFilter.fRazSocial
-                            .map(k => (k || "").toString().trim())
-                            .filter(Boolean);
-
-                        if (validKeys.length > 0) {
-                            const aRazOrs = validKeys.map(key =>
-                                new sap.ui.model.Filter({
-                                    filters: [
-                                        new sap.ui.model.Filter("CustomerFullName", sap.ui.model.FilterOperator.EQ, key),
-                                        new sap.ui.model.Filter("TaxNumber1", sap.ui.model.FilterOperator.EQ, key),
-                                        new sap.ui.model.Filter("TaxNumber2", sap.ui.model.FilterOperator.EQ, key),
-                                        new sap.ui.model.Filter("TaxNumber3", sap.ui.model.FilterOperator.EQ, key),
-                                        new sap.ui.model.Filter("TaxNumber4", sap.ui.model.FilterOperator.EQ, key),
-                                        new sap.ui.model.Filter("TaxNumber5", sap.ui.model.FilterOperator.EQ, key),
-                                        new sap.ui.model.Filter("TaxNumber6", sap.ui.model.FilterOperator.EQ, key)
-                                    ],
-                                    and: false
-                                })
-                            );
-                            that.aFilter.push(new sap.ui.model.Filter({ filters: aRazOrs, and: false }));
-                        }
-                    }
-                    if (Array.isArray(jFilter.fDocument) && jFilter.fDocument.length > 0) {
-                        const validKeys = jFilter.fDocument
-                            .map(k => (k || "").toString().trim())
-                            .filter(Boolean);
-
-                        if (validKeys.length > 0) {
-                            const aDocOrs = validKeys.map(key =>
-                                new sap.ui.model.Filter({
-                                    filters: [
-                                        new sap.ui.model.Filter("CustomerFullName", sap.ui.model.FilterOperator.Contains, key),
-                                        new sap.ui.model.Filter("TaxNumber1", sap.ui.model.FilterOperator.Contains, key),
-                                        new sap.ui.model.Filter("TaxNumber2", sap.ui.model.FilterOperator.Contains, key),
-                                        new sap.ui.model.Filter("TaxNumber3", sap.ui.model.FilterOperator.Contains, key),
-                                        new sap.ui.model.Filter("TaxNumber4", sap.ui.model.FilterOperator.Contains, key),
-                                        new sap.ui.model.Filter("TaxNumber5", sap.ui.model.FilterOperator.Contains, key),
-                                        new sap.ui.model.Filter("TaxNumber6", sap.ui.model.FilterOperator.Contains, key)
-                                    ],
-                                    and: false
-                                })
-                            );
-                            that.aFilter.push(new sap.ui.model.Filter({ filters: aDocOrs, and: false }));
-                        }
-                    }
-
-                    var sPath = jQuery.sap.getModulePath("com.aris.registropedido.textiles.pe") +
-                        "/sap/opu/odata/sap/ZSDB_PORTALCLIENTES/ZC_CLIENTES?$filter=SalesOrganization eq '1110' and DistributionChannel eq 'C1' and Division eq 'S1'&$format=json&sap-language=es-ES";
-
-                    Services.getoDataERPSync(that, sPath, function (result) {
-                        util.response.validateAjaxGetERPNotMessage(result, {
-                            success: function (oData, message) {
-                                oResp.sEstado = "S";
-                                oResp.oResults = oData.results;
-                                resolve(oResp);
-                            },
-                            error: function (message) {
-                                oResp.oResults = [];
-                                oResp.sEstado = "S";
-                                oResp.oResults = models.JsonReporte().d.results;
-
-                                // ✅ Obtener la tabla real (id="tblMain" en el fragment)
-                                const oTbl = sap.ui.core.Fragment.byId(that.frgIdTableMain, "tblMain");
-                                const oBinding = oTbl && oTbl.getBinding && oTbl.getBinding("items");
-
-                                if (oBinding) {
-                                    oBinding.filter(that.aFilter || []);
-                                }
-
-                                resolve(oResp);
-                            }
-                        });
-                    });
-                });
-
-            } catch (oError) {
-                that.getMessageBox("error", that.getI18nText("sErrorTry"));
-            }
-        },
-        //para cambiar idioma
-
-        onLanguageEsp: function () {
-            this._setLanguageModel("esp");
-        },
-
-        onLanguageEng: function () {
-            this._setLanguageModel("ing");
+            // Reuse the account application's destination and current business unit.
+            // Table filters are applied by _buildTableFilters after the query succeeds.
+            return this._getClient(tUniNeg);
         },
         FilterSelling: function () {
             const that = this;

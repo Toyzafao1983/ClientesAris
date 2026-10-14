@@ -413,7 +413,9 @@ sap.ui.define([
             const top = url.match(/[?&]\$top=(\d+)/);
             const limited = !!top && Number(top[1]) <= 200;
             // Preserve explicit top; without it SAP can default to 100 rows.
-            const initialUrl = top ? url : url + (url.includes("?") ? "&" : "?") + "$top=2147483647";
+            // Paging options are invalid on keyed single-entity reads (including navigation).
+            const isSingleEntity = /\([^/]*\)\/?$/.test(url.split("?")[0].replace(/%28/gi, "(").replace(/%29/gi, ")"));
+            const initialUrl = top || isSingleEntity ? url : url + (url.includes("?") ? "&" : "?") + "$top=2147483647";
             const visited = new Set();
             const rows = [];
             let pageUrl = initialUrl;
