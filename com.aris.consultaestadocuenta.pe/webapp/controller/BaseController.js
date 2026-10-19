@@ -1654,6 +1654,7 @@ sap.ui.define([
 				"Netduedate",
 				"Waers",
 				"Monto",
+				"MontoOriginal",
 				"Condicion"
 			].join(",");
 		},

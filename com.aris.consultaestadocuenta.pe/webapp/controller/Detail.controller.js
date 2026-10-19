@@ -389,7 +389,7 @@ sap.ui.define([
 				issueDate = vDocDate.slice(0, 10);
 			}
 
-			const sTotalAmount = oRow.Monto || "";
+			const sTotalAmount = oRow.MontoOriginal ?? "";
 			const sRucEmisor = "20100257298";
 
 			const payload = {

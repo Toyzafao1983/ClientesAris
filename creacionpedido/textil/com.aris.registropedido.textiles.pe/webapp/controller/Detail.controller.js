@@ -2264,7 +2264,9 @@ sap.ui.define([
             const oZPEFHeaderFields = this._getZPEFHeaderFieldsForPayload(oData.inputForm, sDocType);
             const bIsCoord = !!oModelUser?.getProperty("/bIsCoord");
             const bIsVendedor = !!oModelUser?.getProperty("/bIsVendedor");
-            const sPoSupplem = isClienteIAS ? "CLTE" : (bIsCoord ? "SUPE" : (bIsVendedor ? "VEND" : ""));
+            // Solo el tipo seleccionado ZPES usa esta marca en la simulación.
+            const sPoSupplem = sTipDocUI === "ZPES" ? "x" :
+                (isClienteIAS ? "CLTE" : (bIsCoord ? "SUPE" : (bIsVendedor ? "VEND" : "")));
             const extraPoSupplem = sPoSupplem ? { PoSupplem: sPoSupplem } : {};
             const sTipoRef = oData.inputForm?.tipoReferencia || "";
             const bPedidoConReferencia = !!(sTipoRef && oData.inputForm?.docRefSeleccionado);

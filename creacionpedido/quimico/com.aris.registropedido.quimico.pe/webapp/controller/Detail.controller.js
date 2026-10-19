@@ -2839,6 +2839,16 @@ sap.ui.define([
                     this._setMaterialesBusy(false);
                     let sNumPedido = "";
                     const aMensajes = oResponse?.HeaderToReturn?.results || [];
+                    const aErroresSap = aMensajes.filter(m =>
+                        ["E", "A", "X"].includes(String(m.Type || m.type || "").trim().toUpperCase())
+                    );
+                    if (aErroresSap.length) {
+                        sap.m.MessageBox.error(
+                            aErroresSap.map(m => m.Message || m.message || "SAP devolvió un error sin detalle.").join("\n"),
+                            { title: "Error al crear pedido en SAP" }
+                        );
+                        return;
+                    }
                     aMensajes.forEach(m => {
                         const sMessage = String(m.Message || m.message || "");
                         const match = sMessage.match(/\d{10}/);
@@ -2937,12 +2947,88 @@ sap.ui.define([
                     sap.ui.core.BusyIndicator.hide();
                     this._setMaterialesBusy(false);
                     sap.m.MessageBox.error(
-                        "No se puede crear el pedido en este momento. Por favor, verifique los datos e intente nuevamente.",
-                        { title: "Error al crear pedido" }
+                        this._getODataErrorMessage(oError, "No se pudo crear el pedido. El servicio no devolvió detalle del error."),
+                        { title: "Error al crear pedido en SAP" }
                     );
                 }.bind(this)
             });
         },
+        _getODataErrorMessage: function (oError, sFallback) {
+            const aMessages = [];
+
+            const fnAdd = function (vMessage) {
+                if (vMessage === null || vMessage === undefined) {
+                    return;
+                }
+
+                let sMessage = "";
+
+                if (typeof vMessage === "string") {
+                    sMessage = vMessage;
+                } else if (typeof vMessage === "object") {
+                    sMessage = vMessage.value || vMessage.message || vMessage.Message || "";
+                }
+
+                sMessage = String(sMessage || "")
+                    .replace(/<[^>]*>/g, " ")
+                    .replace(/\s+/g, " ")
+                    .trim();
+
+                if (sMessage) {
+                    aMessages.push(sMessage);
+                }
+            };
+
+            const fnReadJsonError = function (oJson) {
+                if (!oJson) {
+                    return;
+                }
+
+                const oSapError = oJson.error || oJson;
+
+                fnAdd(oSapError.message);
+                fnAdd(oSapError.message && oSapError.message.value);
+
+                const aDetails =
+                    oSapError.innererror?.errordetails ||
+                    oSapError.innererror?.error_details ||
+                    oSapError.details ||
+                    [];
+
+                if (Array.isArray(aDetails)) {
+                    aDetails.forEach(function (oDetail) {
+                        fnAdd(
+                            oDetail.message ||
+                            oDetail.Message ||
+                            oDetail.longtext ||
+                            oDetail.LongText
+                        );
+                    });
+                }
+            };
+
+            fnReadJsonError(oError?.responseJSON);
+
+            if (oError?.responseText) {
+                try {
+                    fnReadJsonError(JSON.parse(oError.responseText));
+                } catch (e) {
+                    fnAdd(oError.responseText);
+                }
+            }
+
+            fnAdd(oError?.message);
+
+            if (oError?.status || oError?.statusText) {
+                fnAdd("HTTP " + (oError.status || "") + " " + (oError.statusText || ""));
+            }
+
+            const aUniqueMessages = Array.from(new Set(aMessages));
+            return aUniqueMessages.length
+                ? aUniqueMessages.join("\n")
+                : (sFallback || "Error técnico al consultar SAP.");
+        },
+
         _goToLaunchpadHome: async function () {
             try {
                 if (sap.ushell && sap.ushell.Container) {
