@@ -2264,8 +2264,8 @@ sap.ui.define([
             const oZPEFHeaderFields = this._getZPEFHeaderFieldsForPayload(oData.inputForm, sDocType);
             const bIsCoord = !!oModelUser?.getProperty("/bIsCoord");
             const bIsVendedor = !!oModelUser?.getProperty("/bIsVendedor");
-            // Solo el tipo seleccionado ZPES usa esta marca en la simulación.
-            const sPoSupplem = sTipDocUI === "ZPES" ? "x" :
+            // Pedido nacional y separación usan esta marca solo en la simulación.
+            const sPoSupplem = ["ZPES", "ZPSE"].includes(sTipDocUI) ? "x" :
                 (isClienteIAS ? "CLTE" : (bIsCoord ? "SUPE" : (bIsVendedor ? "VEND" : "")));
             const extraPoSupplem = sPoSupplem ? { PoSupplem: sPoSupplem } : {};
             const sTipoRef = oData.inputForm?.tipoReferencia || "";
