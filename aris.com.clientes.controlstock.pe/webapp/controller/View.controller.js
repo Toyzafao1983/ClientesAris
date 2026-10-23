@@ -1694,6 +1694,7 @@ sap.ui.define([
                     const isLineaAster = linea === "*";
 
                     const stockDispo = toNumber(child?.StockDispo);
+                    const stockFisico = toNumber(child?.StockFisico);
                     const stockPend = toNumber(child?.StockPedido);
 
                     let ocultar = false;
@@ -1713,7 +1714,7 @@ sap.ui.define([
                         if (isLineaAster) {
                             ocultar = false;
                         } else if (isLineaVacia) {
-                            ocultar = !((stockDispo !== 0) || (stockPend > 0));
+                            ocultar = !((stockFisico !== 0) || (stockPend > 0));
                         } else if (isLineaSlash) {
                             ocultar = false;
                         } else {
@@ -1724,7 +1725,7 @@ sap.ui.define([
                         if (isLineaAster) {
                             ocultar = false;
                         } else if (isLineaVacia) {
-                            ocultar = !((stockDispo !== 0) || (stockPend > 0));
+                            ocultar = !((stockFisico !== 0) || (stockPend > 0));
                         } else if (isLineaSlash) {
                             ocultar = true;
                         } else {
