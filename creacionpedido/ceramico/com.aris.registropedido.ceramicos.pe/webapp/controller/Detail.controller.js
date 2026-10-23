@@ -2039,6 +2039,15 @@ sap.ui.define([
 
             oModelProyect.setProperty("/oSchedule", aSchedule);
 
+            const oModelUser = this.getView().getModel("oModelUser");
+            const isClienteIAS =
+                oModelUser?.getProperty("/customAttribute") === "customAttribute6" ||
+                oModelUser?.getProperty("/bIsCliente") === true;
+            const bIsCoord = !!oModelUser?.getProperty("/bIsCoord");
+            const bIsVendedor = !!oModelUser?.getProperty("/bIsVendedor");
+            const sPoSupplem = isClienteIAS ? "CLTE" : (bIsCoord ? "SUPE" : (bIsVendedor ? "VEND" : ""));
+            const extraPoSupplem = sPoSupplem ? { PoSupplem: sPoSupplem } : {};
+
             const oPayload = this._cleanPayload({
                 ClientId: oData.oDatClient?.Customer || "",
                 TOperation: oData.TOperation || "CS",
@@ -2053,7 +2062,7 @@ sap.ui.define([
                 Pmnttrms: oData.inputForm?.cbCondPago || "",
                 Currency: oData.inputForm?.moneda || "USD",
                 PoMethod: "Z001",
-                PoSupplem: "CLTE",
+                ...extraPoSupplem,
                 HeaderToItem: aItemsTechSim,
                 HeaderToPartners: aPartners,
                 HeaderToSchedule: aSchedule,

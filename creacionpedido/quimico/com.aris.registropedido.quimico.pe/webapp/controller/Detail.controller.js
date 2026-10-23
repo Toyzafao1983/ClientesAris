@@ -1741,7 +1741,9 @@ sap.ui.define([
 
                         return oItm;
                     });
-                    const sPoSupplem = isClienteIAS ? "CLTE" : "VEND";
+                    const bIsCoord = !!oModelUser?.getProperty("/bIsCoord");
+                    const bIsVendedor = !!oModelUser?.getProperty("/bIsVendedor");
+                    const sPoSupplem = isClienteIAS ? "CLTE" : (bIsCoord ? "SUPE" : (bIsVendedor ? "VEND" : ""));
                     const extraPoSupplem = sPoSupplem ? { PoSupplem: sPoSupplem } : {};
 
                     void 0;
