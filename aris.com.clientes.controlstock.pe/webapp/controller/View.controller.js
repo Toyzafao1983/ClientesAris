@@ -1727,7 +1727,7 @@ sap.ui.define([
                         } else if (isLineaVacia) {
                             ocultar = !((stockFisico !== 0) || (stockPend > 0));
                         } else if (isLineaSlash) {
-                            ocultar = true;
+                            ocultar = false;
                         } else {
                             ocultar = true;
                         }
