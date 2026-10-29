@@ -376,7 +376,7 @@ sap.ui.define([
 			}
 
 			let issueDate = "";
-			const vDocDate = oRow.DocDate;
+			const vDocDate = oRow.FechaOriginal;
 
 			if (typeof vDocDate === "string" && vDocDate.includes("/Date(")) {
 				const timestamp = parseInt(vDocDate.replace(/[^0-9]/g, ""), 10);

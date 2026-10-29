@@ -1651,6 +1651,7 @@ sap.ui.define([
 				"Banco",
 				"RefKey1",
 				"DocDate",
+				"FechaOriginal",
 				"Netduedate",
 				"Waers",
 				"Monto",

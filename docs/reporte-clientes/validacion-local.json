@@ -1,0 +1,62 @@
+[
+  {
+    "prueba": "docs/tests/sharepoint-config.cjs",
+    "codigo": 0,
+    "salida": "OK aris.com.clientes.controlstock.pe\nOK creacionpedido/quimico/com.aris.registropedido.quimico.pe\nOK creacionpedido/ceramico/com.aris.registropedido.ceramicos.pe\nOK creacionpedido/textil/com.aris.registropedido.textiles.pe\n"
+  },
+  {
+    "prueba": "scripts/validate-authenticated-user.cjs",
+    "codigo": 0,
+    "salida": "PASS: six apps require authenticated email, reject missing identity without requests, bypass user mocks and preserve Post2 payloads.\n"
+  },
+  {
+    "prueba": "scripts/validate-ceramic-search-quantities.cjs",
+    "codigo": 0,
+    "salida": "Ceramic quantities preserved across searches, reordered rows and type filters; explicit clear verified.\n"
+  },
+  {
+    "prueba": "scripts/validate-chemical-freight.cjs",
+    "codigo": 1,
+    "salida": "node:internal/assert/utils:146\n  throw error;\n  ^\n\nAssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:\n\n  assert.ok(requestBegin > 0 && requestEnd > requestBegin)\n\n    at Object.<anonymous> (/home/marlon/Documentos/proyecto ARIS/Clientes/scripts/validate-chemical-freight.cjs:14:8)\n    at Module._compile (node:internal/modules/cjs/loader:1968:14)\n    at Object..js (node:internal/modules/cjs/loader:2108:10)\n    at Module.load (node:internal/modules/cjs/loader:1690:32)\n    at Module._load (node:internal/modules/cjs/loader:1480:12)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)\n    at Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\n    at node:internal/main/run_main_module:33:47 {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: false,\n  expected: true,\n  operator: '==',\n  diff: 'simple'\n}\n\nNode.js v26.12.1\n"
+  },
+  {
+    "prueba": "scripts/validate-customer-odata.cjs",
+    "codigo": 0,
+    "salida": "48 checks passed: customer filtering, catalog compatibility, escaping, local and deployed routes.\n"
+  },
+  {
+    "prueba": "scripts/validate-ias-priority.cjs",
+    "codigo": 0,
+    "salida": "155 IAS priority and SAP authorization scenarios passed.\n"
+  },
+  {
+    "prueba": "scripts/validate-order-access.cjs",
+    "codigo": 0,
+    "salida": "30 order access and rejection scenarios passed.\n"
+  },
+  {
+    "prueba": "scripts/validate-order-pagination.cjs",
+    "codigo": 0,
+    "salida": "PASS pagination transport and OData: quimico\nPASS pagination transport and OData: textil\nPASS pagination transport and OData: ceramico\n"
+  },
+  {
+    "prueba": "scripts/validate-pagination-top.cjs",
+    "codigo": 0,
+    "salida": "PASS: six applications preserve top, avoid default 100-row pages, retain SAP remaining top and respect suggestion limits.\n"
+  },
+  {
+    "prueba": "scripts/validate-restrictive-filters.cjs",
+    "codigo": 0,
+    "salida": "PASS restrictive client/name/seller/document and incomplete input: com.aris.consultaestadocuenta.pe\nPASS restrictive client/name/seller/document and incomplete input: creacionpedido/textil/com.aris.registropedido.textiles.pe\nPASS restrictive client/name/seller/document and incomplete input: creacionpedido/quimico/com.aris.registropedido.quimico.pe\nPASS restrictive client/name/seller/document and incomplete input: creacionpedido/ceramico/com.aris.registropedido.ceramicos.pe\nPASS: scope changes remove clients outside the seller scope and clear previous results; empty/incomplete stock searches clear all result models.\nPASS original agency/transport behavior preserved: FormClient\nPASS original agency/transport behavior preserved: Detail\n"
+  },
+  {
+    "prueba": "scripts/validate-single-entity-queries.cjs",
+    "codigo": 0,
+    "salida": "PASS: keyed address/exchange-rate reads preserve the URI without automatic top in all six applications.\n"
+  },
+  {
+    "prueba": "scripts/validate-textile-customer-search.cjs",
+    "codigo": 0,
+    "salida": "Textil: filtro vendedor/cliente, múltiples vendedores, errores, BusyIndicator y ruta metadata verificados.\n"
+  }
+]
